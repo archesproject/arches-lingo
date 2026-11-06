@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useTemplateRef, watchEffect } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
 
@@ -17,6 +17,7 @@ const languageStore = useLanguageStore();
 const { selectedLanguage, availableLanguages } = storeToRefs(languageStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
+const isLanguageSelectorVisible = ref(false);
 
 const selectedCode = computed({
     get: () => selectedLanguage.value.code,
@@ -32,12 +33,6 @@ const selectedCode = computed({
 
 const showSelector = computed(() => availableLanguages.value.length > 1);
 
-watchEffect(() => {
-    document.documentElement.dir =
-        selectedLanguage.value.default_direction ?? "ltr";
-    document.body.dir = document.documentElement.dir;
-});
-
 function openLanguageSelector(event: MouseEvent) {
     popover.value!.toggle(event);
 }
@@ -49,20 +44,27 @@ function openLanguageSelector(event: MouseEvent) {
         class="language-selector"
     >
         <Button
-            :aria-label="$gettext('Open language selector')"
+            aria-haspopup="dialog"
+            :aria-expanded="isLanguageSelectorVisible"
             @click="openLanguageSelector"
         >
             <div class="language-abbreviation-circle">
                 {{ selectedLanguage.code }}
             </div>
-            <span>{{ selectedLanguage.name }}</span>
+            <span :lang="selectedLanguage.code">{{
+                selectedLanguage.name
+            }}</span>
         </Button>
 
-        <Popover ref="popover">
-            <div class="popover-header">
-                <h4 class="header-title">
+        <Popover
+            ref="popover"
+            @show="isLanguageSelectorVisible = true"
+            @hide="isLanguageSelectorVisible = false"
+        >
+            <fieldset class="popover-header">
+                <legend class="header-title">
                     {{ $gettext("Language Selection") }}
-                </h4>
+                </legend>
                 <div class="formats-container">
                     <span
                         v-for="language in availableLanguages"
@@ -73,14 +75,23 @@ function openLanguageSelector(event: MouseEvent) {
                             :key="language.code"
                             v-model="selectedCode"
                             :input-id="`language-${language.code}`"
+                            name="ui-language"
                             :value="language.code"
+                            :pt="{
+                                input: {
+                                    autofocus: language.code === selectedCode,
+                                },
+                            }"
                         />
                         <label :for="`language-${language.code}`">
-                            {{ language.name }} ({{ language.code }})
+                            <span :lang="language.code">{{
+                                language.name
+                            }}</span>
+                            ({{ language.code }})
                         </label>
                     </span>
                 </div>
-            </div>
+            </fieldset>
         </Popover>
     </div>
 </template>
@@ -125,11 +136,15 @@ function openLanguageSelector(event: MouseEvent) {
 .popover-header {
     font-family: var(--p-lingo-font-family);
     padding: 0.5rem 0.5rem;
+    margin: 0;
+    border: none;
+    min-inline-size: 0;
 }
 
 .header-title {
+    width: 100%;
     margin: 0rem 0rem 0.5rem 0rem;
-    padding-bottom: 0.5rem;
+    padding: 0 0 0.5rem 0;
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     font-weight: 400;
 }

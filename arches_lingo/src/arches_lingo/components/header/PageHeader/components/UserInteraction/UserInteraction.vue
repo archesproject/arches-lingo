@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
@@ -11,6 +11,7 @@ import UserInteractionMenu from "@/arches_lingo/components/header/PageHeader/com
 
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
+import { focusFirstFocusableElement } from "@/arches_lingo/utils.ts";
 
 import type { PopoverMethods } from "primevue/popover";
 
@@ -20,6 +21,8 @@ const userStore = useUserStore();
 const { user, isAnonymous } = storeToRefs(userStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
+const userMenu = useTemplateRef<HTMLElement>("userMenu");
+const isUserMenuVisible = ref(false);
 
 const displayName = computed(() => {
     if (!user.value) return "";
@@ -53,6 +56,11 @@ function openUserMenu(event: MouseEvent) {
     popover.value!.toggle(event);
 }
 
+function onUserMenuShow() {
+    isUserMenuVisible.value = true;
+    focusFirstFocusableElement(userMenu.value);
+}
+
 function navigateToLogin() {
     router.push({ name: routeNames.login });
 }
@@ -70,7 +78,8 @@ function navigateToLogin() {
         </template>
         <template v-else>
             <Button
-                :aria-label="$gettext('Open user menu')"
+                aria-haspopup="dialog"
+                :aria-expanded="isUserMenuVisible"
                 @click="openUserMenu"
             >
                 <div
@@ -85,11 +94,15 @@ function navigateToLogin() {
             <Popover
                 ref="popover"
                 class="user-interaction-popover"
+                @show="onUserMenuShow"
+                @hide="isUserMenuVisible = false"
             >
-                <UserInteractionMenu
-                    :display-name="displayName"
-                    :email="user?.email ?? ''"
-                />
+                <div ref="userMenu">
+                    <UserInteractionMenu
+                        :display-name="displayName"
+                        :email="user?.email ?? ''"
+                    />
+                </div>
             </Popover>
         </template>
     </div>

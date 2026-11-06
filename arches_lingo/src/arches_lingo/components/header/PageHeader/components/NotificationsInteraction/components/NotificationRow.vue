@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useGettext } from "vue3-gettext";
+
 import Button from "primevue/button";
 
 import NotificationFileViewer from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationFileViewer.vue";
@@ -10,6 +12,8 @@ const { notification, showUnreadOnly } = defineProps<{
     notification: Notification;
     showUnreadOnly: boolean;
 }>();
+
+const { $gettext } = useGettext();
 
 function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -49,6 +53,7 @@ function formatDate(dateString: string): string {
         severity="danger"
         rounded
         size="small"
+        :aria-label="$gettext('Dismiss notification')"
         @click="dismissNotifications([notification.id])"
     ></Button>
 </template>

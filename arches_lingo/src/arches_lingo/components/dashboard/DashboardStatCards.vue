@@ -16,7 +16,10 @@ defineProps<{
     <div class="stats-row">
         <div class="stat-card">
             <div class="stat-card-title">
-                <i class="pi pi-folder stat-icon" />
+                <i
+                    class="pi pi-folder stat-icon"
+                    aria-hidden="true"
+                />
                 {{ $gettext("Schemes") }}
             </div>
             <Skeleton
@@ -33,7 +36,10 @@ defineProps<{
         </div>
         <div class="stat-card">
             <div class="stat-card-title">
-                <i class="pi pi-lightbulb stat-icon" />
+                <i
+                    class="pi pi-lightbulb stat-icon"
+                    aria-hidden="true"
+                />
                 {{ $gettext("Concepts") }}
             </div>
             <Skeleton
@@ -50,7 +56,10 @@ defineProps<{
         </div>
         <div class="stat-card">
             <div class="stat-card-title">
-                <i class="pi pi-tag stat-icon" />
+                <i
+                    class="pi pi-tag stat-icon"
+                    aria-hidden="true"
+                />
                 {{ $gettext("Labels") }}
             </div>
             <Skeleton
@@ -67,7 +76,10 @@ defineProps<{
         </div>
         <div class="stat-card">
             <div class="stat-card-title">
-                <i class="pi pi-chart-bar stat-icon" />
+                <i
+                    class="pi pi-chart-bar stat-icon"
+                    aria-hidden="true"
+                />
                 {{ $gettext("Labels / Concept") }}
             </div>
             <Skeleton

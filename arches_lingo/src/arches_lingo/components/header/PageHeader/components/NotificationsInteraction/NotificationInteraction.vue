@@ -129,6 +129,11 @@ onUnmounted(() => {
                 variant="text"
                 class="notifications-button"
                 :label="$gettext('Notifications')"
+                :aria-label="
+                    hasUnreadNotifications
+                        ? $gettext('Notifications (unread)')
+                        : undefined
+                "
                 @click="activateHierarchyOverlay"
             />
         </div>
@@ -146,7 +151,7 @@ onUnmounted(() => {
 
 <style scoped>
 .notifications-button {
-    color: var(--p-menubar-text-color) !important;
+    color: inherit !important;
     height: 3rem;
     border-radius: 0;
     font-size: 0.875rem;
@@ -164,7 +169,7 @@ onUnmounted(() => {
     height: 0.55rem;
     border-radius: 50%;
     background-color: var(--p-button-danger-background);
-    box-shadow: 0 0 0 0.125rem var(--p-menubar-bg, var(--p-off-white));
+    box-shadow: 0 0 0 0.125rem var(--p-off-white);
     z-index: 2;
 }
 </style>

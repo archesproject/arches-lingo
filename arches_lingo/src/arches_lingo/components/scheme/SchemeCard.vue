@@ -65,15 +65,18 @@ function onImport() {
     <RouterLink :to="schemeURL">
         <Card :class="scheme.id === NEW ? 'new-scheme' : ''">
             <template #title>
-                <div v-if="scheme.id === NEW">
+                <h2
+                    v-if="scheme.id === NEW"
+                    class="scheme-card-title"
+                >
                     {{ $gettext("New Scheme") }}
-                </div>
-                <div
+                </h2>
+                <h2
                     v-else
-                    class="scheme-card"
+                    class="scheme-card scheme-card-title"
                 >
                     {{ schemeName.value }}
-                </div>
+                </h2>
             </template>
             <template #content>
                 <div v-if="scheme.id === NEW">
@@ -123,6 +126,12 @@ ul:first-child li:first-child .p-card .scheme-circle {
 
 a {
     text-decoration: none;
+}
+
+.scheme-card-title {
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
 }
 
 :deep(.p-card) {

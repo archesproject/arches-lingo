@@ -271,6 +271,7 @@ onMounted(loadSearchOptions);
             :hide-panel-label="$gettext('Hide Saved Searches & Sets')"
             :show-panel-label="$gettext('Show Saved Searches & Sets')"
             :can-toggle-panel="!isAnonymous"
+            panel-id="advanced-search-side-panel"
         />
 
         <Splitter
@@ -319,7 +320,10 @@ onMounted(loadSearchOptions);
                 v-show="showSidePanel && !isAnonymous"
                 :size="25"
             >
-                <div class="side-panel">
+                <div
+                    id="advanced-search-side-panel"
+                    class="side-panel"
+                >
                     <Panel
                         :header="$gettext('Saved')"
                         toggleable

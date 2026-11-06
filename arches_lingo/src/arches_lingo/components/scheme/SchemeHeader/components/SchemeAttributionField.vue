@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -29,6 +29,8 @@ const emit = defineEmits<{
 
 const toast = useToast();
 const { $gettext } = useGettext();
+
+const attributionLabelId = useId();
 
 const isEditingAttribution = ref(false);
 const attributionDraft = ref("");
@@ -75,7 +77,10 @@ async function saveAttribution() {
 
 <template>
     <div class="header-item attribution-header-item">
-        <span class="header-item-label">
+        <span
+            :id="attributionLabelId"
+            class="header-item-label"
+        >
             {{ $gettext("Attribution:") }}
         </span>
 
@@ -83,6 +88,7 @@ async function saveAttribution() {
             <div class="attribution-input-wrapper">
                 <Textarea
                     v-model="attributionDraft"
+                    :aria-labelledby="attributionLabelId"
                     :rows="3"
                     :placeholder="
                         $gettext('Enter attribution information here...')
