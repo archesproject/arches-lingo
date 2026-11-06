@@ -14,10 +14,12 @@
 #   ARCHES_PROJECT_PACKAGE  - e.g. arches_myproject
 #
 # Optional, and normally unset:
-#   ARCHES_DOCKER_REF   - overrides .arches-docker-ref, for changing the pin
-#                         without a commit. Shadows the file until removed.
+#   ARCHES_DOCKER_REF   - overrides .runtime/arches-docker-ref, for changing the
+#                         pin without a commit. Shadows the file until removed.
 #
-# The arches-docker release is read from .arches-docker-ref at the project root.
+# The arches-docker release is read from .runtime/arches-docker-ref. The bare
+# .arches-docker-ref at the project root is where the pin used to live and is
+# still read as a fallback, so moving the file is a standalone commit.
 # Two forms are accepted, and both name exactly one commit:
 #
 #   v1.2.3                    a release tag
@@ -35,7 +37,7 @@
 # against?" without the Actions log.
 #
 # Local builds do not read this file. They build from the developer's own
-# arches-docker checkout; `make docker-status` reports that tree next to this
+# arches-docker checkout; `make status` reports that tree next to this
 # pin so the difference is visible. CI is what builds the image that deploys.
 #
 # And a repository secret:
@@ -55,15 +57,16 @@ permissions:
 jobs:
   setup:
     name: Setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       environment: ${{ steps.env.outputs.name }}
       arches_docker_ref: ${{ steps.infra.outputs.ref }}
       arches_docker_sha: ${{ steps.infra.outputs.sha }}
+      dockerfile: ${{ steps.dockerfile.outputs.path }}
     steps:
-      # Needed only for .arches-docker-ref, so the default shallow fetch is enough.
+      # Needed only for the pin file, so the default shallow fetch is enough.
       - name: Check out project
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Extract environment from branch
         id: env
@@ -78,9 +81,9 @@ jobs:
       - name: Resolve and validate arches-docker ref
         id: infra
         env:
-          # The committed .arches-docker-ref is the pin. The repository variable
-          # is an override for changing a pin without a commit; it is empty in
-          # the normal case, and the file is authoritative then.
+          # The committed .runtime/arches-docker-ref is the pin. The repository
+          # variable is an override for changing a pin without a commit; it is
+          # empty in the normal case, and the file is authoritative then.
           ARCHES_DOCKER_REF_OVERRIDE: ${{ vars.ARCHES_DOCKER_REF }}
           GH_TOKEN: ${{ secrets.FARGEO_PAT }}
         run: |
@@ -88,15 +91,19 @@ jobs:
 
           if [ -n "${ARCHES_DOCKER_REF_OVERRIDE}" ]; then
             ARCHES_DOCKER_REF="${ARCHES_DOCKER_REF_OVERRIDE}"
-            echo "::notice::Using ARCHES_DOCKER_REF repository variable '${ARCHES_DOCKER_REF}', which overrides the committed .arches-docker-ref."
+            echo "::notice::Using ARCHES_DOCKER_REF repository variable '${ARCHES_DOCKER_REF}', which overrides the committed .runtime/arches-docker-ref."
+          elif [ -f .runtime/arches-docker-ref ]; then
+            ARCHES_DOCKER_REF="$(tr -d '[:space:]' < .runtime/arches-docker-ref)"
           elif [ -f .arches-docker-ref ]; then
+            # Legacy location: the pin used to live at the project root.
             ARCHES_DOCKER_REF="$(tr -d '[:space:]' < .arches-docker-ref)"
+            echo "::notice::Read the pin from the legacy .arches-docker-ref at the project root. Re-run arches-docker's scaffold/init-project.sh to move it to .runtime/arches-docker-ref."
           else
             ARCHES_DOCKER_REF=""
           fi
 
           if [ -z "${ARCHES_DOCKER_REF}" ]; then
-            echo "::error::No arches-docker pin. Commit a .arches-docker-ref at the project root holding a release tag (v1.2.3) or a full 40-character commit SHA — re-running arches-docker's scaffold/init-project.sh writes one. See arches-docker scaffold/README.md."
+            echo "::error::No arches-docker pin. Commit a .runtime/arches-docker-ref holding a release tag (v1.2.3) or a full 40-character commit SHA — re-running arches-docker's scaffold/init-project.sh writes one. See arches-docker scaffold/README.md."
             exit 1
           fi
 
@@ -137,6 +144,31 @@ jobs:
           echo "sha=${SHA}" >> $GITHUB_OUTPUT
           echo "arches-docker \`${VERSION}\` (\`${SHA}\`)" >> $GITHUB_STEP_SUMMARY
 
+      # TEMPORARY — Arches 7.6 needs a different production Dockerfile (see
+      # production/Dockerfile.alpine-arches76 for why). Delete this step, that
+      # file, and .runtime/internal/build-legacy-frontend-arches76.sh once
+      # Arches 7.6 reaches end-of-life (June 2027) and no project still pins
+      # arches<8 — at that point every build always uses Dockerfile.alpine.
+      - name: Select production Dockerfile
+        id: dockerfile
+        run: |
+          set -euo pipefail
+
+          ARCHES_MAJOR="$(grep -oE '"arches(>=|==|~=|>|<=)?[0-9]+' pyproject.toml | head -1 | grep -oE '[0-9]+$' || true)"
+
+          if [ -z "${ARCHES_MAJOR}" ]; then
+            echo "::warning::Could not find an 'arches' version pin in pyproject.toml; defaulting to production/Dockerfile.alpine."
+            DOCKERFILE="production/Dockerfile.alpine"
+          elif [ "${ARCHES_MAJOR}" -lt 8 ]; then
+            echo "::notice::Detected Arches ${ARCHES_MAJOR}.x — using production/Dockerfile.alpine-arches76, a temporary build path removed once Arches 7.6 reaches end-of-life (June 2027)."
+            DOCKERFILE="production/Dockerfile.alpine-arches76"
+          else
+            DOCKERFILE="production/Dockerfile.alpine"
+          fi
+
+          echo "path=${DOCKERFILE}" >> $GITHUB_OUTPUT
+          echo "Dockerfile: \`${DOCKERFILE}\`" >> $GITHUB_STEP_SUMMARY
+
   build:
     name: Build (${{ matrix.slug }})
     needs: setup
@@ -147,21 +179,37 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
             slug: amd64
           - platform: linux/arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
             slug: arm64
     steps:
+      # The amd64 runner image ships toolchains this build never uses, leaving
+      # too little disk for BuildKit's layer export ("no space left on device").
+      - name: Free runner disk space
+        run: |
+          df -h /
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /opt/hostedtoolcache \
+            /usr/share/swift \
+            /usr/local/share/boost
+          sudo docker image prune --all --force > /dev/null
+          df -h /
+
       - name: Checkout project
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: project
 
       # The resolved commit, not the ref that selected it: a tag moved between
       # the setup job and here cannot change what this build compiles.
       - name: Checkout arches-docker
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: fargeo/arches-docker
           ref: ${{ needs.setup.outputs.arches_docker_sha }}
@@ -175,6 +223,10 @@ jobs:
           cp arches-docker/restore-tables.sh project/.runtime/restore-tables.sh
           cp arches-docker/supervisor.conf project/.runtime/supervisor.conf
           cp arches-docker/settings_local.py project/.runtime/settings_local.py
+          # Projects do not commit a .dockerignore, and CI never runs the
+          # scaffold — without this the context would include .git, and every
+          # secret ever removed from the tip would ship inside the image.
+          cp arches-docker/dockerignore project/.dockerignore
           cp -r arches-docker/conf.d project/.runtime/
           cp -r arches-docker/nginx project/.runtime/
           cp -r arches-docker/scaffold/templates/.runtime/internal project/.runtime/
@@ -186,24 +238,24 @@ jobs:
           chmod +x project/.runtime/hooks/build_deps.sh
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.AWS_ROLE }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./project
-          file: arches-docker/production/Dockerfile.alpine
+          file: arches-docker/${{ needs.setup.outputs.dockerfile }}
           platforms: ${{ matrix.platform }}
           outputs: type=image,name=${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=registry,ref=${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:cache-${{ matrix.slug }}
@@ -225,7 +277,7 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: digest-${{ matrix.slug }}
           path: /tmp/digests/*
@@ -234,29 +286,29 @@ jobs:
 
   merge:
     name: Merge manifests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [setup, build]
     environment: ${{ needs.setup.outputs.environment }}
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: /tmp/digests
           pattern: digest-*
           merge-multiple: true
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.AWS_ROLE }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Create and push manifest list
         env:
