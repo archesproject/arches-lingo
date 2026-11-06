@@ -481,6 +481,7 @@ function getTreeNodeStyle(depth: number) {
                                         $gettext(
                                             'Edit relationship to %{parent}',
                                             { parent: getParentLabel(group) },
+                                            true,
                                         )
                                     "
                                     :disabled="group.isTopConcept"
@@ -499,6 +500,7 @@ function getTreeNodeStyle(depth: number) {
                                         $gettext(
                                             'Delete relationship to %{parent}',
                                             { parent: getParentLabel(group) },
+                                            true,
                                         )
                                     "
                                     @click="confirmDelete(group)"
