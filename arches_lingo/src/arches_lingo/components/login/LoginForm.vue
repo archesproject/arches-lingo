@@ -40,7 +40,7 @@ const submit = async () => {
 </script>
 
 <template>
-    <form>
+    <form @submit.prevent="submit">
         <div class="form-header">
             <h1 class="form-title">{{ $gettext("LINGO") }}</h1>
             <h2 class="form-subtitle">
@@ -63,13 +63,11 @@ const submit = async () => {
                 :placeholder="$gettext('Password')"
                 :aria-label="$gettext('Password')"
                 type="password"
-                autocomplete="password"
-                @keyup.enter="submit"
+                autocomplete="current-password"
             />
             <Button
-                type="button"
+                type="submit"
                 :label="$gettext('Sign In')"
-                @click="submit"
             />
         </div>
         <div class="form-footer">
@@ -91,12 +89,20 @@ form {
     flex-direction: column;
     padding: 2rem 2rem;
     gap: 1rem;
-    width: 25rem;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 25rem;
     background: var(--p-inputtext-background);
     border-radius: 0.25rem;
     box-shadow:
         0 0.75rem 1.5rem rgba(0, 0, 0, 0.18),
         0 0.375rem 0.75rem rgba(0, 0, 0, 0.14);
+}
+
+@media (max-width: 480px) {
+    form {
+        padding: 1.5rem 1rem;
+    }
 }
 
 .form-header {
