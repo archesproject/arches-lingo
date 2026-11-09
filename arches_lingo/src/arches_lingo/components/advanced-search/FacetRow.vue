@@ -987,13 +987,13 @@ function toggleCascade() {
     padding: 0.25rem 0.5rem;
 }
 
-.cascade-active :deep(.p-togglebutton) {
+.cascade-toggle.cascade-active {
     background: var(--p-primary-100) !important;
     color: var(--p-primary-700) !important;
     border-color: var(--p-primary-300) !important;
 }
 
-:global(.arches-dark) .cascade-active :deep(.p-togglebutton) {
+:global(.arches-dark) .cascade-toggle.cascade-active {
     background: var(--p-primary-900) !important;
     color: var(--p-primary-200) !important;
     border-color: var(--p-primary-700) !important;
