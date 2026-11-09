@@ -12,11 +12,15 @@ import Toast from "primevue/toast";
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 import LiveAnnouncer from "@/arches_lingo/components/generic/LiveAnnouncer.vue";
 
-import { MAIN_CONTENT_ID } from "@/arches_lingo/constants.ts";
+import {
+    HIERARCHY_PANEL_ID,
+    MAIN_CONTENT_ID,
+} from "@/arches_lingo/constants.ts";
 import { usePageTitle } from "@/arches_lingo/composables/usePageTitle.ts";
 import { useRouteChangeFocus } from "@/arches_lingo/composables/useRouteChangeFocus.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
+import { getSplitterGutterPassThrough } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
@@ -148,19 +152,20 @@ function focusMainContent() {
             />
             <Splitter
                 class="main-splitter"
-                :pt="{
-                    gutter: {
-                        style: {
-                            display: shouldShowHierarchy ? 'flex' : 'none',
-                        },
-                    },
-                }"
+                :pt="
+                    getSplitterGutterPassThrough({
+                        label: $gettext('Resize the Explore panel'),
+                        primaryPanelId: HIERARCHY_PANEL_ID,
+                        isVisible: shouldShowHierarchy,
+                    })
+                "
             >
                 <SplitterPanel
                     v-show="shouldShowHierarchy"
                     :size="25"
                 >
                     <aside
+                        :id="HIERARCHY_PANEL_ID"
                         class="hierarchy-panel"
                         :aria-label="$gettext('Explore')"
                     >

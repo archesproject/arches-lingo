@@ -40,6 +40,7 @@ export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;
 
 export const MAIN_CONTENT_ID = "main-content";
+export const HIERARCHY_PANEL_ID = "hierarchy-panel";
 
 export const FALLBACK_LANGUAGE: Language = {
     code: "en",

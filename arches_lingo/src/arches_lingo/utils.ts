@@ -574,3 +574,45 @@ const FOCUSABLE_SELECTOR = [
 export function focusFirstFocusableElement(container: HTMLElement | null) {
     container?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
 }
+
+type SplitterLayout = "horizontal" | "vertical";
+
+/**
+ * PrimeVue puts role="separator" on the Splitter gutter, which isn't
+ * focusable, and leaves the handle inside it, which is, with no role or name
+ * (4.1.2). This moves the separator semantics onto the handle. Pass-through
+ * attributes bind after PrimeVue's own, so these win.
+ *
+ * PrimeVue's aria-valuenow is always the size of the first panel, so
+ * `primaryPanelId` (aria-controls) must be the first panel too. `isVisible`
+ * hides the gutter while one of the two panels is hidden.
+ */
+export function getSplitterGutterPassThrough({
+    label,
+    primaryPanelId,
+    layout = "horizontal",
+    isVisible = true,
+}: {
+    label: string;
+    primaryPanelId: string;
+    layout?: SplitterLayout;
+    isVisible?: boolean;
+}) {
+    return {
+        gutter: {
+            role: "none",
+            style: { display: isVisible ? "flex" : "none" },
+        },
+        gutterHandle: {
+            role: "separator",
+            "aria-label": label,
+            "aria-controls": primaryPanelId,
+            "aria-valuemin": 0,
+            "aria-valuemax": 100,
+            // PrimeVue passes `layout` through, but the line between
+            // side-by-side (horizontal layout) panels is vertical.
+            "aria-orientation":
+                layout === "horizontal" ? "vertical" : "horizontal",
+        },
+    };
+}
