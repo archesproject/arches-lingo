@@ -928,13 +928,13 @@ function toggleCascade() {
     padding: 0.25rem 0.5rem;
 }
 
-.negation-active :deep(.p-togglebutton) {
+.negation-toggle.negation-active {
     background: var(--p-red-100) !important;
     color: var(--p-red-700) !important;
     border-color: var(--p-red-300) !important;
 }
 
-:global(.arches-dark) .negation-active :deep(.p-togglebutton) {
+:global(.arches-dark) .negation-toggle.negation-active {
     background: var(--p-red-900) !important;
     color: var(--p-red-200) !important;
     border-color: var(--p-red-700) !important;
