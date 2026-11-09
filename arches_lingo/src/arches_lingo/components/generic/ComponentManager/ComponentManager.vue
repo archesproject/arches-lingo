@@ -6,6 +6,7 @@ import {
     onMounted,
     provide,
     ref,
+    useId,
     watch,
 } from "vue";
 
@@ -40,6 +41,7 @@ import {
 
 import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { getSplitterGutterPassThrough } from "@/arches_lingo/utils.ts";
 
 import type { Component } from "vue";
 
@@ -58,6 +60,10 @@ const route = useRoute();
 const confirm = useConfirm();
 const { $gettext } = useGettext();
 const { isEditorDirty } = useEditorDirtyState();
+
+// Each layout has its own copy of the sections, so each needs its own id.
+const horizontalSectionsPanelId = useId();
+const verticalSectionsPanelId = useId();
 
 const processedComponentData = ref(
     props.componentData.map(function (item) {
@@ -307,13 +313,25 @@ provide(openPanelComponentKey, openPanelComponent);
 <template>
     <div class="component-manager">
         <!-- only shown on large screens -->
-        <Splitter class="component-splitter component-splitter-horizontal">
+        <Splitter
+            class="component-splitter component-splitter-horizontal"
+            :pt="
+                getSplitterGutterPassThrough({
+                    label: $gettext('Resize the editor panel'),
+                    primaryPanelId: horizontalSectionsPanelId,
+                    isVisible: editorState !== MAXIMIZED,
+                })
+            "
+        >
             <SplitterPanel
                 v-show="editorState !== MAXIMIZED"
                 class="content"
                 :size="50"
             >
-                <div class="splitter-panel-content">
+                <div
+                    :id="horizontalSectionsPanelId"
+                    class="splitter-panel-content"
+                >
                     <component
                         :is="firstComponentDatum.component"
                         :graph-slug="firstComponentDatum.graphSlug"
@@ -381,13 +399,24 @@ provide(openPanelComponentKey, openPanelComponent);
         <Splitter
             class="component-splitter component-splitter-vertical"
             layout="vertical"
+            :pt="
+                getSplitterGutterPassThrough({
+                    label: $gettext('Resize the editor panel'),
+                    primaryPanelId: verticalSectionsPanelId,
+                    layout: 'vertical',
+                    isVisible: editorState !== MAXIMIZED,
+                })
+            "
         >
             <SplitterPanel
                 v-show="editorState !== MAXIMIZED"
                 class="content"
                 :size="50"
             >
-                <div class="splitter-panel-content">
+                <div
+                    :id="verticalSectionsPanelId"
+                    class="splitter-panel-content"
+                >
                     <component
                         :is="firstComponentDatum.component"
                         :graph-slug="firstComponentDatum.graphSlug"
