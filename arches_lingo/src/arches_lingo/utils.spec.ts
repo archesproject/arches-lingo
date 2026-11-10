@@ -12,6 +12,8 @@ import {
     canUserDereferenceResource,
     dataIsScheme,
     dataIsConcept,
+    focusNeighborAfterRemoval,
+    getSplitterGutterPassThrough,
     treeFromSchemes,
 } from "@/arches_lingo/utils.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
@@ -215,5 +217,88 @@ describe("RDF dereferencing permissions", () => {
 
     it("Should not let anonymous users dereference before the state loads", () => {
         expect(canUserDereferenceResource(true, undefined)).toBe(false);
+    });
+});
+
+describe("Splitter gutter pass-through", () => {
+    it("Should put the separator role, name and range on the focusable handle", () => {
+        const passThrough = getSplitterGutterPassThrough({
+            label: "Resize the Explore panel",
+            primaryPanelId: "hierarchy-panel",
+        });
+
+        expect(passThrough.gutter.role).toBe("none");
+        expect(passThrough.gutterHandle).toMatchObject({
+            role: "separator",
+            "aria-label": "Resize the Explore panel",
+            "aria-controls": "hierarchy-panel",
+            "aria-valuemin": 0,
+            "aria-valuemax": 100,
+        });
+    });
+
+    it("Should give the separator the orientation perpendicular to the layout", () => {
+        const sideBySide = getSplitterGutterPassThrough({
+            label: "Resize",
+            primaryPanelId: "panel",
+            layout: "horizontal",
+        });
+        const stacked = getSplitterGutterPassThrough({
+            label: "Resize",
+            primaryPanelId: "panel",
+            layout: "vertical",
+        });
+
+        expect(sideBySide.gutterHandle["aria-orientation"]).toBe("vertical");
+        expect(stacked.gutterHandle["aria-orientation"]).toBe("horizontal");
+    });
+
+    it("Should hide the gutter while the resized panel is hidden", () => {
+        const visible = getSplitterGutterPassThrough({
+            label: "Resize",
+            primaryPanelId: "panel",
+        });
+        const hidden = getSplitterGutterPassThrough({
+            label: "Resize",
+            primaryPanelId: "panel",
+            isVisible: false,
+        });
+
+        expect(visible.gutter.style.display).toBe("flex");
+        expect(hidden.gutter.style.display).toBe("none");
+    });
+});
+
+describe("Focus after removing a list item", () => {
+    async function getFocusTarget(
+        remainingItems: string[],
+        removedIndex: number,
+    ) {
+        let focusedTarget: string | null = null;
+        await focusNeighborAfterRemoval({
+            remainingItems,
+            removedIndex,
+            focusItem: (item) => {
+                focusedTarget = item;
+            },
+            focusWhenEmpty: () => {
+                focusedTarget = "empty";
+            },
+        });
+        return focusedTarget;
+    }
+
+    it("focuses the item that took the removed one's place", async () => {
+        // "b" was removed from ["a", "b", "c"].
+        expect(await getFocusTarget(["a", "c"], 1)).toBe("c");
+    });
+
+    it("focuses the previous item when the last one was removed", async () => {
+        // "c" was removed from ["a", "b", "c"].
+        expect(await getFocusTarget(["a", "b"], 2)).toBe("b");
+    });
+
+    it("falls back when the list is now empty", async () => {
+        expect(await getFocusTarget([], 0)).toBe("empty");
     });
 });

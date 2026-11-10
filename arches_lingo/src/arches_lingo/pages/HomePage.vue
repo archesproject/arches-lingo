@@ -178,8 +178,8 @@ onMounted(async () => {
                     {{ $gettext("Schemes") }}:
                 </label>
                 <MultiSelect
-                    id="scheme-filter"
                     v-model="selectedSchemeIds"
+                    input-id="scheme-filter"
                     :options="schemes"
                     option-label="name"
                     option-value="resourceinstanceid"

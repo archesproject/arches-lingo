@@ -30,7 +30,10 @@ import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import { storeToRefs } from "pinia";
 
-import { generateConditionId } from "@/arches_lingo/utils.ts";
+import {
+    generateConditionId,
+    getSplitterGutterPassThrough,
+} from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { Labellable } from "@/arches_controlled_lists/types.ts";
@@ -271,21 +274,24 @@ onMounted(loadSearchOptions);
             :hide-panel-label="$gettext('Hide Saved Searches & Sets')"
             :show-panel-label="$gettext('Show Saved Searches & Sets')"
             :can-toggle-panel="!isAnonymous"
+            panel-id="advanced-search-side-panel"
         />
 
         <Splitter
             class="search-splitter"
-            :pt="{
-                gutter: {
-                    style: {
-                        display:
-                            showSidePanel && !isAnonymous ? 'flex' : 'none',
-                    },
-                },
-            }"
+            :pt="
+                getSplitterGutterPassThrough({
+                    label: $gettext('Resize the Saved Searches & Sets panel'),
+                    primaryPanelId: 'advanced-search-content',
+                    isVisible: showSidePanel && !isAnonymous,
+                })
+            "
         >
             <SplitterPanel :size="75">
-                <div class="search-content">
+                <div
+                    id="advanced-search-content"
+                    class="search-content"
+                >
                     <SearchQueryBuilder
                         :query-group="queryGroup"
                         :options="searchOptions"
@@ -319,7 +325,10 @@ onMounted(loadSearchOptions);
                 v-show="showSidePanel && !isAnonymous"
                 :size="25"
             >
-                <div class="side-panel">
+                <div
+                    id="advanced-search-side-panel"
+                    class="side-panel"
+                >
                     <Panel
                         :header="$gettext('Saved')"
                         toggleable

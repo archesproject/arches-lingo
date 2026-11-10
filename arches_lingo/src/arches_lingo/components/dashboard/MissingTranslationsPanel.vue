@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Column from "primevue/column";
@@ -30,14 +30,9 @@ const emit = defineEmits<{
     pageChange: [event: { first: number; rows: number }];
 }>();
 
-const router = useRouter();
 const { $gettext } = useGettext();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
-
-function navigateToConcept(conceptId: string) {
-    router.push({ name: routeNames.concept, params: { id: conceptId } });
-}
 
 function getConceptLabel(concept: SearchResultItem): string {
     return (
@@ -79,14 +74,14 @@ function getConceptScheme(concept: SearchResultItem): string {
                 </span>
             </div>
             <div class="filter-group">
-                <label
-                    for="language-filter"
+                <span
+                    id="language-filter-label"
                     class="filter-label"
                 >
                     {{ $gettext("Language") }}:
-                </label>
+                </span>
                 <Select
-                    id="language-filter"
+                    aria-labelledby="language-filter-label"
                     :model-value="props.translationLanguage"
                     :options="props.languages"
                     option-label="name"
@@ -127,6 +122,7 @@ function getConceptScheme(concept: SearchResultItem): string {
                     <div class="empty-state">
                         <i
                             class="pi pi-check-circle empty-icon empty-icon--success"
+                            aria-hidden="true"
                         />
                         <span>{{
                             $gettext(
@@ -137,15 +133,15 @@ function getConceptScheme(concept: SearchResultItem): string {
                 </template>
                 <Column :header="$gettext('Concept')">
                     <template #body="slotProps">
-                        <a
+                        <RouterLink
                             class="resource-link"
-                            href="#"
-                            @click.prevent="
-                                navigateToConcept(slotProps.data.id)
-                            "
+                            :to="{
+                                name: routeNames.concept,
+                                params: { id: slotProps.data.id },
+                            }"
                         >
                             {{ getConceptLabel(slotProps.data) }}
-                        </a>
+                        </RouterLink>
                     </template>
                 </Column>
                 <Column :header="$gettext('Scheme')">

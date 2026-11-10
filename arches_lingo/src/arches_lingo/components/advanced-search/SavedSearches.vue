@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, useTemplateRef, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+import { useConfirm } from "primevue/useconfirm";
 
 import Button from "primevue/button";
+import ConfirmDialog from "primevue/confirmdialog";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 
@@ -18,8 +20,11 @@ import {
     ERROR,
     SUCCESS,
     DEFAULT_TOAST_LIFE,
+    DANGER,
+    SECONDARY,
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { focusNeighborAfterRemoval } from "@/arches_lingo/utils.ts";
 
 import type {
     AdvancedSearchQuery,
@@ -28,6 +33,7 @@ import type {
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const confirm = useConfirm();
 const userStore = useUserStore();
 const { isAnonymous } = storeToRefs(userStore);
 
@@ -39,10 +45,19 @@ const emit = defineEmits<{
     (event: "load-search", query: AdvancedSearchQuery): void;
 }>();
 
+const DELETE_SAVED_SEARCH_CONFIRM_GROUP = "delete-saved-search";
+
 const savedSearches = ref<SavedSearchItem[]>([]);
 const showSaveDialog = ref(false);
 const newSearchName = ref("");
 const isLoading = ref(false);
+const savedSearchesElement = useTemplateRef<HTMLElement>(
+    "savedSearchesElement",
+);
+
+function focusInSavedSearches(selector: string) {
+    savedSearchesElement.value?.querySelector<HTMLElement>(selector)?.focus();
+}
 
 async function loadSavedSearches() {
     try {
@@ -88,9 +103,21 @@ async function saveCurrentSearch() {
 async function deleteSearch(search: SavedSearchItem) {
     try {
         await deleteSavedSearch(search.id);
+        const deletedSearchIndex = savedSearches.value.findIndex(
+            (item) => item.id === search.id,
+        );
         savedSearches.value = savedSearches.value.filter(
             (item) => item.id !== search.id,
         );
+        await focusNeighborAfterRemoval({
+            remainingItems: savedSearches.value,
+            removedIndex: deletedSearchIndex,
+            focusItem: (remainingSearch) =>
+                focusInSavedSearches(
+                    `[data-saved-search-id="${remainingSearch.id}"]`,
+                ),
+            focusWhenEmpty: () => focusInSavedSearches(".save-current-button"),
+        });
         toast.add({
             severity: SUCCESS,
             life: DEFAULT_TOAST_LIFE,
@@ -104,6 +131,28 @@ async function deleteSearch(search: SavedSearchItem) {
             detail: error instanceof Error ? error.message : undefined,
         });
     }
+}
+
+function confirmDeleteSearch(search: SavedSearchItem) {
+    confirm.require({
+        group: DELETE_SAVED_SEARCH_CONFIRM_GROUP,
+        header: $gettext("Delete saved search?"),
+        message: $gettext(
+            'The saved search "%{name}" will be deleted.',
+            { name: search.name },
+            true,
+        ),
+        accept: () => deleteSearch(search),
+        rejectProps: {
+            label: $gettext("Cancel"),
+            severity: SECONDARY,
+            outlined: true,
+        },
+        acceptProps: {
+            label: $gettext("Delete"),
+            severity: DANGER,
+        },
+    });
 }
 
 function loadSearch(search: SavedSearchItem) {
@@ -122,12 +171,16 @@ watch(
 </script>
 
 <template>
-    <div class="saved-searches">
+    <div
+        ref="savedSearchesElement"
+        class="saved-searches"
+    >
         <div class="section-actions">
             <Button
                 :label="$gettext('Save Current')"
                 icon="pi pi-save"
                 size="small"
+                class="save-current-button"
                 @click="showSaveDialog = true"
             />
         </div>
@@ -144,23 +197,39 @@ watch(
             :key="search.id"
             class="saved-search-item"
         >
-            <div
+            <Button
+                text
+                plain
                 class="search-info"
+                :data-saved-search-id="search.id"
+                :pt="{
+                    root: {
+                        style: {
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            justifyContent: 'flex-start',
+                            padding: '0.375rem 0',
+                            gap: '0.125rem',
+                        },
+                    },
+                }"
                 @click="loadSearch(search)"
             >
-                <div class="search-name">{{ search.name }}</div>
-                <div class="search-date">
+                <span class="search-name">{{ search.name }}</span>
+                <span class="search-date">
                     {{ new Date(search.updated).toLocaleDateString() }}
-                </div>
-            </div>
+                </span>
+            </Button>
             <Button
                 icon="pi pi-trash"
                 severity="danger"
                 text
                 rounded
                 size="small"
-                :aria-label="$gettext('Delete')"
-                @click="deleteSearch(search)"
+                :aria-label="
+                    $gettext('Delete %{name}', { name: search.name }, true)
+                "
+                @click="confirmDeleteSearch(search)"
             />
         </div>
 
@@ -168,7 +237,7 @@ watch(
             v-model:visible="showSaveDialog"
             :header="$gettext('Save Search')"
             modal
-            :style="{ width: '25rem' }"
+            :style="{ width: 'min(25rem, 100%)' }"
         >
             <div class="save-dialog-content">
                 <label for="search-name">{{ $gettext("Name") }}</label>
@@ -196,6 +265,7 @@ watch(
                 />
             </template>
         </Dialog>
+        <ConfirmDialog :group="DELETE_SAVED_SEARCH_CONFIRM_GROUP" />
     </div>
 </template>
 
@@ -243,9 +313,11 @@ watch(
 .search-info {
     flex: 1;
     min-width: 0;
+    font-family: var(--p-lingo-font-family);
 }
 
 .search-name {
+    max-width: 100%;
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: var(--p-lingo-font-size-smallnormal);
     overflow: hidden;

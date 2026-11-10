@@ -6,12 +6,7 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
-import {
-    DRAFT_LIFECYCLE_STATE_ID,
-    RETIRED_LIFECYCLE_STATE_ID,
-} from "@/arches_lingo/constants.ts";
-
-import { dataIsScheme } from "@/arches_lingo/utils.ts";
+import { getDisplayedLifecycleStateName } from "@/arches_lingo/utils.ts";
 
 import type { TreeNode } from "primevue/treenode";
 
@@ -66,15 +61,10 @@ const lifecycleStateName = computed(
     () => node.data?.resource_instance_lifecycle_state_name,
 );
 
-const shouldShowLifecycleBadge = computed(() => {
-    if (!lifecycleStateId.value || !lifecycleStateName.value) return false;
-    if (dataIsScheme(node.data)) return true;
-
-    return (
-        lifecycleStateId.value === DRAFT_LIFECYCLE_STATE_ID ||
-        lifecycleStateId.value === RETIRED_LIFECYCLE_STATE_ID
-    );
-});
+const shouldShowLifecycleBadge = computed(
+    () =>
+        !!node.data && getDisplayedLifecycleStateName(node.data) !== undefined,
+);
 </script>
 
 <template>

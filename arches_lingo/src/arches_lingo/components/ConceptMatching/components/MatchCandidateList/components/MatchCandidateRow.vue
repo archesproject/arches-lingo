@@ -50,10 +50,25 @@ const pairedConcepts = computed(() => [
 ]);
 
 const selectionLabel = computed(() =>
-    $gettext("Select %{first} and %{second}", {
-        first: conceptName(candidate.concept_a),
-        second: conceptName(candidate.concept_b),
-    }),
+    $gettext(
+        "Select %{first} and %{second}",
+        {
+            first: conceptName(candidate.concept_a),
+            second: conceptName(candidate.concept_b),
+        },
+        true,
+    ),
+);
+
+const mergeLabel = computed(() =>
+    $gettext(
+        "Merge %{first} and %{second}",
+        {
+            first: conceptName(candidate.concept_a),
+            second: conceptName(candidate.concept_b),
+        },
+        true,
+    ),
 );
 
 const reason = computed(function () {
@@ -126,7 +141,6 @@ function onSelectionChange(isChecked: boolean): void {
                             name: routeNames.concept,
                             params: { id: concept.id },
                         }"
-                        :title="openInNewTabLabel(concept)"
                         :aria-label="openInNewTabLabel(concept)"
                     >
                         {{ conceptName(concept) }}
@@ -153,6 +167,7 @@ function onSelectionChange(isChecked: boolean): void {
             class="candidate-merge-button"
             icon="pi pi-sign-in"
             :label="$gettext('Merge')"
+            :aria-label="mergeLabel"
             :severity="SECONDARY"
             :outlined="true"
             @click="emit('merge-requested', { candidateId: candidate.id })"

@@ -7,6 +7,8 @@ import {
     provide,
     reactive,
     ref,
+    useId,
+    useTemplateRef,
     watch,
 } from "vue";
 import type { Ref } from "vue";
@@ -38,6 +40,7 @@ import {
     RETIRED_LIFECYCLE_STATE_ID,
 } from "@/arches_lingo/constants.ts";
 
+import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import {
     fetchLifecycleStates,
@@ -46,12 +49,14 @@ import {
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
+    getDisplayedLifecycleStateName,
     treeFromSchemes,
     navigateToSchemeOrConcept,
     filterTreeByLifecycleStates,
 } from "@/arches_lingo/utils.ts";
 
 import { useCappedTreeFilter } from "@/arches_lingo/components/tree/utils/capped-filter.ts";
+import { useTreeKeyboardNavigation } from "@/arches_lingo/components/tree/utils/tree-keyboard-navigation.ts";
 import LifecycleStateFilter from "@/arches_lingo/components/tree/components/LifecycleStateFilter.vue";
 
 import type {
@@ -92,13 +97,15 @@ const UNFOCUS = computed(() => $gettext("Unfocus"));
 const ADD_CHILD = computed(() => $gettext("Add child"));
 const DELETE = computed(() => $gettext("Delete"));
 const EXPORT = computed(() => $gettext("Export"));
+const PRESS_TAB_FOR_ACTIONS = computed(() => $gettext("Press Tab for actions"));
 
 const FILTER_CONCEPTS = computed(() => $gettext("Filter concepts"));
 const FILTER_CAPPED_MESSAGE = computed(() =>
     $gettext("Please refine your query."),
 );
-const SORT_ASCENDING = computed(() => $gettext("Sort ascending"));
-const SORT_DESCENDING = computed(() => $gettext("Sort descending"));
+const SORTED_ASCENDING = computed(() => $gettext("Sorted A to Z"));
+const SORTED_DESCENDING = computed(() => $gettext("Sorted Z to A"));
+const CONCEPT_HIERARCHY = computed(() => $gettext("Concept hierarchy"));
 
 const iconLabels = computed<IconLabels>(() =>
     Object.freeze({
@@ -113,6 +120,11 @@ const schemes = ref<Scheme[]>([]);
 const shouldSortByAscending = ref(route.query.sort !== "desc");
 const focusedNode = ref<TreeNode | null>(null);
 const focusedOccurrenceKey = ref<string | null>(null);
+const activeTreeItemKey = ref<string | null>(null);
+const treeActionsHintId = useId();
+const filterToolbar = useTemplateRef<HTMLElement>("filterToolbar");
+const { onTreeKeydown } = useTreeKeyboardNavigation(filterFromTreeTypeahead);
+const { announce } = useAnnouncer();
 
 const selectedKeys = ref<TreeSelectionKeys>({});
 const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
@@ -989,6 +1001,99 @@ async function onNodeSelect(node: TreeNode) {
     }
 }
 
+function onTreeFocusIn(event: FocusEvent) {
+    const treeRootElement = event.currentTarget as HTMLElement;
+    const focusedElement = event.target as HTMLElement;
+    const treeItemElement =
+        focusedElement.closest<HTMLElement>('[role="treeitem"]');
+
+    activeTreeItemKey.value = treeItemElement?.dataset.nodeKey ?? null;
+
+    if (treeItemElement && focusedElement !== treeItemElement) {
+        treeRootElement
+            .querySelectorAll<HTMLElement>('[role="treeitem"]')
+            .forEach((otherTreeItemElement) => {
+                otherTreeItemElement.tabIndex = -1;
+            });
+        treeItemElement.tabIndex = 0;
+    }
+}
+
+function onTreeFocusOut(event: FocusEvent) {
+    const treeRootElement = event.currentTarget as HTMLElement;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (!nextFocusedElement || !treeRootElement.contains(nextFocusedElement)) {
+        activeTreeItemKey.value = null;
+    }
+}
+
+async function filterFromTreeTypeahead(character: string) {
+    filterValue.value += character;
+    await nextTick();
+
+    const filterInputElement =
+        filterToolbar.value?.querySelector<HTMLInputElement>(
+            ".tree-filter-input",
+        );
+    filterInputElement?.focus();
+    filterInputElement?.setSelectionRange(
+        filterValue.value.length,
+        filterValue.value.length,
+    );
+}
+
+function getTreeItemAccessibleName(node: TreeNode) {
+    const lifecycleStateName = node.data
+        ? getDisplayedLifecycleStateName(node.data)
+        : undefined;
+
+    return [node.label, node.iconLabel, lifecycleStateName]
+        .filter(Boolean)
+        .join(", ");
+}
+
+function findDisplayedNodeByKey(
+    nodes: TreeNode[],
+    nodeKey: string,
+): TreeNode | undefined {
+    for (const node of nodes) {
+        if (node.key === nodeKey) {
+            return node;
+        }
+        const matchingDescendant = node.children
+            ? findDisplayedNodeByKey(node.children, nodeKey)
+            : undefined;
+        if (matchingDescendant) {
+            return matchingDescendant;
+        }
+    }
+}
+
+function onTreeKeydownCapture(event: KeyboardEvent) {
+    const treeItemElement = event.target as HTMLElement;
+    const nodeKey = treeItemElement.dataset.nodeKey;
+    if (
+        event.key !== "ArrowRight" ||
+        treeItemElement.getAttribute("role") !== "treeitem" ||
+        !nodeKey ||
+        expandedKeys.value[nodeKey]
+    ) {
+        return;
+    }
+
+    const node = findDisplayedNodeByKey(displayTree.value, nodeKey);
+    const hasUnloadedChildren = node?.leaf === false && !node.children?.length;
+    if (!node || !hasUnloadedChildren) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    expandedKeys.value = { ...expandedKeys.value, [nodeKey]: true };
+    onNodeExpand(node);
+}
+
 async function onNodeExpand(node: TreeNode) {
     const conceptId: string = node.data?.id;
     if (!conceptId || node.data?.top_concepts !== undefined) return;
@@ -998,8 +1103,22 @@ async function onNodeExpand(node: TreeNode) {
 
     const nodeKey: string = node.key as string;
     loadingNodeKeys.add(nodeKey);
+    announce(
+        $gettext(
+            "Loading narrower concepts of %{label}",
+            { label: node.label ?? "" },
+            true,
+        ),
+    );
     try {
         await conceptStore.loadChildren(conceptId);
+        announce(
+            $gettext(
+                "Narrower concepts of %{label} loaded",
+                { label: node.label ?? "" },
+                true,
+            ),
+        );
     } catch {
         toast.add({
             severity: ERROR,
@@ -1016,7 +1135,10 @@ async function onNodeExpand(node: TreeNode) {
 <template>
     <div class="concept-tree-layout">
         <div class="filter-container">
-            <div class="filter-toolbar">
+            <div
+                ref="filterToolbar"
+                class="filter-toolbar"
+            >
                 <InputText
                     v-model="filterValue"
                     class="tree-filter-input"
@@ -1027,7 +1149,9 @@ async function onNodeExpand(node: TreeNode) {
                 <Button
                     :icon="sortIcon"
                     :aria-label="
-                        shouldSortByAscending ? SORT_ASCENDING : SORT_DESCENDING
+                        shouldSortByAscending
+                            ? SORTED_ASCENDING
+                            : SORTED_DESCENDING
                     "
                     variant="text"
                     size="small"
@@ -1050,6 +1174,12 @@ async function onNodeExpand(node: TreeNode) {
             </Message>
         </div>
 
+        <span
+            :id="treeActionsHintId"
+            class="p-hidden-accessible"
+        >
+            {{ PRESS_TAB_FOR_ACTIONS }}
+        </span>
         <div
             v-if="!tree.length"
             class="skeleton-container"
@@ -1066,9 +1196,20 @@ async function onNodeExpand(node: TreeNode) {
             v-model:selection-keys="selectedKeys"
             v-model:expanded-keys="expandedKeys"
             :value="displayTree"
+            :aria-label="CONCEPT_HIERARCHY"
             class="concept-tree"
             selection-mode="single"
             :pt="{
+                node: ({
+                    instance,
+                    context,
+                }: TreePassThroughMethodOptions) => ({
+                    'data-node-key': instance.node.key,
+                    'aria-label': getTreeItemAccessibleName(instance.node),
+                    'aria-describedby': treeActionsHintId,
+                    'aria-selected': context.selected,
+                    'aria-checked': undefined,
+                }),
                 nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
                     let className;
 
@@ -1096,6 +1237,10 @@ async function onNodeExpand(node: TreeNode) {
             }"
             @node-select="onNodeSelect"
             @node-expand="onNodeExpand"
+            @focusin="onTreeFocusIn"
+            @focusout="onTreeFocusOut"
+            @keydown="onTreeKeydown"
+            @keydown.capture="onTreeKeydownCapture"
         >
             <template #default="slotProps">
                 <div :id="`tree-node-${slotProps.node.key}`">
@@ -1111,6 +1256,9 @@ async function onNodeExpand(node: TreeNode) {
                         :add-child-label="ADD_CHILD"
                         :delete-label="DELETE"
                         :export-label="EXPORT"
+                        :action-tab-index="
+                            slotProps.node.key === activeTreeItemKey ? 0 : -1
+                        "
                     />
                 </div>
             </template>

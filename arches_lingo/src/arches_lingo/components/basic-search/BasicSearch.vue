@@ -58,6 +58,12 @@ const isLoading = ref(false);
 const isLoadingAdditionalResults = ref(false);
 const shouldShowClearInputButton = ref(false);
 
+// keepOverlayVisible re-opens the overlay whenever it hides while focus is
+// still in the search, so the sort controls can be used without losing the
+// results. Escape must still dismiss it (WCAG 1.4.13), so a hide started by
+// Escape is let through. AutoComplete hides on a timeout, after the keydown.
+let isEscapeDismissPending = false;
+
 const isFloatingResults = computed(() => props.resultsDisplay === "floating");
 
 const resultsHostClass = computed(() => {
@@ -218,13 +224,24 @@ async function fetchData(
     }
 }
 
+function onSearchKeydown(event: KeyboardEvent) {
+    isEscapeDismissPending = event.key === "Escape";
+}
+
 function onDocumentPointerDown(event: PointerEvent) {
+    isEscapeDismissPending = false;
+
     if (!isInsideSearch(event.target)) {
         hideOverlay();
     }
 }
 
 function keepOverlayVisible() {
+    if (isEscapeDismissPending) {
+        isEscapeDismissPending = false;
+        return;
+    }
+
     if (!query.value || !searchResults.value.length) {
         return;
     }
@@ -325,6 +342,7 @@ watch(searchResults, () => {
     <div
         ref="root"
         class="basic-search"
+        @keydown="onSearchKeydown"
     >
         <div class="search-input-row">
             <i
@@ -341,6 +359,7 @@ watch(searchResults, () => {
                 :delay="500"
                 :loading="isLoading && !isLoadingAdditionalResults"
                 :placeholder="$gettext('Quick Search')"
+                :aria-label="$gettext('Quick Search')"
                 :pt="autoCompletePt"
                 :suggestions="searchResults"
                 :virtual-scroller-options="{

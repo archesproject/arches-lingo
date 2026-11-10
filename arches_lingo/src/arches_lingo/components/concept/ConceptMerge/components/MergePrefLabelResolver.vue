@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useId } from "vue";
+
 import { useGettext } from "vue3-gettext";
 import Message from "primevue/message";
 import RadioButton from "primevue/radiobutton";
@@ -23,6 +25,11 @@ const emit = defineEmits<{
 }>();
 
 const { $gettext } = useGettext();
+const languageHeadingIdPrefix = useId();
+
+function getLanguageHeadingId(languageCode: string) {
+    return `${languageHeadingIdPrefix}-${languageCode}`;
+}
 
 function candidateSourceText(candidate: PrefLabelCandidate) {
     if (candidate.isFromSurvivor) {
@@ -52,10 +59,15 @@ function candidateSourceText(candidate: PrefLabelCandidate) {
             v-for="conflict in conflicts"
             :key="conflict.languageCode"
             class="pref-label-conflict"
+            role="radiogroup"
+            :aria-labelledby="getLanguageHeadingId(conflict.languageCode)"
         >
-            <span class="pref-label-language">{{
-                conflict.languageLabel
-            }}</span>
+            <span
+                :id="getLanguageHeadingId(conflict.languageCode)"
+                class="pref-label-language"
+            >
+                {{ conflict.languageLabel }}
+            </span>
             <label
                 v-for="candidate in conflict.candidates"
                 :key="candidate.tileId"

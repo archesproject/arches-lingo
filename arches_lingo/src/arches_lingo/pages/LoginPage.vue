@@ -14,13 +14,15 @@ import LoginForm from "@/arches_lingo/components/login/LoginForm.vue";
     display: flex;
     flex-direction: column;
     justify-content: center;
+    justify-content: safe center;
     align-items: center;
+    box-sizing: border-box;
     height: 100%;
     background: var(--p-form-field-disabled-background);
     overflow: auto;
-    padding-bottom: 12rem;
+    padding: 1rem 1rem 12rem;
     @media (max-width: 960px) {
-        padding-bottom: 0;
+        padding-bottom: 1rem;
     }
 }
 
