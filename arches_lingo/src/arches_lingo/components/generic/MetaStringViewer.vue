@@ -33,8 +33,11 @@ const openEditor =
 const updateAfterComponentDeletion = inject<
     (componentName: string, tileId: string) => void
 >("updateAfterComponentDeletion");
-const refreshReportSection = inject<(componentName: string) => void>(
+const refreshReportSection = inject<(componentName: string) => Promise<void>>(
     "refreshReportSection",
+);
+const focusSectionHeading = inject<(componentName: string) => void>(
+    "focusSectionHeading",
 );
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 const { isEditor } = useUserStore();
@@ -55,6 +58,7 @@ const canEditResourceInstances = computed(() => {
 });
 
 const rowIdPrefix = useId();
+const confirmDialogHeaderId = useId();
 const expandedRows = ref([]);
 const isDeletePending = ref(false);
 const tableContainerRef = ref<HTMLElement | null>(null);
@@ -64,6 +68,20 @@ let scrollableTableBody: HTMLElement | null = null;
 
 function getRowElementId(tileId: string, part: string): string {
     return `${rowIdPrefix}-${tileId}-${part}`;
+}
+
+// PrimeVue's default toggle name is untranslated and reads as the opposite state.
+function getRowTogglePassThrough({
+    parent,
+}: {
+    parent: { props: { rowData: { tileid: string } } };
+}) {
+    const tileId = parent.props.rowData.tileid;
+    return {
+        id: getRowElementId(tileId, "details"),
+        "aria-label": $gettext("Details"),
+        "aria-labelledby": `${getRowElementId(tileId, "details")} ${getRowElementId(tileId, "name")}`,
+    };
 }
 
 function updateScrollShadow() {
@@ -106,11 +124,12 @@ async function deleteSectionValue(tileId: string) {
 
         await deleteLingoTile(props.graphSlug, props.nodegroupAlias, tileId);
 
-        refreshReportSection!(props.componentName);
+        await refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, tileId);
         refreshSchemeHierarchy!();
 
         confirm.close();
+        focusSectionHeading!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -128,6 +147,7 @@ async function deleteSectionValue(tileId: string) {
     <ConfirmDialog
         :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
         :group="metaStringText.name"
+        :aria-labelledby="confirmDialogHeaderId"
     >
         <template #container="{ message, rejectCallback }">
             <div
@@ -136,7 +156,10 @@ async function deleteSectionValue(tileId: string) {
                 @mousedown.stop
                 @mouseup.stop
             >
-                <div class="confirm-dialog-header">
+                <div
+                    :id="confirmDialogHeaderId"
+                    class="confirm-dialog-header"
+                >
                     {{ message.header }}
                 </div>
                 <div class="confirm-dialog-message">
@@ -148,6 +171,7 @@ async function deleteSectionValue(tileId: string) {
                         :disabled="isDeletePending"
                         severity="secondary"
                         outlined
+                        autofocus
                         @click="
                             () => {
                                 rejectCallback();
@@ -183,7 +207,14 @@ async function deleteSectionValue(tileId: string) {
             <Column
                 expander
                 style="width: 3rem"
-            />
+                :pt="{ rowToggleButton: getRowTogglePassThrough }"
+            >
+                <template #header>
+                    <span class="p-hidden-accessible">{{
+                        $gettext("Details")
+                    }}</span>
+                </template>
+            </Column>
             <Column
                 :header="props.metaStringText.name"
                 :field="props.metaStringText.sortFields?.name"

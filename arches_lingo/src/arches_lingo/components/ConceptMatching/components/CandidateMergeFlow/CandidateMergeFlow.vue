@@ -20,7 +20,8 @@ import type { MergeDirection } from "@/arches_lingo/components/ConceptMatching/t
 
 const CONCEPT_GRAPH_SLUG = "concept";
 
-const { conceptA, conceptB } = defineProps<{
+const { visible, conceptA, conceptB } = defineProps<{
+    visible: boolean;
     conceptA: MatchedConceptSummary;
     conceptB: MatchedConceptSummary;
 }>();
@@ -28,6 +29,7 @@ const { conceptA, conceptB } = defineProps<{
 const emit = defineEmits<{
     (event: "merged"): void;
     (event: "cancel"): void;
+    (event: "after-hide"): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -70,15 +72,18 @@ function onMerged(): void {
 <template>
     <MergeDirectionDialog
         v-if="!survivorResource || !mergeDirection"
+        :visible="visible"
         :concept-a="conceptA"
         :concept-b="conceptB"
         :is-loading="isPreparingMerge"
         @direction-chosen="onDirectionChosen"
         @cancel="emit('cancel')"
+        @after-hide="emit('after-hide')"
     />
 
     <ConceptMergeDialog
         v-else
+        :visible="visible"
         :graph-slug="CONCEPT_GRAPH_SLUG"
         :survivor-concept="survivorResource"
         :survivor-label="labelOf(mergeDirection.survivor)"
@@ -86,5 +91,6 @@ function onMerged(): void {
         :preselected-concept-id="mergeDirection.absorbed.id"
         @merged="onMerged"
         @cancel="emit('cancel')"
+        @after-hide="emit('after-hide')"
     />
 </template>

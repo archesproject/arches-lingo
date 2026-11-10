@@ -13,6 +13,8 @@ import SavedSearches from "@/arches_lingo/components/advanced-search/SavedSearch
 import ConceptSets from "@/arches_lingo/components/advanced-search/ConceptSets.vue";
 import PanelToggleHeader from "@/arches_lingo/components/generic/PanelToggleHeader.vue";
 
+import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
+
 import {
     executeAdvancedSearch,
     fetchAdvancedSearchOptions,
@@ -22,6 +24,7 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
     LABEL_TYPE_LIST_ID,
+    NARROW_SCREEN_MEDIA_QUERY,
     NOTE_TYPE_LIST_ID,
     CONCEPT_TYPE_LIST_ID,
 } from "@/arches_lingo/constants.ts";
@@ -53,6 +56,7 @@ const { isAnonymous } = storeToRefs(userStore);
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
 
 const conceptSetsRef =
     useTemplateRef<InstanceType<typeof ConceptSets>>("conceptSetsRef");
@@ -279,10 +283,12 @@ onMounted(loadSearchOptions);
 
         <Splitter
             class="search-splitter"
+            :layout="isNarrowScreen ? 'vertical' : 'horizontal'"
             :pt="
                 getSplitterGutterPassThrough({
                     label: $gettext('Resize the Saved Searches & Sets panel'),
                     primaryPanelId: 'advanced-search-content',
+                    layout: isNarrowScreen ? 'vertical' : 'horizontal',
                     isVisible: showSidePanel && !isAnonymous,
                 })
             "
@@ -470,5 +476,11 @@ onMounted(loadSearchOptions);
 
 .advanced-search :deep(.p-dialog .p-button) {
     border-radius: 0.125rem;
+}
+
+@media (max-width: 960px) {
+    .search-content {
+        overflow: auto;
+    }
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useId } from "vue";
+import { nextTick, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -8,6 +8,7 @@ import Textarea from "primevue/textarea";
 
 import { upsertSchemeAttribution } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { focusFirstElementById } from "@/arches_lingo/utils.ts";
 
 type SchemeAttribution = {
     scheme_resource_instance_id: string;
@@ -31,19 +32,25 @@ const toast = useToast();
 const { $gettext } = useGettext();
 
 const attributionLabelId = useId();
+const attributionInputId = useId();
+const attributionEditButtonId = useId();
 
 const isEditingAttribution = ref(false);
 const attributionDraft = ref("");
 const isSavingAttribution = ref(false);
 
-function editAttribution() {
+async function editAttribution() {
     attributionDraft.value = props.schemeAttribution?.attribution ?? "";
     isEditingAttribution.value = true;
+    await nextTick();
+    focusFirstElementById(attributionInputId);
 }
 
-function cancelEditingAttribution() {
+async function cancelEditingAttribution() {
     attributionDraft.value = "";
     isEditingAttribution.value = false;
+    await nextTick();
+    focusFirstElementById(attributionEditButtonId, attributionLabelId);
 }
 
 async function saveAttribution() {
@@ -87,6 +94,7 @@ async function saveAttribution() {
         <template v-if="isEditingAttribution">
             <div class="attribution-input-wrapper">
                 <Textarea
+                    :id="attributionInputId"
                     v-model="attributionDraft"
                     :aria-labelledby="attributionLabelId"
                     :rows="3"
@@ -128,6 +136,7 @@ async function saveAttribution() {
             </span>
             <Button
                 v-if="canEditResourceInstances"
+                :id="attributionEditButtonId"
                 icon="pi pi-pencil"
                 variant="text"
                 size="small"

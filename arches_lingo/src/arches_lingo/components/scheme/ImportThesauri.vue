@@ -123,6 +123,7 @@ async function submit() {
             <ProgressSpinner
                 v-if="loading"
                 style="display: flex"
+                :aria-label="$gettext('Importing')"
             />
             <div v-else>
                 <div class="form-field">

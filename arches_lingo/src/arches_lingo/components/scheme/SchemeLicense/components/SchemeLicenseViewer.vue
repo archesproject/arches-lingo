@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, inject } from "vue";
+import { computed, inject, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
@@ -20,6 +20,7 @@ const props = defineProps<{
 }>();
 
 const { $gettext } = useGettext();
+const rightsStatementLabelId = useId();
 
 const openEditor =
     inject<(componentName: string, tileId: string | undefined) => void>(
@@ -81,27 +82,17 @@ const buttonIcon = computed(() => {
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
 
-            <Button
+            <DisabledReasonButton
                 v-if="isEditor"
-                v-tooltip.top="{
-                    disabled: Boolean(!isCreateDisabled),
-                    value: createTooltipText,
-                    showDelay: 300,
-                    pt: {
-                        text: {
-                            style: { fontFamily: 'var(--p-lingo-font-family)' },
-                        },
-                        arrow: { style: { display: 'none' } },
-                    },
-                }"
-                :disabled="isCreateDisabled"
+                :is-disabled="isCreateDisabled"
+                :disabled-reason="createTooltipText"
                 :label="buttonLabel"
                 :icon="buttonIcon"
                 class="add-button"
                 @click="
                     openEditor!(props.componentName, props.tileData?.tileid)
                 "
-            ></Button>
+            />
         </div>
 
         <div
@@ -129,10 +120,14 @@ const buttonIcon = computed(() => {
             <div
                 v-if="props.tileData?.aliased_data.right_statement"
                 class="statement-section"
+                role="group"
+                :aria-labelledby="rightsStatementLabelId"
             >
-                <span class="group-label">{{
-                    $gettext("Rights Statement")
-                }}</span>
+                <span
+                    :id="rightsStatementLabelId"
+                    class="group-label"
+                    >{{ $gettext("Rights Statement") }}</span
+                >
                 <div class="right-statement-group">
                     <GenericWidget
                         node-alias="right_statement_content"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useId, watch } from "vue";
+import { computed, nextTick, ref, useId, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -17,6 +17,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
 import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
+import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
     deleteLingoResource,
     fetchResourceReferenceCount,
@@ -26,10 +27,14 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
     ERROR,
+    NARROW_SCREEN_MEDIA_QUERY,
     SECONDARY,
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
-import { getSplitterGutterPassThrough } from "@/arches_lingo/utils.ts";
+import {
+    focusWithoutScrolling,
+    getSplitterGutterPassThrough,
+} from "@/arches_lingo/utils.ts";
 
 import type {
     PaginatedResourceListResponse,
@@ -48,6 +53,7 @@ const props = defineProps<{
     showGraphType?: boolean;
     refreshTrigger?: number;
     editorEnabled?: boolean;
+    isEditorLoading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -56,6 +62,7 @@ const emit = defineEmits<{
 
 const toast = useToast();
 const confirm = useConfirm();
+const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
 const { $gettext, interpolate, $ngettext } = useGettext();
 
 const isLoading = ref(true);
@@ -70,6 +77,10 @@ const listPanelId = useId();
 const isCreatingNew = ref(false);
 const editorInstanceKey = ref(0);
 const pendingSavedResourceInstanceId = ref<string | null>(null);
+const splitterRef = ref<InstanceType<typeof Splitter> | null>(null);
+const pageTitleRef = ref<HTMLElement | null>(null);
+
+let editorTriggerElement: HTMLElement | null = null;
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -147,12 +158,29 @@ function onSearchInput() {
     }, 400);
 }
 
+// The Splitter sizes panels only on mount, and remounting it would drop focus.
+async function resetPanelSizes() {
+    await nextTick();
+    splitterRef.value?.resetState();
+}
+
+function openEditor() {
+    if (!isEditorOpen.value) {
+        editorTriggerElement =
+            document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
+    }
+    isEditorOpen.value = true;
+    editorInstanceKey.value++;
+    resetPanelSizes();
+}
+
 function onRowSelect(event: { data: ResourceSummary }) {
     isCreatingNew.value = false;
     selectedResource.value = event.data;
     if (props.editorEnabled !== false) {
-        isEditorOpen.value = true;
-        editorInstanceKey.value++;
+        openEditor();
     }
     emit("select-resource", event.data);
 }
@@ -160,15 +188,28 @@ function onRowSelect(event: { data: ResourceSummary }) {
 function openBlankEditor() {
     selectedResource.value = null;
     isCreatingNew.value = true;
-    isEditorOpen.value = true;
-    editorInstanceKey.value++;
+    openEditor();
 }
 
-function closeEditor() {
+function focusPageTitle() {
+    if (pageTitleRef.value) {
+        focusWithoutScrolling(pageTitleRef.value);
+    }
+}
+
+async function closeEditor() {
     isEditorOpen.value = false;
     isEditorMaximized.value = false;
     selectedResource.value = null;
     isCreatingNew.value = false;
+    await resetPanelSizes();
+
+    if (editorTriggerElement?.isConnected) {
+        editorTriggerElement.focus();
+    } else {
+        focusPageTitle();
+    }
+    editorTriggerElement = null;
 }
 
 async function confirmDeleteResource(resource: ResourceSummary) {
@@ -234,7 +275,8 @@ async function confirmDeleteResource(resource: ResourceSummary) {
                     summary: $gettext("Resource deleted"),
                 });
 
-                loadResources();
+                await loadResources();
+                focusPageTitle();
             } catch (error) {
                 toast.add({
                     severity: ERROR,
@@ -258,12 +300,14 @@ defineExpose({
 <template>
     <div class="resource-list-editor">
         <Splitter
-            :key="isEditorOpen ? 'open' : 'closed'"
+            ref="splitterRef"
             class="resource-splitter"
+            :layout="isNarrowScreen ? 'vertical' : 'horizontal'"
             :pt="
                 getSplitterGutterPassThrough({
                     label: $gettext('Resize the editor panel'),
                     primaryPanelId: listPanelId,
+                    layout: isNarrowScreen ? 'vertical' : 'horizontal',
                     isVisible: !isEditorMaximized,
                 })
             "
@@ -280,7 +324,12 @@ defineExpose({
                 >
                     <div class="list-header">
                         <div class="list-header-toolbar">
-                            <h1 class="page-title">{{ pageTitle }}</h1>
+                            <h1
+                                ref="pageTitleRef"
+                                class="page-title"
+                            >
+                                {{ pageTitle }}
+                            </h1>
                             <div class="header-buttons">
                                 <slot
                                     name="list-actions"
@@ -415,7 +464,7 @@ defineExpose({
                 <ComponentEditor
                     :key="editorInstanceKey"
                     :is-editor-maximized="isEditorMaximized"
-                    :is-editor-loading="false"
+                    :is-editor-loading="isEditorLoading ?? false"
                     :is-form-editor="true"
                     :header-title="editorTitle"
                     @maximize="isEditorMaximized = true"

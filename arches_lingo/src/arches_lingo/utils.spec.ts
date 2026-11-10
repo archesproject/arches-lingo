@@ -13,7 +13,9 @@ import {
     dataIsScheme,
     dataIsConcept,
     focusNeighborAfterRemoval,
+    focusWithoutScrolling,
     getSplitterGutterPassThrough,
+    scaleWithRootFontSize,
     treeFromSchemes,
 } from "@/arches_lingo/utils.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
@@ -300,5 +302,31 @@ describe("Focus after removing a list item", () => {
 
     it("falls back when the list is now empty", async () => {
         expect(await getFocusTarget([], 0)).toBe("empty");
+    });
+});
+
+describe("Focus and sizing helpers", () => {
+    afterEach(() => {
+        document.documentElement.style.fontSize = "";
+        document.body.replaceChildren();
+    });
+
+    it("scales a pixel size with the root font size", () => {
+        document.documentElement.style.fontSize = "20px";
+        expect(scaleWithRootFontSize(36)).toBe(45);
+    });
+
+    it("makes a heading focusable but leaves a button's tab stop alone", () => {
+        const heading = document.createElement("h2");
+        const button = document.createElement("button");
+        document.body.append(heading, button);
+
+        focusWithoutScrolling(heading);
+        expect(document.activeElement).toBe(heading);
+        expect(heading.getAttribute("tabindex")).toBe("-1");
+
+        focusWithoutScrolling(button);
+        expect(document.activeElement).toBe(button);
+        expect(button.hasAttribute("tabindex")).toBe(false);
     });
 });

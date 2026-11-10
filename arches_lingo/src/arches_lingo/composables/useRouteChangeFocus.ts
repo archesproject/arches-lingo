@@ -2,6 +2,7 @@ import { nextTick, onUnmounted } from "vue";
 
 import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 import { MAIN_CONTENT_ID } from "@/arches_lingo/constants.ts";
+import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 
 import type { Ref } from "vue";
 import type { Router } from "vue-router";
@@ -46,13 +47,6 @@ function waitForPageHeading(
             characterData: true,
         });
     });
-}
-
-function focusWithoutScrolling(element: HTMLElement) {
-    if (!element.hasAttribute("tabindex")) {
-        element.setAttribute("tabindex", "-1");
-    }
-    element.focus({ preventScroll: true });
 }
 
 /**
