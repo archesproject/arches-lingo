@@ -11,13 +11,16 @@ from arches.app.utils.response import JSONErrorResponse
 
 from arches_lingo.mixins.permissions import ReconciliationAccessMixin
 from arches_lingo.utils.reconciliation.candidates import reconcile_queries
+from arches_lingo.utils.reconciliation.exceptions import (
+    ReconciliationRequestError,
+)
 from arches_lingo.utils.reconciliation.extension import (
     extend_concepts,
     propose_properties,
 )
 from arches_lingo.utils.reconciliation.manifest import build_service_manifest
 from arches_lingo.utils.reconciliation.preview import build_concept_preview
-from arches_lingo.utils.reconciliation.suggest import SUGGEST_SERVICES
+from arches_lingo.utils.reconciliation.suggest import answer_suggest_request
 from arches_lingo.utils.reconciliation.visibility import (
     resolve_reconcilable_scheme_id,
 )
@@ -69,8 +72,8 @@ class ReconciliationServiceView(ReconciliationAccessMixin, View):
             if "extend" in parameters:
                 return JsonResponse(extend_concepts(parameters["extend"], scheme_id))
             return JsonResponse(reconcile_queries(parameters["queries"], scheme_id))
-        except ValueError as value_error:
-            return invalid_request_response(str(value_error))
+        except ReconciliationRequestError as request_error:
+            return invalid_request_response(str(request_error))
 
 
 class ReconciliationPropertyProposalView(ReconciliationAccessMixin, View):
@@ -81,8 +84,8 @@ class ReconciliationPropertyProposalView(ReconciliationAccessMixin, View):
             return JsonResponse(
                 propose_properties(request.GET.get("type"), request.GET.get("limit"))
             )
-        except ValueError as value_error:
-            return invalid_request_response(str(value_error))
+        except ReconciliationRequestError as request_error:
+            return invalid_request_response(str(request_error))
 
 
 class ReconciliationSuggestView(ReconciliationAccessMixin, View):
@@ -90,23 +93,19 @@ class ReconciliationSuggestView(ReconciliationAccessMixin, View):
     global or scoped to one scheme."""
 
     def get(self, request, suggest_kind, scheme_identifier=None):
-        suggest_service = SUGGEST_SERVICES.get(suggest_kind)
-        if suggest_service is None:
-            raise Http404()
-        scope_scheme_id = resolve_scheme_scope(scheme_identifier)
-
-        suggest_arguments = {
-            "prefix": request.GET.get("prefix"),
-            "raw_cursor": request.GET.get("cursor"),
-        }
-        if suggest_kind == "entity":
-            suggest_arguments["scheme_id"] = request.GET.get("type")
-        if suggest_kind in ("entity", "type"):
-            suggest_arguments["scope_scheme_id"] = scope_scheme_id
         try:
-            return JsonResponse(suggest_service(**suggest_arguments))
-        except ValueError as value_error:
-            return invalid_request_response(str(value_error))
+            suggestions = answer_suggest_request(
+                suggest_kind,
+                prefix=request.GET.get("prefix"),
+                raw_cursor=request.GET.get("cursor"),
+                scheme_id=request.GET.get("type"),
+                scope_scheme_id=resolve_scheme_scope(scheme_identifier),
+            )
+        except ReconciliationRequestError as request_error:
+            return invalid_request_response(str(request_error))
+        if suggestions is None:
+            raise Http404()
+        return JsonResponse(suggestions)
 
 
 @method_decorator(xframe_options_exempt, name="dispatch")

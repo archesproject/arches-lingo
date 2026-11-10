@@ -23,6 +23,10 @@ SUGGESTED_BATCH_SIZE = 10
 SUGGEST_KINDS = ("entity", "type", "property")
 MAX_QUERIES_PER_REQUEST = 50
 MAX_QUERY_LENGTH = 255
+# Every value is looked up or compared, so a query's properties are bounded too.
+MAX_PROPERTY_VALUES_PER_QUERY = 25
+# Room for a long exactMatch URI.
+MAX_PROPERTY_VALUE_LENGTH = 2048
 # The reconciliation spec defines the preview iframe size as unitless pixel
 # counts, so these cannot be relative units.
 PREVIEW_WIDTH_PIXELS = 400
@@ -44,7 +48,7 @@ PROPERTY_SETTINGS = [
 
 
 def get_public_server_address():
-    return settings.PUBLIC_SERVER_ADDRESS.rstrip("/")
+    return (getattr(settings, "PUBLIC_SERVER_ADDRESS", None) or "").rstrip("/")
 
 
 def reconciliation_service_url(scheme_identifier=None):

@@ -1,5 +1,6 @@
 import json
 import uuid
+from unittest import mock
 
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.test.client import Client
@@ -26,6 +27,7 @@ from arches_lingo.const import (
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_TYPE_NODE,
     SCHEMES_GRAPH_ID,
+    SCOPE_NOTE_URI,
     STATEMENT_CONTENT_NODE,
     STATEMENT_LANGUAGE_NODE,
     STATEMENT_NODEGROUP,
@@ -34,6 +36,7 @@ from arches_lingo.const import (
     URI_NODEGROUP,
 )
 from arches_lingo.checks import (
+    check_reconciliation_is_rate_limited,
     check_reconciliation_public_server_address,
     check_reconciliation_rate_limit,
 )
@@ -50,10 +53,14 @@ from arches_lingo.utils.reconciliation.candidates import (
     ScoredCandidate,
     parse_reconciliation_queries,
 )
+from arches_lingo.utils.reconciliation.exceptions import (
+    ReconciliationRequestError,
+)
 from arches_lingo.utils.reconciliation.manifest import (
+    MAX_PROPERTY_VALUE_LENGTH,
+    MAX_PROPERTY_VALUES_PER_QUERY,
     MAX_QUERIES_PER_REQUEST,
     SUGGEST_KINDS,
-    list_reconcilable_schemes,
 )
 from arches_lingo.utils.reconciliation.suggest import SUGGEST_SERVICES
 from arches_lingo.utils.reconciliation.scoring import (
@@ -132,17 +139,6 @@ class ReconciliationManifestTests(SchemeWithConceptsTestCase):
     def setUp(self):
         self.client.logout()
 
-    def test_lists_only_published_and_locked_schemes_by_display_name(self):
-        self.assertEqual(
-            list_reconcilable_schemes(),
-            [
-                # The English altLabel outranks the French prefLabel in English.
-                {"id": str(self.locked_scheme.pk), "name": "Alpha Scheme"},
-                {"id": str(self.scheme.pk), "name": "Test Scheme"},
-                {"id": str(self.unlabelled_scheme.pk), "name": "Unlabelled Scheme"},
-            ],
-        )
-
     @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False)
     def test_anonymous_cross_origin_global_manifest(self):
         response = self.client.get(reverse("api-lingo-reconcile"))
@@ -161,7 +157,16 @@ class ReconciliationManifestTests(SchemeWithConceptsTestCase):
         self.assertEqual(
             manifest["schemaSpace"], "http://www.w3.org/2004/02/skos/core#"
         )
-        self.assertEqual(len(manifest["defaultTypes"]), 3)
+        # Only published and locked schemes, by display name.
+        self.assertEqual(
+            manifest["defaultTypes"],
+            [
+                # The English altLabel outranks the French prefLabel in English.
+                {"id": str(self.locked_scheme.pk), "name": "Alpha Scheme"},
+                {"id": str(self.scheme.pk), "name": "Test Scheme"},
+                {"id": str(self.unlabelled_scheme.pk), "name": "Unlabelled Scheme"},
+            ],
+        )
         self.assertEqual(
             manifest["preview"]["url"],
             "https://lingo.example.org/api/lingo/reconcile/preview?id={{id}}",
@@ -275,9 +280,25 @@ class ReconciliationManifestTests(SchemeWithConceptsTestCase):
                     [] if is_valid else ["arches_lingo.E001"],
                 )
 
-    def test_check_warns_about_a_local_public_server_address(self):
+    def test_check_warns_while_enabled_without_a_rate_limit(self):
+        for rate_limit, is_enabled, expected_ids in [
+            (None, True, ["arches_lingo.W002"]),
+            ("120/m", True, []),
+            (None, False, []),
+        ]:
+            with self.subTest(rate_limit=rate_limit, is_enabled=is_enabled):
+                with override_settings(
+                    LINGO_RECONCILIATION_RATE_LIMIT=rate_limit,
+                    LINGO_RECONCILIATION_ENABLED=is_enabled,
+                ):
+                    warnings = check_reconciliation_is_rate_limited(None)
+                self.assertEqual([warning.id for warning in warnings], expected_ids)
+
+    def test_check_warns_about_an_empty_or_local_public_server_address(self):
         for public_server_address, is_enabled, expected_ids in [
             ("https://lingo.example.org/", True, []),
+            ("", True, ["arches_lingo.W001"]),
+            (None, True, ["arches_lingo.W001"]),
             ("http://localhost:8000/", True, ["arches_lingo.W001"]),
             ("http://127.0.0.1:8000/", True, ["arches_lingo.W001"]),
             ("http://localhost:8000/", False, []),
@@ -302,37 +323,15 @@ class ReconciliationScoringTests(SimpleTestCase):
         self.assertEqual(score_match(best_rank=7000, best_similarity=0.2), 16)
         self.assertEqual(score_match(best_rank=7000, best_similarity=None), 0)
 
-    def test_only_an_unambiguous_direct_pref_label_match_is_automatic(self):
-        exact = ScoredCandidate(concept_id="exact", tier=0, score=100)
-        other_exact = ScoredCandidate(concept_id="other", tier=0, score=100)
-        alt_label = ScoredCandidate(concept_id="alt", tier=1, score=90)
-        substitute = ScoredCandidate(
-            concept_id="survivor", tier=0, score=100, substitutes_for_concept_id="old"
-        )
-
-        self.assertIs(decide_automatic_match([exact, alt_label]), exact)
-        self.assertIsNone(decide_automatic_match([exact, other_exact]))
-        self.assertIsNone(decide_automatic_match([alt_label]))
-        self.assertIsNone(decide_automatic_match([substitute]))
-
-    def test_properties_boost_penalize_and_settle_matches(self):
-        exact = ScoredCandidate(concept_id="exact", tier=0, score=100)
-        contradicted_exact = ScoredCandidate(
-            concept_id="homograph", tier=0, score=70, is_contradicted=True
-        )
-        identified = ScoredCandidate(
-            concept_id="identified", tier=8, score=100, is_identified=True
-        )
-        retired_exact = ScoredCandidate(
-            concept_id="retired", tier=0, score=100, is_retired=True
-        )
-
+    def test_property_adjustments_stay_within_the_score_range(self):
         self.assertEqual(adjust_score_for_properties(95, 2, False), 100)
         self.assertEqual(adjust_score_for_properties(20, 0, True), 0)
         self.assertEqual(adjust_score_for_properties(60, 1, True), 40)
-        self.assertIs(decide_automatic_match([exact, contradicted_exact]), exact)
-        self.assertIs(decide_automatic_match([exact, identified]), identified)
-        self.assertIsNone(decide_automatic_match([retired_exact]))
+
+    def test_an_exact_alternate_label_alone_is_never_automatic(self):
+        alt_label = ScoredCandidate(concept_id="alt", tier=1, score=90)
+
+        self.assertIsNone(decide_automatic_match([alt_label]))
 
 
 class ReconciliationQueryParsingTests(SimpleTestCase):
@@ -401,10 +400,37 @@ class ReconciliationQueryParsingTests(SimpleTestCase):
             json.dumps({"q0": {"query": "crane", "properties": {"pid": "broader"}}}),
             json.dumps({"q0": {"query": "crane", "properties": [{"v": "birds"}]}}),
             json.dumps({"q0": {"query": "crane", "properties": [{"pid": "colour"}]}}),
+            json.dumps(
+                {
+                    "q0": {
+                        "query": "crane",
+                        "properties": [
+                            {
+                                "pid": "exactMatch",
+                                "v": ["http://example.org/crane"]
+                                * (MAX_PROPERTY_VALUES_PER_QUERY + 1),
+                            }
+                        ],
+                    }
+                }
+            ),
+            json.dumps(
+                {
+                    "q0": {
+                        "query": "crane",
+                        "properties": [
+                            {
+                                "pid": "notation",
+                                "v": "9" * (MAX_PROPERTY_VALUE_LENGTH + 1),
+                            }
+                        ],
+                    }
+                }
+            ),
         ]
         for malformed_batch in malformed_batches:
             with self.subTest(malformed_batch=malformed_batch[:40]):
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ReconciliationRequestError):
                     parse_reconciliation_queries(malformed_batch)
 
 
@@ -557,13 +583,30 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
             absorbed_concept_id=self.concepts[4].pk,
             survivor_concept_id=self.concepts[1].pk,
         )
+        # A merge leaves the identifier behind on the retired concept.
+        TileModel.objects.create(
+            resourceinstance=self.concepts[4],
+            nodegroup_id=IDENTIFIER_NODEGROUP,
+            data={IDENTIFIER_CONTENT_NODE: "C-5"},
+        )
 
-        results = self.reconcile({"q0": {"query": "Concept 5"}})["q0"]["result"]
+        batch = self.reconcile(
+            {
+                "by_label": {"query": "Concept 5"},
+                "by_identifier": {
+                    "query": "no such label",
+                    "properties": [{"pid": "notation", "v": "C-5"}],
+                },
+            }
+        )
 
-        self.assertEqual(results[0]["id"], str(self.concepts[1].pk))
-        self.assertEqual(results[0]["score"], 100)
-        self.assertFalse(results[0]["match"])
-        self.assertNotIn(str(self.concepts[4].pk), self.result_ids(results))
+        for query_key in ["by_label", "by_identifier"]:
+            with self.subTest(query_key=query_key):
+                results = batch[query_key]["result"]
+                self.assertEqual(results[0]["id"], str(self.concepts[1].pk))
+                self.assertEqual(results[0]["score"], 100)
+                self.assertFalse(results[0]["match"])
+                self.assertNotIn(str(self.concepts[4].pk), self.result_ids(results))
 
     def test_cross_scheme_survivor_respects_scheme_scope_and_visibility(self):
         other_scheme = self.create_published_scheme()
@@ -623,23 +666,8 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
             batch["in_scheme"]["result"][0]["id"], str(self.concepts[2].pk)
         )
         self.assertEqual(batch["unknown_scheme"]["result"], [])
-        self.assertEqual(
-            self.reconcile({"q0": {"query": "Concept 3", "type": "no-such-scheme"}}),
-            {"q0": {"result": []}},
-        )
 
-    def test_scheme_service_defaults_queries_to_its_scheme(self):
-        scheme_url = reverse(
-            "api-lingo-scheme-reconcile", kwargs={"scheme_identifier": "test-scheme"}
-        )
-
-        results = self.reconcile({"q0": {"query": "Concept 3"}}, url=scheme_url)["q0"][
-            "result"
-        ]
-
-        self.assertEqual(results[0]["id"], str(self.concepts[2].pk))
-
-    def test_scheme_service_never_searches_another_scheme(self):
+    def test_scheme_service_searches_its_own_scheme_and_no_other(self):
         other_scheme = self.create_published_scheme()
         elsewhere = self.create_concept_in_scheme(other_scheme, "Elsewhere")
         self.add_label(elsewhere, "Concept 3")
@@ -667,6 +695,9 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
 
         global_batch = self.reconcile(queries)
         scheme_batch = self.reconcile(queries, url=scheme_url)
+        untyped_scheme_results = self.reconcile(
+            {"q0": {"query": "Concept 3"}}, url=scheme_url
+        )["q0"]["result"]
         global_extension = self.client.post(
             reverse("api-lingo-reconcile"), extension_request
         ).json()
@@ -678,6 +709,8 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
                 [str(elsewhere.pk)],
             )
             self.assertEqual(scheme_batch[query_key]["result"], [])
+        self.assertEqual(untyped_scheme_results[0]["id"], str(self.concepts[2].pk))
+        self.assertNotIn(str(elsewhere.pk), self.result_ids(untyped_scheme_results))
         self.assertEqual(
             global_extension["rows"][str(elsewhere.pk)]["prefLabel"],
             [{"str": "Concept 3"}],
@@ -720,6 +753,14 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
 
         self.assertEqual(missing_queries.status_code, 400)
         self.assertEqual(malformed_queries.status_code, 400)
+
+    def test_internal_errors_are_not_reported_as_bad_requests(self):
+        with mock.patch(
+            "arches_lingo.views.api.reconciliation.reconcile_queries",
+            side_effect=ValueError("internal detail"),
+        ):
+            with self.assertRaises(ValueError):
+                self.client.post(reverse("api-lingo-reconcile"), {"queries": "{}"})
 
 
 class ReconciliationQueryPropertyTests(ReconciliationQueryTestCase):
@@ -781,6 +822,27 @@ class ReconciliationQueryPropertyTests(ReconciliationQueryTestCase):
         set_lifecycle_state(self.concepts[1], DRAFT_STATE_ID)
         hidden = self.reconcile_one("no such label", [{"pid": "notation", "v": "C-2"}])
         self.assertEqual(hidden, [])
+
+    def test_exact_match_hit_without_the_queried_notation_is_contradicted(self):
+        self.add_tile(
+            self.concepts[0], IDENTIFIER_NODEGROUP, {IDENTIFIER_CONTENT_NODE: "C-1"}
+        )
+        self.add_tile(
+            self.concepts[2], URI_NODEGROUP, {URI_CONTENT_NODE: "https://lingo/c3"}
+        )
+
+        results = self.reconcile_one(
+            "no such label",
+            [
+                {"pid": "notation", "v": "C-1"},
+                {"pid": "exactMatch", "v": "https://lingo/c3"},
+            ],
+        )
+
+        self.assertEqual(self.matched_id(results), str(self.concepts[0].pk))
+        self.assertEqual(
+            [result["score"] for result in results if not result["match"]], [70]
+        )
 
     def test_exact_match_uri_identifies_linked_and_own_uris(self):
         self.add_tile(
@@ -926,7 +988,14 @@ class ReconciliationPreviewTests(ReconciliationQueryTestCase):
             reverse("api-lingo-reconcile-preview"), {"id": str(concept_id)}
         )
 
-    def add_note(self, concept, content, language):
+    def add_note(
+        self,
+        concept,
+        content,
+        language,
+        note_type_uri=SCOPE_NOTE_URI,
+        name="Scope note",
+    ):
         TileModel.objects.create(
             resourceinstance=concept,
             nodegroup_id=STATEMENT_NODEGROUP,
@@ -934,7 +1003,10 @@ class ReconciliationPreviewTests(ReconciliationQueryTestCase):
                 STATEMENT_CONTENT_NODE: content,
                 STATEMENT_LANGUAGE_NODE: language,
                 STATEMENT_TYPE_NODE: [
-                    {"labels": [{"language_id": "en", "value": "Scope note"}]}
+                    {
+                        "uri": note_type_uri,
+                        "labels": [{"language_id": "en", "value": name}],
+                    }
                 ],
             },
         )
@@ -969,6 +1041,20 @@ class ReconciliationPreviewTests(ReconciliationQueryTestCase):
             self.assertIn(expected_text, content)
         self.assertNotIn("Troisième", content)
         self.assertNotIn("Une note.", content)
+
+    def test_preview_never_shows_notes_written_for_editors(self):
+        self.add_note(
+            self.concepts[1],
+            "Check this with the committee.",
+            "en",
+            note_type_uri="http://www.w3.org/2004/02/skos/core#editorialNote",
+            name="Editorial note",
+        )
+
+        content = self.preview(self.concepts[1].pk).content.decode()
+
+        self.assertNotIn("Check this with the committee.", content)
+        self.assertNotIn("Editorial note", content)
 
     def test_preview_falls_back_to_a_note_in_another_language(self):
         self.add_note(self.concepts[1], "Une note.", "fr")
@@ -1169,6 +1255,7 @@ class ReconciliationExtensionTests(ReconciliationQueryTestCase):
             json.dumps({"ids": too_many_ids, "properties": []}),
             json.dumps({"ids": [], "properties": "uri"}),
             json.dumps({"ids": [], "properties": [{"id": "colour"}]}),
+            json.dumps({"ids": [], "properties": [{"id": ["uri"]}]}),
             json.dumps({"ids": [], "properties": [{"id": "uri"}, {"id": "uri"}]}),
             json.dumps({"ids": [], "properties": [{"id": "uri", "settings": "fr"}]}),
             json.dumps(

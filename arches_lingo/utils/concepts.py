@@ -59,7 +59,6 @@ def build_search_queryset(
     order_mode,
     active_language=None,
     system_language=None,
-    scheme_id=None,
     excluded_ids=None,
     scheme_ids=None,
     lifecycle_state_ids=None,
@@ -91,7 +90,6 @@ def build_search_queryset(
         order_mode=order_mode,
         active_language=active_language or "",
         system_language=system_language or "",
-        scheme_id=scheme_id,
         excluded_ids=excluded_ids,
         scheme_ids=scheme_ids,
         lifecycle_state_ids=lifecycle_state_ids,
@@ -108,7 +106,7 @@ def _edit_distance_to_similarity_threshold(max_edit_distance, term_length):
 
 
 def build_concept_ids_for_non_fuzzy(
-    labels_queryset, order_mode, scheme_id=None, excluded_ids=None
+    labels_queryset, order_mode, scheme_ids=None, excluded_ids=None
 ):
     """Return a SearchResultSet for browsing (no search term)."""
     return SearchResultSet(
@@ -118,7 +116,7 @@ def build_concept_ids_for_non_fuzzy(
         order_mode=order_mode,
         active_language="",
         system_language="",
-        scheme_id=scheme_id,
+        scheme_ids=scheme_ids,
         excluded_ids=excluded_ids,
     )
 
@@ -145,7 +143,6 @@ class SearchResultSet:
         active_language,
         system_language,
         exact_match=False,
-        scheme_id=None,
         excluded_ids=None,
         scheme_ids=None,
         lifecycle_state_ids=None,
@@ -159,7 +156,6 @@ class SearchResultSet:
         self.active_language = active_language
         self.system_language = system_language
         self.exact_match = exact_match
-        self.scheme_id = scheme_id
         self.excluded_ids = excluded_ids or []
         # None leaves results unfiltered; an empty collection matches nothing.
         self.scheme_ids = scheme_ids
@@ -190,16 +186,6 @@ class SearchResultSet:
             else:
                 where_sql += f" AND {self.CONTENT_COL} ILIKE %s"
                 params.append(f"%{self.like_term}%")
-
-        if self.scheme_id:
-            where_sql += (
-                f" AND resourceinstanceid IN ("
-                f"SELECT resourceinstanceid FROM tiles"
-                f" WHERE nodegroupid = '{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'"
-                f" AND tiledata -> '{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'"
-                f" @> %s::jsonb)"
-            )
-            params.append(json.dumps([{"resourceId": self.scheme_id}]))
 
         if self.scheme_ids is not None:
             where_sql += (

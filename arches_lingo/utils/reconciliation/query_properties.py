@@ -5,10 +5,9 @@ Property ids are SKOS local names, matching the manifest's ``schemaSpace``.
 
 from collections import defaultdict
 from dataclasses import dataclass
-from functools import reduce
-from operator import or_
 
-from django.db.models import Q
+from django.db.models.fields.json import KT
+from django.db.models.functions import Lower
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
@@ -32,7 +31,14 @@ from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
 from arches_lingo.utils.reconciliation.concept_summaries import (
     get_public_broader_ids_for_concepts,
 )
+from arches_lingo.utils.reconciliation.exceptions import (
+    ReconciliationRequestError,
+)
 from arches_lingo.utils.reconciliation.labels import get_label_type_uri
+from arches_lingo.utils.reconciliation.manifest import (
+    MAX_PROPERTY_VALUE_LENGTH,
+    MAX_PROPERTY_VALUES_PER_QUERY,
+)
 
 BROADER = "broader"
 ALT_LABEL = "altLabel"
@@ -70,26 +76,43 @@ def normalize_property_values(raw_value):
 
 
 def parse_query_properties(raw_properties):
-    """Return ``{property_id: (value, …)}``; raise ValueError if malformed."""
+    """Return ``{property_id: (value, …)}``; raise ReconciliationRequestError
+    if malformed or over the per-query limits."""
     if raw_properties is None:
         return {}
     if not isinstance(raw_properties, list):
-        raise ValueError(_('A query\'s "properties" must be a list.'))
+        raise ReconciliationRequestError(_('A query\'s "properties" must be a list.'))
 
     values_by_property_id = defaultdict(list)
     for raw_property in raw_properties:
         if not isinstance(raw_property, dict) or not isinstance(
             raw_property.get("pid"), str
         ):
-            raise ValueError(_('Each query property needs a "pid" string.'))
+            raise ReconciliationRequestError(
+                _('Each query property needs a "pid" string.')
+            )
         property_id = raw_property["pid"]
         if property_id not in QUERY_PROPERTY_NAMES:
-            raise ValueError(
+            raise ReconciliationRequestError(
                 _("Unknown query property: %(property_id)s")
                 % {"property_id": property_id}
             )
         values_by_property_id[property_id].extend(
             normalize_property_values(raw_property.get("v"))
+        )
+
+    all_values = [
+        value for values in values_by_property_id.values() for value in values
+    ]
+    if len(all_values) > MAX_PROPERTY_VALUES_PER_QUERY:
+        raise ReconciliationRequestError(
+            _("A query can give at most %(limit)s property values.")
+            % {"limit": MAX_PROPERTY_VALUES_PER_QUERY}
+        )
+    if any(len(value) > MAX_PROPERTY_VALUE_LENGTH for value in all_values):
+        raise ReconciliationRequestError(
+            _("Property values cannot exceed %(limit)s characters.")
+            % {"limit": MAX_PROPERTY_VALUE_LENGTH}
         )
     return {
         property_id: tuple(values)
@@ -127,32 +150,40 @@ def find_concepts_by_exact_match(uris):
     matched_uri_tiles = TileModel.objects.filter(
         nodegroup_id=MATCH_STATUS_NODEGROUP,
         **{f"data__{MATCH_STATUS_RELATION_NODE}__0__uri": exact_match_relation_uri},
-    ).filter(
-        reduce(
-            or_,
-            (
-                Q(**{f"data__{MATCH_STATUS_COMPARATE_NODE}__iexact": uri})
-                for uri in uris
-            ),
-        )
     )
-    own_uri_tiles = TileModel.objects.filter(nodegroup_id=URI_NODEGROUP).filter(
-        reduce(or_, (Q(**{f"data__{URI_CONTENT_NODE}__iexact": uri}) for uri in uris))
-    )
+    own_uri_tiles = TileModel.objects.filter(nodegroup_id=URI_NODEGROUP)
+    lowered_uris = {uri.lower() for uri in uris}
     for tiles, content_node in [
         (matched_uri_tiles, MATCH_STATUS_COMPARATE_NODE),
         (own_uri_tiles, URI_CONTENT_NODE),
     ]:
-        for concept_id, uri in tiles.values_list(
+        # One set comparison per tile, however many URIs the batch names.
+        tiles_naming_a_queried_uri = tiles.annotate(
+            lowered_uri=Lower(KT(f"data__{content_node}"))
+        ).filter(lowered_uri__in=lowered_uris)
+        for concept_id, uri in tiles_naming_a_queried_uri.values_list(
             "resourceinstance_id", f"data__{content_node}"
         ):
             concept_ids_by_uri[uri.strip().casefold()].add(str(concept_id))
     return concept_ids_by_uri
 
 
+@dataclass(frozen=True)
+class IdentifiedConceptIds:
+    """The concepts a query names outright, kept apart by how it named them:
+    only an identifier lookup shows that a concept carries a queried identifier."""
+
+    notation_concept_ids: frozenset = frozenset()
+    exact_match_concept_ids: frozenset = frozenset()
+
+    @property
+    def all_concept_ids(self):
+        return self.notation_concept_ids | self.exact_match_concept_ids
+
+
 def find_identified_concept_ids(queries_by_key):
-    """Return ``{query_key: {concept_id, …}}`` for queries naming a notation or
-    exactMatch, in lookups shared by the whole batch."""
+    """Return ``{query_key: IdentifiedConceptIds}`` for queries naming a notation
+    or exactMatch, in lookups shared by the whole batch."""
     queries = queries_by_key.values()
     concept_ids_by_notation = find_concepts_by_notation(
         {notation for query in queries for notation in query.values_for(NOTATION)}
@@ -162,12 +193,16 @@ def find_identified_concept_ids(queries_by_key):
     )
     identified_concept_ids_by_key = {}
     for query_key, query in queries_by_key.items():
-        identified_concept_ids = set()
+        notation_concept_ids = set()
         for notation in query.values_for(NOTATION):
-            identified_concept_ids |= concept_ids_by_notation.get(notation, set())
+            notation_concept_ids |= concept_ids_by_notation.get(notation, set())
+        exact_match_concept_ids = set()
         for uri in query.values_for(EXACT_MATCH):
-            identified_concept_ids |= concept_ids_by_uri.get(uri.casefold(), set())
-        identified_concept_ids_by_key[query_key] = identified_concept_ids
+            exact_match_concept_ids |= concept_ids_by_uri.get(uri.casefold(), set())
+        identified_concept_ids_by_key[query_key] = IdentifiedConceptIds(
+            notation_concept_ids=frozenset(notation_concept_ids),
+            exact_match_concept_ids=frozenset(exact_match_concept_ids),
+        )
     return identified_concept_ids_by_key
 
 
@@ -231,12 +266,13 @@ def gather_property_evidence(
     return evidence_by_concept_id
 
 
-def evaluate_query_properties(query, evidence, is_identified):
+def evaluate_query_properties(query, evidence, is_found_by_notation):
     """Return ``(matched_property_count, is_contradicted)`` for one candidate.
 
     A broader term that matches none of the candidate's broader concepts, or an
-    identifier the candidate does not carry, contradicts it. A missing altLabel or
-    exactMatch link does not: those are often simply unrecorded.
+    identifier that did not lead to the candidate, contradicts it, even when an
+    exactMatch URI did. A missing altLabel or exactMatch link does not: those
+    are often simply unrecorded.
     """
     matched_property_count = 0
     is_contradicted = False
@@ -252,7 +288,7 @@ def evaluate_query_properties(query, evidence, is_identified):
     if alternate_label_values & evidence.alternate_labels:
         matched_property_count += 1
 
-    if query.values_for(NOTATION) and not is_identified:
+    if query.values_for(NOTATION) and not is_found_by_notation:
         is_contradicted = True
 
     return matched_property_count, is_contradicted

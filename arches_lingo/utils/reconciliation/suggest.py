@@ -8,6 +8,9 @@ from arches_lingo.utils.concepts import (
     build_search_queryset,
 )
 from arches_lingo.utils.reconciliation.concept_summaries import summarize_concepts
+from arches_lingo.utils.reconciliation.exceptions import (
+    ReconciliationRequestError,
+)
 from arches_lingo.utils.reconciliation.manifest import (
     MAX_QUERY_LENGTH,
     list_reconcilable_schemes,
@@ -29,11 +32,15 @@ def parse_cursor(raw_cursor):
     try:
         cursor = int(raw_cursor)
     except ValueError:
-        raise ValueError(_("The cursor must be a non-negative integer."))
+        raise ReconciliationRequestError(
+            _("The cursor must be a non-negative integer.")
+        )
     if cursor < 0:
-        raise ValueError(_("The cursor must be a non-negative integer."))
+        raise ReconciliationRequestError(
+            _("The cursor must be a non-negative integer.")
+        )
     if cursor > MAX_SUGGEST_CURSOR:
-        raise ValueError(
+        raise ReconciliationRequestError(
             _("The cursor cannot exceed %(limit)s.") % {"limit": MAX_SUGGEST_CURSOR}
         )
     return cursor
@@ -54,7 +61,7 @@ def suggest_entities(prefix, raw_cursor=None, scheme_id=None, scope_scheme_id=No
     if not prefix:
         return {"result": []}
     if len(prefix) > MAX_QUERY_LENGTH:
-        raise ValueError(
+        raise ReconciliationRequestError(
             _("Suggest prefixes cannot exceed %(limit)s characters.")
             % {"limit": MAX_QUERY_LENGTH}
         )
@@ -123,3 +130,20 @@ SUGGEST_SERVICES = {
     "type": suggest_types,
     "property": suggest_properties,
 }
+
+
+def answer_suggest_request(
+    suggest_kind, prefix, raw_cursor=None, scheme_id=None, scope_scheme_id=None
+):
+    """Answer one suggest request, or return None for an unknown kind.
+
+    Only entities can be narrowed to a requested type, and properties are the
+    same for every scheme, so each service is given just what it uses.
+    """
+    if suggest_kind not in SUGGEST_SERVICES:
+        return None
+    if suggest_kind == "entity":
+        return suggest_entities(prefix, raw_cursor, scheme_id, scope_scheme_id)
+    if suggest_kind == "type":
+        return suggest_types(prefix, raw_cursor, scope_scheme_id)
+    return suggest_properties(prefix, raw_cursor)

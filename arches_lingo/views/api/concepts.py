@@ -163,6 +163,7 @@ class ValueSearchView(ConceptTreeView):
 class ConceptResourceView(ConceptTreeView):
     def get(self, request):
         scheme = request.GET.get("scheme", None)
+        scheme_ids = [scheme] if scheme else None
         exclude = request.GET.get("exclude", None)
         excluded_ids = exclude.split(",") if exclude else None
         term = request.GET.get("term", None)
@@ -188,7 +189,7 @@ class ConceptResourceView(ConceptTreeView):
                         "unsorted",
                         active_language,
                         system_language,
-                        scheme_id=scheme,
+                        scheme_ids=scheme_ids,
                         excluded_ids=excluded_ids,
                     )
                 except ValueError as value_error:
@@ -201,7 +202,7 @@ class ConceptResourceView(ConceptTreeView):
                 concept_ids = build_concept_ids_for_non_fuzzy(
                     None,
                     "alphabetical",
-                    scheme_id=scheme,
+                    scheme_ids=scheme_ids,
                     excluded_ids=excluded_ids,
                 )
 

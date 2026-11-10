@@ -2,6 +2,7 @@ from django.apps import AppConfig
 from django.core import checks
 
 from arches_lingo.checks import (
+    check_reconciliation_is_rate_limited,
     check_reconciliation_public_server_address,
     check_reconciliation_rate_limit,
 )
@@ -14,4 +15,5 @@ class ArchesLingoConfig(AppConfig):
 
     def ready(self):
         checks.register(check_reconciliation_rate_limit)
+        checks.register(check_reconciliation_is_rate_limited)
         checks.register(check_reconciliation_public_server_address)

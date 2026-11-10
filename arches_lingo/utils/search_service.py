@@ -107,17 +107,32 @@ def get_identifiers_for_concepts(concept_ids):
     return result
 
 
-def get_notes_for_concepts(concept_ids, limit_per_concept=3, label_language="en"):
-    """Return ``{concept_id: [note, ...]}`` for a batch of concepts (1 query)."""
-    tiles = TileModel.objects.filter(
-        resourceinstance_id__in=concept_ids,
-        nodegroup_id=STATEMENT_NODEGROUP,
-    ).values("resourceinstance_id", "data")
+def get_notes_for_concepts(
+    concept_ids, limit_per_concept=3, label_language="en", note_type_uris=None
+):
+    """Return ``{concept_id: [note, ...]}`` for a batch of concepts (1 query).
+
+    ``note_type_uris`` keeps only notes of those types; None keeps every note.
+    """
+    tiles = (
+        TileModel.objects.filter(
+            resourceinstance_id__in=concept_ids,
+            nodegroup_id=STATEMENT_NODEGROUP,
+        )
+        .order_by("sortorder", "pk")
+        .values("resourceinstance_id", "data")
+    )
 
     result: dict = {}
     counts: dict = {}
     for tile in tiles:
         concept_id = str(tile["resourceinstance_id"])
+        note_types = tile["data"].get(STATEMENT_TYPE_NODE) or [{}]
+        if (
+            note_type_uris is not None
+            and note_types[0].get("uri") not in note_type_uris
+        ):
+            continue
         if counts.get(concept_id, 0) >= limit_per_concept:
             continue
         content = tile["data"].get(STATEMENT_CONTENT_NODE, "")

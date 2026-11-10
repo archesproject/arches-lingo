@@ -11,6 +11,8 @@ from arches_lingo.const import (
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
+    DEFINITION_URI,
+    SCOPE_NOTE_URI,
 )
 from arches_lingo.utils.concept_lifecycle import RETIRED_STATE_ID
 from arches_lingo.utils.reconciliation.concept_summaries import (
@@ -36,6 +38,9 @@ from arches_lingo.utils.search_service import (
 MAX_PREVIEW_ALTERNATE_LABELS = 3
 # Enough notes to usually find one in the active language.
 MAX_PREVIEW_NOTE_CANDIDATES = 20
+# The note types data extension also serves; editorial, change and history
+# notes are written for editors, not for anonymous callers.
+PREVIEW_NOTE_TYPE_URIS = frozenset({SCOPE_NOTE_URI, DEFINITION_URI})
 
 
 def choose_alternate_labels(label_tiles, display_language):
@@ -56,6 +61,7 @@ def choose_preview_note(concept_id, display_language):
         [concept_id],
         limit_per_concept=MAX_PREVIEW_NOTE_CANDIDATES,
         label_language=display_language,
+        note_type_uris=PREVIEW_NOTE_TYPE_URIS,
     ).get(concept_id, [])
     notes_with_content = [note for note in notes if note["content"]]
     for note in notes_with_content:
