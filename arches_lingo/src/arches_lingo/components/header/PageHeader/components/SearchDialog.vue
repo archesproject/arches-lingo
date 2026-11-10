@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -9,16 +9,35 @@ import BasicSearch from "@/arches_lingo/components/basic-search/BasicSearch.vue"
 
 import { SEARCH_RESULTS_PER_PAGE } from "@/arches_lingo/constants.ts";
 
+import type { ComponentPublicInstance } from "vue";
+
 const { $gettext } = useGettext();
 
+const searchButton = useTemplateRef<ComponentPublicInstance>("searchButton");
 const visible = ref(false);
+let wasClosedBySelectingResult = false;
+
 const toggleModal = () => {
+    wasClosedBySelectingResult = false;
     visible.value = !visible.value;
 };
+
+function onSearchResultSelect() {
+    wasClosedBySelectingResult = true;
+    visible.value = false;
+}
+
+function onSearchDialogAfterHide() {
+    if (!wasClosedBySelectingResult) {
+        (searchButton.value?.$el as HTMLElement | undefined)?.focus();
+    }
+    wasClosedBySelectingResult = false;
+}
 </script>
 
 <template>
     <Button
+        ref="searchButton"
         class="basic-search-button"
         icon="pi pi-search"
         variant="text"
@@ -46,11 +65,12 @@ const toggleModal = () => {
             },
         }"
         :show-header="false"
+        @after-hide="onSearchDialogAfterHide"
     >
         <div style="width: 80vw">
             <BasicSearch
                 :search-results-per-page="SEARCH_RESULTS_PER_PAGE"
-                @select="toggleModal"
+                @select="onSearchResultSelect"
             />
         </div>
     </Dialog>
