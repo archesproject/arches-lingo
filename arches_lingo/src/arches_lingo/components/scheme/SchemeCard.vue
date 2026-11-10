@@ -62,50 +62,59 @@ function onImport() {
 </script>
 
 <template>
-    <RouterLink :to="schemeURL">
-        <Card :class="scheme.id === NEW ? 'new-scheme' : ''">
-            <template #title>
-                <h2
-                    v-if="scheme.id === NEW"
-                    class="scheme-card-title"
+    <Card :class="scheme.id === NEW ? 'new-scheme' : ''">
+        <template #title>
+            <h2
+                v-if="scheme.id === NEW"
+                class="scheme-card-title"
+            >
+                <RouterLink
+                    :to="schemeURL"
+                    class="scheme-card-link"
                 >
                     {{ $gettext("New Scheme") }}
-                </h2>
-                <h2
-                    v-else
-                    class="scheme-card scheme-card-title"
+                </RouterLink>
+            </h2>
+            <h2
+                v-else
+                class="scheme-card scheme-card-title"
+            >
+                <RouterLink
+                    :to="schemeURL"
+                    class="scheme-card-link"
                 >
                     {{ schemeName.value }}
-                </h2>
-            </template>
-            <template #content>
-                <div v-if="scheme.id === NEW">
-                    <div class="scheme-circle">
-                        <i class="pi pi-share-alt new-scheme-icon"></i>
-                    </div>
-                    <div>
-                        <span>{{
-                            $gettext(
-                                "Add a new thesaurus, manage concept hierarchies",
-                            )
-                        }}</span>
-                    </div>
+                </RouterLink>
+            </h2>
+        </template>
+        <template #content>
+            <div v-if="scheme.id === NEW">
+                <div class="scheme-circle">
+                    <i class="pi pi-share-alt new-scheme-icon"></i>
                 </div>
-                <span v-else>{{ schemeDescription }}</span>
-            </template>
-            <template
-                v-if="scheme.id === NEW"
-                #footer
-            >
-                <Button
-                    :label="$gettext('Import Thesauri')"
-                    type="button"
-                    outlined
-                    @click.stop.prevent="openImportDialog"
-                />
-            </template>
-        </Card>
-    </RouterLink>
+                <div>
+                    <span>{{
+                        $gettext(
+                            "Add a new thesaurus, manage concept hierarchies",
+                        )
+                    }}</span>
+                </div>
+            </div>
+            <span v-else>{{ schemeDescription }}</span>
+        </template>
+        <template
+            v-if="scheme.id === NEW"
+            #footer
+        >
+            <Button
+                :label="$gettext('Import Thesauri')"
+                type="button"
+                outlined
+                class="import-button"
+                @click="openImportDialog"
+            />
+        </template>
+    </Card>
     <ImportThesauri
         v-if="showImportDialog"
         :key="importDialogKey"
@@ -124,8 +133,29 @@ ul:first-child li:first-child .p-card .scheme-circle {
     background: var(--p-blue-600);
 }
 
-a {
+.scheme-card-link {
+    color: inherit;
     text-decoration: none;
+}
+
+.scheme-card-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+/* Draw the link's focus ring around the whole card, as before. */
+.scheme-card-link:focus-visible {
+    outline: none;
+}
+
+.p-card:has(.scheme-card-link:focus-visible) {
+    outline: auto;
+}
+
+.import-button {
+    position: relative;
+    z-index: 1;
 }
 
 .scheme-card-title {
@@ -134,7 +164,8 @@ a {
     font-weight: inherit;
 }
 
-:deep(.p-card) {
+.p-card {
+    position: relative;
     background-color: var(--p-button-primary-background);
     border: 0.0625rem solid var(--p-header-toolbar-border);
     color: var(--p-button-primary-color);
