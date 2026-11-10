@@ -21,6 +21,19 @@ const TOOLTIP_PASS_THROUGH = {
     arrow: { style: { display: "none" } },
 };
 
+function showReasonOnKeyboardFocus(event: FocusEvent) {
+    const button = event.currentTarget as HTMLElement;
+    if (isDisabled && button.matches(":focus-visible")) {
+        button.dispatchEvent(new MouseEvent("mouseenter"));
+    }
+}
+
+function hideReasonOnBlur(event: FocusEvent) {
+    (event.currentTarget as HTMLElement).dispatchEvent(
+        new MouseEvent("mouseleave"),
+    );
+}
+
 function onClick(event: MouseEvent) {
     if (!isDisabled) {
         emit("click", event);
@@ -35,6 +48,7 @@ function onClick(event: MouseEvent) {
                 disabled: !isDisabled,
                 value: disabledReason,
                 showDelay: 300,
+                autoHide: false,
                 pt: TOOLTIP_PASS_THROUGH,
             }"
             v-bind="$attrs"
@@ -42,6 +56,8 @@ function onClick(event: MouseEvent) {
             :aria-disabled="isDisabled"
             :aria-describedby="isDisabled ? disabledReasonId : undefined"
             @click="onClick"
+            @focus="showReasonOnKeyboardFocus"
+            @blur="hideReasonOnBlur"
         />
         <span
             v-if="isDisabled"
