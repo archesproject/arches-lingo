@@ -86,7 +86,10 @@ function attemptFocusFirstField(attemptsRemaining: number) {
 
     const formInstance = componentEditorFormRef.value;
     if (formInstance) {
-        const formElement = formInstance.$refs.formRef;
+        if (formInstance.focusFirstField?.()) {
+            return;
+        }
+        const formElement = formInstance.$refs?.formRef;
         if (formElement) {
             try {
                 formElement[0].focus();
