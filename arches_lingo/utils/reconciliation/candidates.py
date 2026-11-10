@@ -17,6 +17,9 @@ from arches_lingo.utils.reconciliation.concept_summaries import (
     get_pref_labels_for_concepts,
     summarize_concepts,
 )
+from arches_lingo.utils.reconciliation.exceptions import (
+    ReconciliationRequestError,
+)
 from arches_lingo.utils.reconciliation.labels import is_same_base_language
 from arches_lingo.utils.reconciliation.manifest import (
     MAX_QUERIES_PER_REQUEST,
@@ -94,21 +97,27 @@ class ScoredCandidate:
     score: int
     substitutes_for_concept_id: str | None = None
     is_identified: bool = False
+    is_found_by_notation: bool = False
     is_contradicted: bool = False
     is_retired: bool = False
     is_other_language_match: bool = False
 
 
 def parse_reconciliation_queries(raw_queries, default_scheme_id=None):
-    """Validate a W3C reconciliation ``queries`` batch; raise ValueError if malformed."""
+    """Validate a W3C reconciliation ``queries`` batch; raise
+    ReconciliationRequestError if malformed."""
     try:
         raw_queries_by_key = json.loads(raw_queries)
     except (TypeError, ValueError):
-        raise ValueError(_("The queries parameter must be a JSON object."))
+        raise ReconciliationRequestError(
+            _("The queries parameter must be a JSON object.")
+        )
     if not isinstance(raw_queries_by_key, dict):
-        raise ValueError(_("The queries parameter must be a JSON object."))
+        raise ReconciliationRequestError(
+            _("The queries parameter must be a JSON object.")
+        )
     if len(raw_queries_by_key) > MAX_QUERIES_PER_REQUEST:
-        raise ValueError(
+        raise ReconciliationRequestError(
             _("At most %(limit)s queries can be sent at once.")
             % {"limit": MAX_QUERIES_PER_REQUEST}
         )
@@ -120,14 +129,16 @@ def parse_reconciliation_queries(raw_queries, default_scheme_id=None):
 
 def parse_reconciliation_query(raw_query, default_scheme_id):
     if not isinstance(raw_query, dict):
-        raise ValueError(_("Each query must be a JSON object."))
+        raise ReconciliationRequestError(_("Each query must be a JSON object."))
 
     query_text = raw_query.get("query")
     if not isinstance(query_text, str) or not query_text.strip():
-        raise ValueError(_('Each query needs a non-empty "query" string.'))
+        raise ReconciliationRequestError(
+            _('Each query needs a non-empty "query" string.')
+        )
     query_text = query_text.strip()
     if len(query_text) > MAX_QUERY_LENGTH:
-        raise ValueError(
+        raise ReconciliationRequestError(
             _("Queries cannot exceed %(limit)s characters.")
             % {"limit": MAX_QUERY_LENGTH}
         )
@@ -138,11 +149,13 @@ def parse_reconciliation_query(raw_query, default_scheme_id):
     if isinstance(scheme_id, list) and len(scheme_id) == 1:
         scheme_id = scheme_id[0]
     if scheme_id is not None and not isinstance(scheme_id, str):
-        raise ValueError(_("Each query may name at most one type."))
+        raise ReconciliationRequestError(_("Each query may name at most one type."))
 
     limit = raw_query.get("limit", DEFAULT_CANDIDATE_LIMIT)
     if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
-        raise ValueError(_('A query "limit" must be a positive integer.'))
+        raise ReconciliationRequestError(
+            _('A query "limit" must be a positive integer.')
+        )
 
     return ReconciliationQuery(
         text=query_text,
@@ -186,22 +199,31 @@ def find_scored_candidates(query, searchable_scheme_ids, identified_concept_ids)
     ]
 
     label_matched_ids = {candidate.concept_id for candidate in scored_candidates}
+    all_identified_ids = identified_concept_ids.all_concept_ids
     scored_candidates = [
         (
-            replace(candidate, score=IDENTIFIED_SCORE, is_identified=True)
-            if candidate.concept_id in identified_concept_ids
+            replace(
+                candidate,
+                score=IDENTIFIED_SCORE,
+                is_identified=True,
+                is_found_by_notation=candidate.concept_id
+                in identified_concept_ids.notation_concept_ids,
+            )
+            if candidate.concept_id in all_identified_ids
             else candidate
         )
         for candidate in scored_candidates
     ]
     # Sorted so results are deterministic; scheme scope is applied with the others.
-    for concept_id in sorted(identified_concept_ids - label_matched_ids):
+    for concept_id in sorted(all_identified_ids - label_matched_ids):
         scored_candidates.append(
             ScoredCandidate(
                 concept_id=concept_id,
                 tier=NO_LABEL_MATCH_TIER,
                 score=IDENTIFIED_SCORE,
                 is_identified=True,
+                is_found_by_notation=concept_id
+                in identified_concept_ids.notation_concept_ids,
             )
         )
     return scored_candidates
@@ -250,7 +272,12 @@ def expand_retired_candidates(
     query, scored_candidates, survivor_by_retired_id, retired_ids
 ):
     """Swap each retired candidate for its merge survivor, if any, and keep the
-    retired concept itself only when the query asks for retired concepts."""
+    retired concept itself only when the query asks for retired concepts.
+
+    A survivor is no longer identified, so it is never matched automatically,
+    but it keeps ``is_found_by_notation``: a merge leaves identifiers behind on
+    the retired concept, so the queried identifier is how the survivor was found
+    rather than evidence against it."""
     expanded_candidates = []
     for candidate in scored_candidates:
         if candidate.concept_id not in retired_ids:
@@ -311,7 +338,7 @@ def build_query_results(
         matched_property_count, is_contradicted = evaluate_query_properties(
             query,
             evidence_by_concept_id.get(candidate.concept_id, PropertyEvidence()),
-            candidate.is_identified,
+            candidate.is_found_by_notation,
         )
         candidate = replace(
             candidate,

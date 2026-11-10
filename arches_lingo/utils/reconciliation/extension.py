@@ -23,6 +23,9 @@ from arches_lingo.const import URI_CONTENT_NODE, URI_NODEGROUP
 from arches_lingo.utils.reconciliation.concept_summaries import (
     get_display_labels_for_concepts,
 )
+from arches_lingo.utils.reconciliation.exceptions import (
+    ReconciliationRequestError,
+)
 from arches_lingo.utils.reconciliation.labels import is_same_base_language
 from arches_lingo.utils.reconciliation.manifest import (
     MAX_QUERIES_PER_REQUEST,
@@ -81,9 +84,9 @@ def propose_properties(type_id, raw_limit=None):
     try:
         limit = int(raw_limit) if raw_limit else len(EXTENSION_PROPERTIES)
     except ValueError:
-        raise ValueError(_("The limit must be a positive integer."))
+        raise ReconciliationRequestError(_("The limit must be a positive integer."))
     if limit < 1:
-        raise ValueError(_("The limit must be a positive integer."))
+        raise ReconciliationRequestError(_("The limit must be a positive integer."))
     return {
         "type": type_id,
         "properties": [
@@ -94,33 +97,43 @@ def propose_properties(type_id, raw_limit=None):
 
 
 def parse_extension_request(raw_extension_request):
-    """Return ``(concept_ids, [(property_id, language)])``; raise ValueError if malformed."""
+    """Return ``(concept_ids, [(property_id, language)])``; raise
+    ReconciliationRequestError if malformed."""
     try:
         extension_request = json.loads(raw_extension_request)
     except (TypeError, ValueError):
-        raise ValueError(_("The extend parameter must be a JSON object."))
+        raise ReconciliationRequestError(
+            _("The extend parameter must be a JSON object.")
+        )
     if not isinstance(extension_request, dict):
-        raise ValueError(_("The extend parameter must be a JSON object."))
+        raise ReconciliationRequestError(
+            _("The extend parameter must be a JSON object.")
+        )
 
     concept_ids = extension_request.get("ids")
     if not isinstance(concept_ids, list) or not all(
         isinstance(concept_id, str) for concept_id in concept_ids
     ):
-        raise ValueError(_('The extend parameter needs an "ids" list of strings.'))
+        raise ReconciliationRequestError(
+            _('The extend parameter needs an "ids" list of strings.')
+        )
     if len(concept_ids) > MAX_QUERIES_PER_REQUEST:
-        raise ValueError(
+        raise ReconciliationRequestError(
             _("At most %(limit)s ids can be extended at once.")
             % {"limit": MAX_QUERIES_PER_REQUEST}
         )
 
     raw_properties = extension_request.get("properties")
     if not isinstance(raw_properties, list):
-        raise ValueError(_('The extend parameter needs a "properties" list.'))
+        raise ReconciliationRequestError(
+            _('The extend parameter needs a "properties" list.')
+        )
     requested_properties = []
     for raw_property in raw_properties:
         property_id = raw_property.get("id") if isinstance(raw_property, dict) else None
-        if property_id not in EXTENSION_PROPERTIES:
-            raise ValueError(
+        # A JSON list or object is unhashable, so it cannot be looked up.
+        if not isinstance(property_id, str) or property_id not in EXTENSION_PROPERTIES:
+            raise ReconciliationRequestError(
                 _("Unknown extension property: %(property_id)s")
                 % {"property_id": property_id}
             )
@@ -129,16 +142,18 @@ def parse_extension_request(raw_extension_request):
             property_id == requested_property_id
             for requested_property_id, _language in requested_properties
         ):
-            raise ValueError(
+            raise ReconciliationRequestError(
                 _("Extension property requested twice: %(property_id)s")
                 % {"property_id": property_id}
             )
         property_settings = raw_property.get("settings") or {}
         if not isinstance(property_settings, dict):
-            raise ValueError(_("Extension property settings must be a JSON object."))
+            raise ReconciliationRequestError(
+                _("Extension property settings must be a JSON object.")
+            )
         language = property_settings.get("lang") or None
         if language is not None and not isinstance(language, str):
-            raise ValueError(_('The "lang" setting must be a string.'))
+            raise ReconciliationRequestError(_('The "lang" setting must be a string.'))
         requested_properties.append((property_id, language))
     return concept_ids, requested_properties
 

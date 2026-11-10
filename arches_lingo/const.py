@@ -194,6 +194,8 @@ STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
 PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
 ALT_LABEL_URI = "http://www.w3.org/2004/02/skos/core#altLabel"
 HIDDEN_LABEL_URI = "http://www.w3.org/2004/02/skos/core#hiddenLabel"
+SCOPE_NOTE_URI = "http://www.w3.org/2004/02/skos/core#scopeNote"
+DEFINITION_URI = "http://www.w3.org/2004/02/skos/core#definition"
 
 EDIT_TYPE_LABELS = {
     "create": _("Resource Created"),
