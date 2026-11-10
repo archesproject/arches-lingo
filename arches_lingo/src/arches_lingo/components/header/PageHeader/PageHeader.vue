@@ -42,12 +42,23 @@ watch(shouldShowHierarchy, (newValue) => {
 });
 
 const overlayPanel = useTemplateRef("overlayPanel");
+const overlayPanelButton =
+    useTemplateRef<ComponentPublicInstance>("overlayPanelButton");
 const overlayPanelItems = useTemplateRef<HTMLElement>("overlayPanelItems");
 const isOverlayPanelVisible = ref(false);
 
 function onOverlayPanelShow() {
     isOverlayPanelVisible.value = true;
     focusFirstFocusableElement(overlayPanelItems.value);
+}
+
+// The Menu's own close-on-escape listens on the whole document, so Escape in a
+// popover or drawer opened from inside it closed the Menu too and dropped focus
+// to <body>. Those overlays render outside the Menu's DOM, so handling Escape
+// here only closes the Menu when focus is in it.
+function onOverlayPanelEscape() {
+    overlayPanel.value?.hide();
+    (overlayPanelButton.value?.$el as HTMLElement | undefined)?.focus();
 }
 
 const mobileNavButton =
@@ -116,6 +127,7 @@ async function onMobileNavAfterHide() {
                 </div>
 
                 <Button
+                    ref="overlayPanelButton"
                     icon="pi pi-bars"
                     class="overlay-panel-button p-button-text"
                     :aria-label="$gettext('Menu')"
@@ -127,6 +139,7 @@ async function onMobileNavAfterHide() {
                 <Popover
                     ref="overlayPanel"
                     show-close-icon
+                    :close-on-escape="false"
                     :pt="{
                         root: {
                             class: 'overlay-panel-popover-root',
@@ -140,6 +153,7 @@ async function onMobileNavAfterHide() {
                     <div
                         ref="overlayPanelItems"
                         class="overlay-panel-items"
+                        @keydown.escape="onOverlayPanelEscape"
                     >
                         <div class="overlay-panel-item">
                             <UserInteraction />
