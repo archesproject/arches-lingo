@@ -7,7 +7,7 @@ import { useToast } from "primevue/usetoast";
 import { downloadReconciliationWorksheet } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { saveBlobAsFile } from "@/arches_lingo/utils.ts";
+import { triggerBlobDownload } from "@/arches_lingo/utils.ts";
 
 import type { ReconciliationWorksheetScope } from "@/arches_lingo/types.ts";
 
@@ -30,7 +30,10 @@ export function useReconciliationWorksheetDownload() {
                 scope,
                 selectedLanguage.value.code,
             );
-            saveBlobAsFile(worksheet, worksheetFilename(requestedFilename));
+            triggerBlobDownload(
+                worksheet,
+                worksheetFilename(requestedFilename),
+            );
             return true;
         } catch (error) {
             toast.add({
