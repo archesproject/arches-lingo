@@ -256,7 +256,8 @@ def validate_match_links(match_links, user, scheme_id=None):
                 **match_link,
                 "concept_id": concept_id or match_link["concept_id"],
                 "outcome": outcome,
-                "is_internal_concept": match_uri in internal_concept_uris,
+                "is_internal_concept": outcome != OUTCOME_SELF_MATCH
+                and match_uri in internal_concept_uris,
             }
         )
     return validated_links

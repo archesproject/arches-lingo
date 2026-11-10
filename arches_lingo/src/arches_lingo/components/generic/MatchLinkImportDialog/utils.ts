@@ -47,10 +47,11 @@ export function summarizeOutcomeCounts(
             outcome,
             count,
             label,
-            text: $gettext("%{label}: %{count}", {
-                label,
-                count: String(count),
-            }),
+            text: $gettext(
+                "%{label}: %{count}",
+                { label, count: String(count) },
+                true,
+            ),
             severity: outcomeSeverity(outcome),
         };
     });
