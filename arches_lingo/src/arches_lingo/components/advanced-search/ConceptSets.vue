@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useId, watch } from "vue";
+import { ref, useId, useTemplateRef, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -29,6 +29,7 @@ import {
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { useConceptSetStore } from "@/arches_lingo/stores/useConceptSetStore.ts";
+import { focusNeighborAfterRemoval } from "@/arches_lingo/utils.ts";
 
 import type {
     AdvancedSearchQuery,
@@ -73,6 +74,11 @@ const newSetName = ref("");
 const newSetDescription = ref("");
 const targetSetId = ref<number | null>(null);
 const isLoading = ref(false);
+const conceptSetsElement = useTemplateRef<HTMLElement>("conceptSetsElement");
+
+function focusInConceptSets(selector: string) {
+    conceptSetsElement.value?.querySelector<HTMLElement>(selector)?.focus();
+}
 
 async function loadConceptSets() {
     try {
@@ -120,10 +126,22 @@ async function createNewSet() {
 async function deleteSet(setItem: ConceptSetItem) {
     try {
         await deleteConceptSet(setItem.id);
+        const deletedSetIndex = conceptSets.value.findIndex(
+            (item) => item.id === setItem.id,
+        );
         conceptSets.value = conceptSets.value.filter(
             (item) => item.id !== setItem.id,
         );
         emit("sets-updated", conceptSets.value);
+        await focusNeighborAfterRemoval({
+            remainingItems: conceptSets.value,
+            removedIndex: deletedSetIndex,
+            focusItem: (remainingSet) =>
+                focusInConceptSets(
+                    `[data-concept-set-id="${remainingSet.id}"]`,
+                ),
+            focusWhenEmpty: () => focusInConceptSets(".new-set-button"),
+        });
         toast.add({
             severity: SUCCESS,
             life: DEFAULT_TOAST_LIFE,
@@ -252,7 +270,10 @@ watch(
 </script>
 
 <template>
-    <div class="concept-sets">
+    <div
+        ref="conceptSetsElement"
+        class="concept-sets"
+    >
         <div class="section-actions">
             <Button
                 :label="$gettext('Add to Set')"
@@ -280,6 +301,7 @@ watch(
                 icon="pi pi-folder"
                 size="small"
                 outlined
+                class="new-set-button"
                 @click="showCreateDialog = true"
             />
         </div>
@@ -301,6 +323,7 @@ watch(
                 text
                 plain
                 class="set-info"
+                :data-concept-set-id="setItem.id"
                 :pt="{
                     root: {
                         style: {
