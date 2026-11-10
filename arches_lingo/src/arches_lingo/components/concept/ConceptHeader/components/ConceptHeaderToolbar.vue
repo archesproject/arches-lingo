@@ -72,6 +72,7 @@ const emit = defineEmits<{
 const props = defineProps<{
     concept: ResourceInstanceResult | undefined;
     label: Label | undefined;
+    isHeaderLoading: boolean;
     graphSlug: string;
     resourceInstanceId: string | undefined;
     conceptTypeTile:
@@ -480,7 +481,10 @@ function onMergeCancelled() {
                     </span>
                 </h1>
             </div>
-            <div class="card flex justify-center">
+            <div
+                v-show="!isHeaderLoading"
+                class="card flex justify-center"
+            >
                 <Tag
                     v-if="conceptTypeLabel && !canEditResourceInstances"
                     :value="conceptTypeLabel"
@@ -509,6 +513,7 @@ function onMergeCancelled() {
         </div>
         <div
             v-if="resourceInstanceId"
+            v-show="!isHeaderLoading"
             class="header-buttons"
         >
             <Button
