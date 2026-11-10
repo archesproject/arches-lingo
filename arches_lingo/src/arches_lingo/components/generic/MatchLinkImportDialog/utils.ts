@@ -1,4 +1,4 @@
-import { SECONDARY, SUCCESS } from "@/arches_lingo/constants.ts";
+import { SECONDARY, SUCCESS, WARN } from "@/arches_lingo/constants.ts";
 
 import type { useGettext } from "vue3-gettext";
 import type {
@@ -15,6 +15,11 @@ export const MATCH_LINK_IMPORT_MAX_FAILED_POLLS = 3;
 export const OUTCOME_ADD: MatchLinkImportOutcome = "add";
 export const MATCH_LINK_IMPORT_IN_PROGRESS_STATUSES = ["pending", "running"];
 export const MATCH_LINK_IMPORT_COMPLETE_STATUS = "complete";
+// Links left out because the concept already has them; nothing to put right.
+const HARMLESS_SKIPPED_OUTCOMES: MatchLinkImportOutcome[] = [
+    "already_linked",
+    "duplicate_in_file",
+];
 
 export function describeOutcome(
     outcomeLabels: Record<MatchLinkImportOutcome, string>,
@@ -25,7 +30,8 @@ export function describeOutcome(
 }
 
 export function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
-    return outcome === OUTCOME_ADD ? SUCCESS : SECONDARY;
+    if (outcome === OUTCOME_ADD) return SUCCESS;
+    return HARMLESS_SKIPPED_OUTCOMES.includes(outcome) ? SECONDARY : WARN;
 }
 
 export function summarizeOutcomeCounts(

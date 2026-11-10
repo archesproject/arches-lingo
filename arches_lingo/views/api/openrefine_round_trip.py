@@ -1,5 +1,3 @@
-import json
-from datetime import date
 from http import HTTPStatus
 
 from django.http import HttpResponse, JsonResponse
@@ -9,6 +7,9 @@ from django.views import View
 from arches.app.utils.response import JSONErrorResponse
 
 from arches_lingo.mixins.permissions import LingoEditorMixin
+from arches_lingo.utils.openrefine_round_trip.exceptions import (
+    RoundTripRequestError,
+)
 from arches_lingo.utils.openrefine_round_trip.match_link_import_service import (
     get_match_link_import,
     is_in_progress,
@@ -18,10 +19,7 @@ from arches_lingo.utils.openrefine_round_trip.match_link_import_service import (
     start_match_link_import,
 )
 from arches_lingo.utils.openrefine_round_trip.worksheet_export import (
-    parse_worksheet_scope,
-    resolve_worksheet_concept_ids,
-    resolve_worksheet_language,
-    write_worksheet,
+    build_worksheet,
 )
 
 
@@ -38,27 +36,20 @@ class ReconciliationWorksheetView(LingoEditorMixin, View):
 
     def post(self, request):
         try:
-            request_body = json.loads(request.body)
-            scope_key, scope_value = parse_worksheet_scope(request_body)
-            concept_ids = resolve_worksheet_concept_ids(
-                scope_key, scope_value, request.user
-            )
-        except ValueError as value_error:
-            return invalid_request_response(str(value_error))
+            worksheet = build_worksheet(request.body, request.user)
+        except RoundTripRequestError as request_error:
+            return invalid_request_response(str(request_error))
 
-        language = resolve_worksheet_language(request_body.get("language"))
-        response = HttpResponse(
-            write_worksheet(concept_ids, request.user, language),
-            content_type="text/csv; charset=utf-8",
-        )
+        response = HttpResponse(worksheet, content_type="text/csv; charset=utf-8")
         response["Content-Disposition"] = (
-            f'attachment; filename="reconciliation-worksheet-{date.today()}.csv"'
+            'attachment; filename="reconciliation-worksheet.csv"'
         )
         return response
 
 
 class MatchLinkImportPreviewView(LingoEditorMixin, View):
-    """Validates an uploaded match-link CSV and reports each link's outcome."""
+    """Records an uploaded match-link CSV as an import awaiting the editor's
+    go-ahead, and reports each link's outcome."""
 
     def post(self, request):
         try:
@@ -69,21 +60,18 @@ class MatchLinkImportPreviewView(LingoEditorMixin, View):
                     parse_scheme_id(request.POST.get("scheme_id")),
                 )
             )
-        except ValueError as value_error:
-            return invalid_request_response(str(value_error))
+        except RoundTripRequestError as request_error:
+            return invalid_request_response(str(request_error))
 
 
-class MatchLinkImportCreateView(LingoEditorMixin, View):
-    def post(self, request):
-        """Starts an import; while it runs, the response is the record to poll."""
+class MatchLinkImportApplyView(LingoEditorMixin, View):
+    def post(self, request, pk):
+        """Starts a previewed import; while it runs, the response is the
+        record to poll."""
         try:
-            match_link_import = start_match_link_import(
-                request.FILES.get("file"),
-                request.user,
-                parse_scheme_id(request.POST.get("scheme_id")),
-            )
-        except ValueError as value_error:
-            return invalid_request_response(str(value_error))
+            match_link_import = start_match_link_import(pk, request.user)
+        except RoundTripRequestError as request_error:
+            return invalid_request_response(str(request_error))
         return JsonResponse(
             serialize_match_link_import(match_link_import),
             status=(

@@ -69,6 +69,19 @@ const addLinksLabel = computed(() =>
     ),
 );
 
+const hasStartedApplying = computed(
+    () => isApplying.value || Boolean(finishedImport.value),
+);
+
+const dismissLabel = computed(() =>
+    hasStartedApplying.value ? $gettext("Close") : $gettext("Cancel"),
+);
+
+const isPreviewShown = computed(
+    () =>
+        Boolean(preview.value) && !isPreviewing.value && !finishedImport.value,
+);
+
 const workingText = computed(() => {
     if (isApplying.value) return $gettext("Adding links…");
     if (isPreviewing.value) return $gettext("Checking the file…");
@@ -157,7 +170,7 @@ function onVisibilityChange(isNowVisible: boolean): void {
             />
 
             <MatchLinkImportPreview
-                v-if="preview && !isPreviewing && !finishedImport"
+                v-if="preview && isPreviewShown"
                 :preview="preview"
             />
         </div>
@@ -165,11 +178,7 @@ function onVisibilityChange(isNowVisible: boolean): void {
         <template #footer>
             <div class="dialog-footer">
                 <Button
-                    :label="
-                        finishedImport || isApplying
-                            ? $gettext('Close')
-                            : $gettext('Cancel')
-                    "
+                    :label="dismissLabel"
                     :severity="SECONDARY"
                     @click="onVisibilityChange(false)"
                 />
@@ -199,11 +208,13 @@ function onVisibilityChange(isNowVisible: boolean): void {
     gap: 0.75rem;
 }
 
-/* Screen reader only: the visible spinner and summary say the same thing. */
+/* Screen reader only: the visible spinner and summary say the same thing.
+   The standard visually hidden pattern is a 1px box: screen readers skip
+   elements with no size, and a rem value can round down to none. */
 .match-link-import-dialog .dialog-body .status-announcement {
     position: absolute;
-    width: 0.0625rem;
-    height: 0.0625rem;
+    width: 1px;
+    height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;

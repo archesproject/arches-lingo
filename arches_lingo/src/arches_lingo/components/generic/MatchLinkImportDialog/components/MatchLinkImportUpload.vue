@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { useId } from "vue";
+
 import { useGettext } from "vue3-gettext";
 
 import FileUpload from "primevue/fileupload";
 
-const FILE_LABEL_ID = "match-link-import-file-label";
-const CHOOSE_BUTTON_ID = "match-link-import-choose-button";
-const HELP_TEXT_ID = "match-link-import-help";
+const FILE_SELECTED_EVENT = "file-selected" as const;
 
 const { isDisabled, isSchemeScoped } = defineProps<{
     isDisabled: boolean;
@@ -13,23 +13,25 @@ const { isDisabled, isSchemeScoped } = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (event: "file-selected", file: File | null): void;
+    (event: typeof FILE_SELECTED_EVENT, file: File | null): void;
 }>();
 
 const { $gettext } = useGettext();
 
+const fileLabelId = useId();
+const chooseButtonId = useId();
+const helpTextId = useId();
+
 function onFileSelected(event: { files: File[] }): void {
-    emit("file-selected", event.files?.[0] ?? null);
+    emit(FILE_SELECTED_EVENT, event.files?.[0] ?? null);
 }
 </script>
 
 <template>
     <div class="match-link-import-upload">
-        <span :id="FILE_LABEL_ID">{{
-            $gettext("Match links file (CSV)")
-        }}</span>
+        <span :id="fileLabelId">{{ $gettext("Match links file (CSV)") }}</span>
         <div
-            :id="HELP_TEXT_ID"
+            :id="helpTextId"
             class="help"
         >
             <p class="help-text">
@@ -43,6 +45,13 @@ function onFileSelected(event: { files: File[] }): void {
                 {{
                     $gettext(
                         "A reconciliation worksheet can be uploaded as it is once its match_uri column is filled in, for example in OpenRefine from the reconciled column's matched entity URI. Rows left without a match_uri are skipped. Separate several URIs in one cell with |.",
+                    )
+                }}
+            </p>
+            <p class="help-text">
+                {{
+                    $gettext(
+                        "A worksheet value that begins with =, + or @ is exported with a leading apostrophe, so that a spreadsheet does not run it as a formula. Remove the apostrophe in OpenRefine before reconciling that column.",
                     )
                 }}
             </p>
@@ -61,9 +70,9 @@ function onFileSelected(event: { files: File[] }): void {
             :auto="false"
             :choose-label="$gettext('Choose File')"
             :choose-button-props="{
-                id: CHOOSE_BUTTON_ID,
-                'aria-labelledby': `${FILE_LABEL_ID} ${CHOOSE_BUTTON_ID}`,
-                'aria-describedby': HELP_TEXT_ID,
+                id: chooseButtonId,
+                'aria-labelledby': `${fileLabelId} ${chooseButtonId}`,
+                'aria-describedby': helpTextId,
             }"
             :multiple="false"
             :disabled="isDisabled"

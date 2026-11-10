@@ -6,6 +6,7 @@ import uuid
 from contextlib import nullcontext
 from unittest.mock import patch
 
+from django.contrib import admin
 from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -40,6 +41,7 @@ from arches_lingo.utils.openrefine_round_trip.match_link_csv import (
 from arches_lingo.utils.openrefine_round_trip.match_link_import import (
     apply_match_link_import,
 )
+from arches_lingo.utils.reconciliation.manifest import get_concept_identifier_space
 from tests.tests import SchemeWithConceptsTestCase
 
 CELERY_CHECK = (
@@ -184,14 +186,16 @@ class ReconciliationWorksheetTests(OpenRefineRoundTripTestCase):
         ]:
             with self.subTest(scope=scope):
                 self.assertEqual(self.export(scope).status_code, 400)
-        self.assertEqual(
-            self.client.post(
-                reverse("api-lingo-reconciliation-worksheet"),
-                "[]",
-                content_type="application/json",
-            ).status_code,
-            400,
-        )
+        for raw_request_body in ["[]", "not json"]:
+            with self.subTest(raw_request_body=raw_request_body):
+                self.assertEqual(
+                    self.client.post(
+                        reverse("api-lingo-reconciliation-worksheet"),
+                        raw_request_body,
+                        content_type="application/json",
+                    ).status_code,
+                    400,
+                )
 
     @patch(
         "arches_lingo.utils.openrefine_round_trip.worksheet_export"
@@ -243,6 +247,14 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             reverse("api-lingo-match-link-import-preview"), {"file": upload}
         )
 
+    def apply(self, import_id):
+        return self.client.post(
+            reverse("api-lingo-match-link-import-apply", kwargs={"pk": import_id})
+        )
+
+    def preview_and_apply(self, upload):
+        return self.apply(self.preview(upload).json()["import_id"])
+
     def outcomes_of(self, preview_response):
         return {
             link["row_number"]: link["outcome"]
@@ -252,6 +264,8 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
     def test_every_row_gets_an_outcome(self):
         set_lifecycle_state(self.concepts[1], PUBLISHED_STATE_ID)
         self.add_exact_match(self.concepts[3], "http://example.org/already")
+        # A stored link that cannot be parsed as a URI must not fail the file.
+        self.add_exact_match(self.concepts[3], "http://[stored")
         concept_ids = [str(concept.pk) for concept in self.concepts]
         upload = csv_upload(
             [
@@ -266,6 +280,13 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
                 [concept_ids[4], "https://lingo.example/c1", "closeMatch"],
                 [concept_ids[3], "http://example.org/already", "relatedMatch"],
                 [concept_ids[2], "http://example.org/new", "closeMatch"],
+                [concept_ids[2], "http://[unclosed", ""],
+                # Concept 3 has no minted URI, but is still served at this address.
+                [
+                    concept_ids[2],
+                    f"{get_concept_identifier_space()}{concept_ids[2]}",
+                    "",
+                ],
             ]
         )
 
@@ -286,6 +307,8 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
                 10: "add",
                 11: "conflicting_link",
                 12: "conflicting_link",
+                13: "invalid_uri",
+                14: "self_match",
             },
         )
         self.assertEqual(preview.json()["counts_by_outcome"]["add"], 2)
@@ -366,9 +389,8 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             status=MatchLinkImport.STATUS_RUNNING,
             started=a_day_ago,
         )
-        stale_pending_import = MatchLinkImport.objects.create(user=self.editor)
-        MatchLinkImport.objects.filter(pk=stale_pending_import.pk).update(
-            created=a_day_ago
+        stale_pending_import = MatchLinkImport.objects.create(
+            user=self.editor, apply_requested=a_day_ago
         )
         # Queued for a day, but only just picked up by a worker.
         fresh_running_import = MatchLinkImport.objects.create(
@@ -380,9 +402,9 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             created=a_day_ago
         )
         # Queued for an hour: a backed-up queue, not a lost worker.
-        queued_pending_import = MatchLinkImport.objects.create(user=self.editor)
-        MatchLinkImport.objects.filter(pk=queued_pending_import.pk).update(
-            created=timezone.now() - datetime.timedelta(hours=1)
+        queued_pending_import = MatchLinkImport.objects.create(
+            user=self.editor,
+            apply_requested=timezone.now() - datetime.timedelta(hours=1),
         )
 
         imports_by_id = {
@@ -412,7 +434,7 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             },
         )
         self.assertIn(
-            "stopped before it finished",
+            "did not finish in the expected time",
             imports_by_id[stale_pending_import.pk]["error_message"],
         )
 
@@ -444,6 +466,49 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             ).exists()
         )
         notify_completion.assert_not_called()
+
+    @patch(NOTIFY_COMPLETION)
+    def test_an_import_given_up_on_while_it_runs_writes_nothing(
+        self, notify_completion
+    ):
+        slow_import = MatchLinkImport.objects.create(
+            user=self.editor,
+            links=[
+                {
+                    "row_number": 2,
+                    "concept_id": str(self.concepts[2].pk),
+                    "match_uri": "http://example.org/slow",
+                    "match_type": "exactMatch",
+                }
+            ],
+        )
+
+        def give_up_on_the_import(*_arguments):
+            MatchLinkImport.objects.filter(pk=slow_import.pk).update(
+                status=MatchLinkImport.STATUS_FAILED,
+                error_code=MatchLinkImport.ERROR_INTERRUPTED,
+            )
+
+        # The links are written by then, so this is the latest it can happen.
+        with patch(
+            "arches_lingo.utils.openrefine_round_trip.match_link_import"
+            ".attribute_edits_to_user",
+            side_effect=give_up_on_the_import,
+        ):
+            apply_match_link_import(slow_import)
+
+        self.assertEqual(slow_import.status, MatchLinkImport.STATUS_FAILED)
+        self.assertEqual(slow_import.error_code, MatchLinkImport.ERROR_INTERRUPTED)
+        self.assertIsNone(slow_import.edit_transaction_id)
+        self.assertFalse(
+            TileModel.objects.filter(
+                nodegroup_id=MATCH_STATUS_NODEGROUP,
+                resourceinstance_id=self.concepts[2].pk,
+            ).exists()
+        )
+        notify_completion.assert_called_once_with(
+            "Match link import failed", self.editor
+        )
 
     @patch(
         "arches_lingo.utils.openrefine_round_trip.match_link_import"
@@ -495,13 +560,14 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             ["not-a-uuid", "http://example.org/c", ""],
         ]
 
-        response = self.client.post(
-            reverse("api-lingo-match-link-imports"), {"file": csv_upload(upload_rows)}
-        )
+        response = self.preview_and_apply(csv_upload(upload_rows))
         match_link_import = MatchLinkImport.objects.get(pk=response.json()["id"])
+        repeat_apply = self.apply(match_link_import.pk)
         repeat_preview = self.preview(csv_upload(upload_rows))
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["total_links"], 3)
+        self.assertEqual(repeat_apply.status_code, 400)
         self.assertEqual(match_link_import.status, MatchLinkImport.STATUS_COMPLETE)
         self.assertEqual(
             match_link_import.outcome_counts, {"add": 2, "unknown_concept": 1}
@@ -544,14 +610,59 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
     def test_apply_is_handed_to_a_worker_when_one_is_available(
         self, apply_async, _celery_check
     ):
-        response = self.client.post(
-            reverse("api-lingo-match-link-imports"),
-            {"file": csv_upload([[str(self.concepts[2].pk), "http://e.org/a", ""]])},
+        response = self.preview_and_apply(
+            csv_upload([[str(self.concepts[2].pk), "http://e.org/a", ""]])
         )
 
         self.assertEqual(response.status_code, 202)
         apply_async.assert_called_once_with(args=[response.json()["id"]])
         self.assertEqual(response.json()["status"], "pending")
+
+    @patch(NOTIFY_COMPLETION)
+    @patch(CELERY_CHECK, return_value=False)
+    @patch(
+        "arches_lingo.utils.openrefine_round_trip.match_link_import_service"
+        ".MAX_LINKS_WITHOUT_WORKER",
+        1,
+    )
+    def test_large_files_need_a_worker_and_stay_startable(
+        self, _celery_check, _notify_completion
+    ):
+        upload_rows = [
+            [str(self.concepts[2].pk), "http://example.org/a", ""],
+            [str(self.concepts[3].pk), "http://example.org/b", ""],
+        ]
+        import_id = self.preview(csv_upload(upload_rows)).json()["import_id"]
+
+        without_worker = self.apply(import_id)
+        with (
+            patch(CELERY_CHECK, return_value=True),
+            patch("arches_lingo.tasks.apply_match_link_import_task.apply_async"),
+        ):
+            with_worker = self.apply(import_id)
+
+        self.assertEqual(without_worker.status_code, 400)
+        self.assertIn("at most 1 links", without_worker.json()["message"])
+        self.assertEqual(with_worker.status_code, 202)
+
+    def test_only_the_requesters_latest_preview_can_be_applied(self):
+        upload_rows = [[str(self.concepts[2].pk), "http://example.org/a", ""]]
+        superseded_import_id = self.preview(csv_upload(upload_rows)).json()["import_id"]
+        latest_import_id = self.preview(csv_upload(upload_rows)).json()["import_id"]
+
+        self.assertEqual(self.apply(superseded_import_id).status_code, 400)
+        self.client.force_login(self.other_editor)
+        self.assertEqual(self.apply(latest_import_id).status_code, 400)
+        self.assertEqual(
+            list(MatchLinkImport.objects.values_list("pk", flat=True)),
+            [latest_import_id],
+        )
+
+    def test_imports_are_read_only_in_the_admin(self):
+        import_admin = admin.site._registry[MatchLinkImport]
+
+        self.assertFalse(import_admin.has_add_permission(request=None))
+        self.assertFalse(import_admin.has_change_permission(request=None))
 
     @patch(NOTIFY_COMPLETION)
     def test_worker_task_applies_and_notifies(self, notify_completion):
@@ -628,9 +739,6 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
                         {} if upload is None else {"file": upload},
                     )
                 self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            self.client.post(reverse("api-lingo-match-link-imports")).status_code, 400
-        )
 
     def test_worksheet_columns_are_ignored_and_headers_normalized(self):
         upload = SimpleUploadedFile(

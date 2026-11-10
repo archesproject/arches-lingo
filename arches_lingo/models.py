@@ -339,8 +339,9 @@ class ConceptPairDismissal(models.Model):
 
 class MatchLinkImport(BackgroundJob):
     """One upload of match links (typically reconciled in OpenRefine), kept as
-    an audit record. ``edit_transaction_id`` groups every edit log entry the
-    import wrote, so its full effect can be reconstructed or undone later."""
+    an audit record. It starts as a preview and is applied only once
+    ``apply_requested`` is set. ``edit_transaction_id`` groups every edit log
+    entry the import wrote, so its full effect can be reconstructed later."""
 
     ERROR_APPLY_FAILED = "apply_failed"
     ERROR_INTERRUPTED = "interrupted"
@@ -376,6 +377,18 @@ class MatchLinkImport(BackgroundJob):
     links = models.JSONField(
         default=list,
         help_text=_("The parsed links of the uploaded file, validated again on apply."),
+    )
+    link_count = models.PositiveIntegerField(
+        default=0,
+        help_text=_("How many links the uploaded file held."),
+    )
+    apply_requested = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_(
+            "When the requester asked for the previewed links to be applied; "
+            "empty while the import is only a preview."
+        ),
     )
     outcome_counts = models.JSONField(default=dict, blank=True)
     edit_transaction_id = models.UUIDField(null=True, blank=True, db_index=True)

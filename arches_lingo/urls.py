@@ -60,7 +60,7 @@ from arches_lingo.views.api.concept_merge import (
     ConceptMergeView,
 )
 from arches_lingo.views.api.openrefine_round_trip import (
-    MatchLinkImportCreateView,
+    MatchLinkImportApplyView,
     MatchLinkImportDetailView,
     MatchLinkImportPreviewView,
     ReconciliationWorksheetView,
@@ -175,9 +175,9 @@ urlpatterns = [
         name="api-lingo-match-link-import-preview",
     ),
     path(
-        "api/lingo/match-link-imports",
-        MatchLinkImportCreateView.as_view(),
-        name="api-lingo-match-link-imports",
+        "api/lingo/match-link-imports/<int:pk>/apply",
+        MatchLinkImportApplyView.as_view(),
+        name="api-lingo-match-link-import-apply",
     ),
     path(
         "api/lingo/match-link-imports/<int:pk>",

@@ -51,6 +51,7 @@ vi.mock("@/arches_lingo/api.ts", () => ({
 }));
 
 const UPLOADED_FILE = new File(["concept_id,match_uri"], "matches.csv");
+const PREVIEWED_IMPORT_ID = 7;
 
 // PrimeVue's Dialog renders into a portal; render its slots in place instead.
 const DialogStub = defineComponent({
@@ -63,6 +64,7 @@ function previewWith(
     countsByOutcome: MatchLinkImportPreviewData["counts_by_outcome"],
 ): MatchLinkImportPreviewData {
     return {
+        import_id: PREVIEWED_IMPORT_ID,
         total_links: 2,
         counts_by_outcome: countsByOutcome,
         links: [
@@ -273,10 +275,8 @@ describe("MatchLinkImportDialog", () => {
             UPLOADED_FILE,
             "scheme-1",
         );
-        expect(startMatchLinkImport).toHaveBeenCalledWith(
-            UPLOADED_FILE,
-            "scheme-1",
-        );
+        // The scheme was recorded with the preview, so applying only names it.
+        expect(startMatchLinkImport).toHaveBeenCalledWith(PREVIEWED_IMPORT_ID);
     });
 
     it("can be closed while an import runs, and stops polling", async () => {

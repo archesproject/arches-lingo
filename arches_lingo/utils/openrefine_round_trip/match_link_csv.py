@@ -8,6 +8,9 @@ from django.utils import formats
 from django.utils.translation import gettext as _
 
 from arches_lingo.const import LINKABLE_MATCH_TYPES, MATCH_TYPE_EXACT
+from arches_lingo.utils.openrefine_round_trip.exceptions import (
+    RoundTripRequestError,
+)
 from arches_lingo.utils.openrefine_round_trip.worksheet_export import (
     MULTI_VALUE_SEPARATOR,
 )
@@ -43,24 +46,24 @@ def parse_match_link_csv(uploaded_file):
     edited reconciliation worksheet can be uploaded as it is. A match_uri cell
     holding several URIs gives one link per URI, and a row with none gives no
     link, so unmatched concepts neither show in the preview nor count toward
-    MAX_IMPORT_LINKS. Raises ValueError for a file that cannot be read.
+    MAX_IMPORT_LINKS. Raises RoundTripRequestError for a file that cannot be read.
     """
     if uploaded_file is None:
-        raise ValueError(_("Choose a CSV file to import."))
+        raise RoundTripRequestError(_("Choose a CSV file to import."))
     if uploaded_file.size > MAX_IMPORT_BYTES:
-        raise ValueError(
+        raise RoundTripRequestError(
             _("The file is larger than %(limit)s MB.")
             % {"limit": MAX_IMPORT_BYTES // (1024 * 1024)}
         )
     try:
         text = uploaded_file.read().decode("utf-8-sig")
     except UnicodeDecodeError:
-        raise ValueError(_("The file must be a UTF-8 encoded CSV."))
+        raise RoundTripRequestError(_("The file must be a UTF-8 encoded CSV."))
 
     try:
         return parse_match_links(csv.reader(io.StringIO(text)))
     except csv.Error as csv_error:
-        raise ValueError(
+        raise RoundTripRequestError(
             _("The file could not be read as a CSV: %(error)s") % {"error": csv_error}
         )
 
@@ -68,7 +71,7 @@ def parse_match_link_csv(uploaded_file):
 def parse_match_links(csv_reader):
     header = next(csv_reader, None)
     if header is None:
-        raise ValueError(_("The file is empty."))
+        raise RoundTripRequestError(_("The file is empty."))
     column_index_by_name = {
         normalize_column_name(column_name): column_index
         for column_index, column_name in enumerate(header)
@@ -79,7 +82,7 @@ def parse_match_links(csv_reader):
         if column_name not in column_index_by_name
     ]
     if missing_columns:
-        raise ValueError(
+        raise RoundTripRequestError(
             _("The file needs these columns: %(columns)s.")
             % {"columns": join_labels(missing_columns)}
         )
@@ -105,7 +108,7 @@ def parse_match_links(csv_reader):
                     }
                 )
         if len(match_links) > MAX_IMPORT_LINKS:
-            raise ValueError(
+            raise RoundTripRequestError(
                 _("The file has more than %(limit)s links.")
                 % {
                     "limit": formats.number_format(

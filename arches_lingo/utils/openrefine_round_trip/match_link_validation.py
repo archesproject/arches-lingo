@@ -4,6 +4,8 @@ import uuid
 from collections import Counter, defaultdict
 from urllib.parse import urlsplit, urlunsplit
 
+from django.conf import settings
+
 from arches.app.models.models import ResourceInstance, TileModel
 
 from arches_lingo.const import (
@@ -19,6 +21,7 @@ from arches_lingo.permissions import is_lingo_admin
 from arches_lingo.utils.concept_lifecycle import reasons_concepts_cannot_receive_data
 from arches_lingo.utils.concept_matching import get_scheme_ids_for_concepts
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
+from arches_lingo.utils.reconciliation.manifest import get_concept_identifier_space
 
 OUTCOME_ADD = "add"
 OUTCOME_ALREADY_LINKED = "already_linked"
@@ -49,10 +52,20 @@ def canonical_concept_id(raw_concept_id):
         return None
 
 
+def split_uri(uri):
+    """Return the parts of a URI, or None for one that cannot be parsed, such
+    as a host with an unclosed bracket."""
+    try:
+        return urlsplit(uri)
+    except ValueError:
+        return None
+
+
 def is_absolute_web_uri(uri):
-    parsed_uri = urlsplit(uri)
+    parsed_uri = split_uri(uri)
     return (
-        parsed_uri.scheme in ("http", "https")
+        parsed_uri is not None
+        and parsed_uri.scheme in ("http", "https")
         and bool(parsed_uri.netloc)
         and not any(character.isspace() for character in uri)
     )
@@ -60,8 +73,12 @@ def is_absolute_web_uri(uri):
 
 def comparable_uri(uri):
     """Reduce a URI to what identifies its target, so http/https, host case and
-    a trailing slash do not make the same link look new."""
-    parsed_uri = urlsplit((uri or "").strip())
+    a trailing slash do not make the same link look new. A URI that cannot be
+    parsed is only comparable with itself."""
+    stripped_uri = (uri or "").strip()
+    parsed_uri = split_uri(stripped_uri)
+    if parsed_uri is None:
+        return stripped_uri
     return urlunsplit(
         (
             "",
@@ -101,7 +118,15 @@ def uri_node_value_as_text(uri_node_value):
 
 
 def get_own_uris(concept_ids):
+    """Return ``{concept_id: {comparable uri, …}}``: each concept's minted URI,
+    and the two addresses every concept has without one."""
+    concept_identifier_space = get_concept_identifier_space()
     own_uris_by_concept_id = defaultdict(set)
+    for concept_id in concept_ids:
+        own_uris_by_concept_id[concept_id] = {
+            comparable_uri(f"{settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT}{concept_id}"),
+            comparable_uri(f"{concept_identifier_space}{concept_id}"),
+        }
     for concept_id, uri_node_value in TileModel.objects.filter(
         nodegroup_id=URI_NODEGROUP, resourceinstance_id__in=concept_ids
     ).values_list("resourceinstance_id", f"data__{URI_CONTENT_NODE}"):
@@ -122,7 +147,11 @@ def get_existing_links(concept_ids):
             relation_uris_by_link[
                 (
                     str(concept_id),
-                    comparable_uri(tile_data.get(MATCH_STATUS_COMPARATE_NODE)),
+                    comparable_uri(
+                        uri_node_value_as_text(
+                            tile_data.get(MATCH_STATUS_COMPARATE_NODE)
+                        )
+                    ),
                 )
             ].add(relation_values[0].get("uri"))
     return relation_uris_by_link

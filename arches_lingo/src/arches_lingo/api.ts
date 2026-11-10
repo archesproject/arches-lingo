@@ -1564,42 +1564,40 @@ export const downloadReconciliationWorksheet = async (
     return response.blob();
 };
 
-async function postMatchLinkFile<ResponseBody>(
-    urlName: string,
+export const previewMatchLinkImport = async (
     file: File,
     schemeId?: string,
-): Promise<ResponseBody> {
+): Promise<MatchLinkImportPreview> => {
     const formData = new FormData();
     formData.append("file", file);
     if (schemeId) formData.append("scheme_id", schemeId);
-    const response = await fetch(generateArchesURL(urlName), {
-        method: "POST",
-        headers: { "X-CSRFTOKEN": getToken() },
-        body: formData,
-    });
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-match-link-import-preview"),
+        {
+            method: "POST",
+            headers: { "X-CSRFTOKEN": getToken() },
+            body: formData,
+        },
+    );
     if (!response.ok) throw new Error(await readErrorMessage(response));
     return response.json();
-}
+};
 
-export const previewMatchLinkImport = (
-    file: File,
-    schemeId?: string,
-): Promise<MatchLinkImportPreview> =>
-    postMatchLinkFile(
-        "arches_lingo:api-lingo-match-link-import-preview",
-        file,
-        schemeId,
+export const startMatchLinkImport = async (
+    importId: number,
+): Promise<MatchLinkImportRecord> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-match-link-import-apply", {
+            pk: importId,
+        }),
+        {
+            method: "POST",
+            headers: { "X-CSRFTOKEN": getToken() },
+        },
     );
-
-export const startMatchLinkImport = (
-    file: File,
-    schemeId?: string,
-): Promise<MatchLinkImportRecord> =>
-    postMatchLinkFile(
-        "arches_lingo:api-lingo-match-link-imports",
-        file,
-        schemeId,
-    );
+    if (!response.ok) throw new Error(await readErrorMessage(response));
+    return response.json();
+};
 
 export const fetchMatchLinkImport = async (
     importId: number,

@@ -41,7 +41,6 @@ export function useMatchLinkImport(schemeId?: string): {
     const { $gettext, $ngettext } = useGettext();
     const toast = useToast();
 
-    const selectedFile = ref<File | null>(null);
     const preview = ref<MatchLinkImportPreview | null>(null);
     const previewErrorMessage = ref<string | null>(null);
     const isPreviewing = ref(false);
@@ -54,7 +53,6 @@ export function useMatchLinkImport(schemeId?: string): {
     });
 
     async function previewFile(file: File | null): Promise<void> {
-        selectedFile.value = file;
         preview.value = null;
         previewErrorMessage.value = null;
         finishedImport.value = null;
@@ -74,12 +72,11 @@ export function useMatchLinkImport(schemeId?: string): {
     }
 
     async function applyImport(): Promise<void> {
-        if (!selectedFile.value) return;
+        if (!preview.value) return;
         isApplying.value = true;
         try {
             const startedImport = await startMatchLinkImport(
-                selectedFile.value,
-                schemeId,
+                preview.value.import_id,
             );
             const completedImport = await waitForImport(startedImport);
             if (completedImport) reportFinishedImport(completedImport);

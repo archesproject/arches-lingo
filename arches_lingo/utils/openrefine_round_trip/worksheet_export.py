@@ -3,6 +3,7 @@ OpenRefine, then bring the matches back with the match-link import."""
 
 import csv
 import io
+import json
 import uuid
 from collections import defaultdict
 
@@ -43,6 +44,9 @@ from arches_lingo.utils.concept_lifecycle import (
 )
 from arches_lingo.utils.concept_matching import get_scheme_ids_for_concepts
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
+from arches_lingo.utils.openrefine_round_trip.exceptions import (
+    RoundTripRequestError,
+)
 from arches_lingo.utils.reconciliation.concept_summaries import (
     get_broader_ids_for_concepts,
     get_display_labels_for_concepts,
@@ -100,17 +104,20 @@ MATCH_COLUMN_BY_LIST_ITEM_ID = {
 
 
 def parse_worksheet_scope(request_body):
-    """Return ``(scope_key, scope_value)``; raise ValueError unless exactly one is given."""
+    """Return ``(scope_key, scope_value)``; raise RoundTripRequestError unless
+    exactly one is given."""
     scope = request_body.get("scope") if isinstance(request_body, dict) else None
     if not isinstance(scope, dict):
-        raise ValueError(_('The request needs a "scope" object.'))
+        raise RoundTripRequestError(_('The request needs a "scope" object.'))
     given_scopes = [
         (scope_key, scope[scope_key])
         for scope_key in SCOPE_KEYS
         if scope.get(scope_key) not in (None, "")
     ]
     if len(given_scopes) != 1:
-        raise ValueError(_("Give exactly one of scheme_id, concept_set_id or query."))
+        raise RoundTripRequestError(
+            _("Give exactly one of scheme_id, concept_set_id or query.")
+        )
     return given_scopes[0]
 
 
@@ -124,7 +131,7 @@ def resolve_worksheet_concept_ids(scope_key, scope_value, user):
         try:
             scope_value = uuid.UUID(str(scope_value))
         except ValueError:
-            raise ValueError(_("The scheme id is not valid."))
+            raise RoundTripRequestError(_("The scheme id is not valid."))
         candidate_ids = TileModel.objects.filter(
             nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
             **{
@@ -137,13 +144,13 @@ def resolve_worksheet_concept_ids(scope_key, scope_value, user):
         try:
             concept_set = ConceptSet.objects.get(pk=scope_value, user=user)
         except (ConceptSet.DoesNotExist, TypeError, ValueError):
-            raise ValueError(_("That concept set was not found."))
+            raise RoundTripRequestError(_("That concept set was not found."))
         candidate_ids = concept_set.members.values("concept_id")
     else:
         if not isinstance(scope_value, dict):
-            raise ValueError(_("The search query must be an object."))
+            raise RoundTripRequestError(_("The search query must be an object."))
         if is_empty_search_query(scope_value):
-            raise ValueError(_("Add at least one search condition."))
+            raise RoundTripRequestError(_("Add at least one search condition."))
         candidate_ids = AdvancedSearchEvaluator(user=user).evaluate(scope_value)
 
     concept_ids = [
@@ -156,7 +163,7 @@ def resolve_worksheet_concept_ids(scope_key, scope_value, user):
         .values_list("pk", flat=True)[: MAX_WORKSHEET_CONCEPTS + 1]
     ]
     if len(concept_ids) > MAX_WORKSHEET_CONCEPTS:
-        raise ValueError(
+        raise RoundTripRequestError(
             _(
                 "A worksheet can hold at most %(limit)s concepts. "
                 "Narrow the scheme, set or search and try again."
@@ -327,6 +334,19 @@ def resolve_worksheet_language(requested_language):
     ):
         return requested_language
     return get_language() or settings.LANGUAGE_CODE
+
+
+def build_worksheet(raw_request_body, user):
+    """Return the worksheet CSV a JSON request asks for; raise
+    RoundTripRequestError for a request that cannot be answered."""
+    try:
+        request_body = json.loads(raw_request_body)
+    except ValueError:
+        raise RoundTripRequestError(_("The request body must be JSON."))
+    scope_key, scope_value = parse_worksheet_scope(request_body)
+    concept_ids = resolve_worksheet_concept_ids(scope_key, scope_value, user)
+    language = resolve_worksheet_language(request_body.get("language"))
+    return write_worksheet(concept_ids, user, language)
 
 
 def write_worksheet(concept_ids, user, language):
