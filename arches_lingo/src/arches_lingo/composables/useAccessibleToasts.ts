@@ -1,4 +1,4 @@
-import { nextTick, onBeforeUnmount } from "vue";
+import { nextTick, onBeforeUnmount, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 
 import ToastEventBus from "primevue/toasteventbus";
@@ -6,11 +6,23 @@ import ToastEventBus from "primevue/toasteventbus";
 import { ERROR } from "@/arches_lingo/constants.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 
-import type { ToastMessageOptions } from "primevue/toast";
+import type {
+    ToastMessageOptions,
+    ToastPassThroughMethodOptions,
+} from "primevue/toast";
 
 const TOAST_MESSAGE_SELECTOR = ".p-toast-message";
 const OPEN_TOAST_CLOSE_BUTTON_SELECTOR =
     ".p-toast-message:not(.p-toast-message-leave-active) .p-toast-close-button";
+const TOAST_ID_ATTRIBUTE = "data-toast-id";
+
+type ToastMessageWithId = ToastMessageOptions & { id?: number };
+
+export const TOAST_MESSAGE_PASS_THROUGH = ({
+    instance,
+}: ToastPassThroughMethodOptions) => ({
+    [TOAST_ID_ATTRIBUTE]: instance.message?.id,
+});
 
 // In ACCESSIBILITY_MODE, errors and toasts with a detail stay open and take focus (2.2.1).
 export function useAccessibleToasts() {
@@ -29,8 +41,15 @@ export function useAccessibleToasts() {
         return closeButtons.length > 0;
     }
 
-    // Runs before the Toast component's own listener, so it sees the message first.
-    async function makeToastSticky(message: ToastMessageOptions) {
+    function focusToast(toastId: ToastMessageWithId["id"]) {
+        document
+            .querySelector<HTMLElement>(
+                `[${TOAST_ID_ATTRIBUTE}="${String(toastId)}"] .p-toast-close-button`,
+            )
+            ?.focus();
+    }
+
+    async function makeToastSticky(message: ToastMessageWithId) {
         const isStickyToast = message.severity === ERROR || message.detail;
         if (!isAccessibilityMode.value || !isStickyToast) {
             return;
@@ -44,7 +63,7 @@ export function useAccessibleToasts() {
                     : null;
         }
         await nextTick();
-        focusNewestToast();
+        focusToast(message.id);
     }
 
     function onToastKeydown(event: KeyboardEvent) {
@@ -72,7 +91,7 @@ export function useAccessibleToasts() {
         focusBeforeToasts = null;
     }
 
-    ToastEventBus.on("add", makeToastSticky);
+    onMounted(() => ToastEventBus.on("add", makeToastSticky));
     onBeforeUnmount(() => ToastEventBus.off("add", makeToastSticky));
 
     return { onToastKeydown, onToastClose };

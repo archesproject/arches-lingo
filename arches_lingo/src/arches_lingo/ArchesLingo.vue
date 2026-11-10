@@ -16,7 +16,10 @@ import {
     HIERARCHY_PANEL_ID,
     MAIN_CONTENT_ID,
 } from "@/arches_lingo/constants.ts";
-import { useAccessibleToasts } from "@/arches_lingo/composables/useAccessibleToasts.ts";
+import {
+    TOAST_MESSAGE_PASS_THROUGH,
+    useAccessibleToasts,
+} from "@/arches_lingo/composables/useAccessibleToasts.ts";
 import { usePageTitle } from "@/arches_lingo/composables/usePageTitle.ts";
 import { useRouteChangeFocus } from "@/arches_lingo/composables/useRouteChangeFocus.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
@@ -197,6 +200,7 @@ function focusMainContent() {
     <Toast
         :pt="{
             root: { onKeydown: onToastKeydown },
+            message: TOAST_MESSAGE_PASS_THROUGH,
             summary: { fontSize: 'medium' },
             detail: { fontSize: 'small' },
             messageIcon: {
