@@ -231,11 +231,11 @@ function externalConceptURI(rowData: ConceptMatchStatus): string | null {
 
 <style scoped>
 .text-link {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 :deep(a) {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     padding-left: 0;
 
     span {
@@ -244,7 +244,7 @@ function externalConceptURI(rowData: ConceptMatchStatus): string | null {
 }
 
 .local-concept-link {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     font-size: var(--p-lingo-font-size-smallnormal);
     text-decoration: none;
 

@@ -153,6 +153,11 @@ ul:first-child li:first-child .p-card .scheme-circle {
     outline: auto;
 }
 
+:global(.arches-high-contrast .p-card:has(.scheme-card-link:focus-visible)) {
+    outline: 0.25rem solid var(--p-text-color);
+    outline-offset: 0.125rem;
+}
+
 .import-button {
     position: relative;
     z-index: 1;

@@ -7,6 +7,7 @@ import Button from "primevue/button";
 
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import BasicSearch from "@/arches_lingo/components/basic-search/BasicSearch.vue";
+import DisplaySettingsMenu from "@/arches_lingo/components/generic/DisplaySettingsMenu.vue";
 import { SEARCH_RESULTS_PER_PAGE } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
@@ -61,6 +62,7 @@ const quickActions = [
 
 <template>
     <div class="landing-page">
+        <DisplaySettingsMenu class="landing-display-settings" />
         <section class="landing-hero">
             <div class="hero-content">
                 <div class="hero-text">
@@ -322,11 +324,18 @@ const quickActions = [
 
 <style scoped>
 .landing-page {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 100%;
     overflow-y: auto;
     background: var(--p-inputtext-background);
+}
+
+.landing-display-settings {
+    position: absolute;
+    top: 1rem;
+    inset-inline-end: 1rem;
 }
 
 /* ── Hero ──────────────────────────────────────────────────── */
@@ -445,7 +454,12 @@ const quickActions = [
 
 .pulse-ring {
     transform-origin: 240px 45px;
-    animation: node-pulse 2.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .pulse-ring {
+        animation: node-pulse 2.8s ease-out forwards;
+    }
 }
 
 @keyframes node-pulse {

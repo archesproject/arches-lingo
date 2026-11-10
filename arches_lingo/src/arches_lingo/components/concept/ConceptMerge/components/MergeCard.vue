@@ -41,7 +41,7 @@ const { $gettext } = useGettext();
 }
 
 .merge-card.muted {
-    opacity: 0.6;
+    opacity: var(--p-lingo-dimmed-already-present-opacity);
 }
 
 .merge-card-control {

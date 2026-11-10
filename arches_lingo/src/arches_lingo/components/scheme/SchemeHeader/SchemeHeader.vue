@@ -1003,13 +1003,13 @@ h1 > span {
     overflow: hidden;
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .uri-copy-button {
     flex-shrink: 0;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 :deep(.scheme-uri .p-button-label) {
@@ -1076,7 +1076,7 @@ h1 > span {
     gap: 0.25rem;
     padding: 0.125rem 0.375rem;
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     background: none;
     border: 0;
     cursor: pointer;
@@ -1085,8 +1085,8 @@ h1 > span {
 }
 
 .language-expand-toggle:hover {
-    color: var(--p-primary-600);
-    background: var(--p-primary-50);
+    color: var(--p-lingo-accent-strong-color);
+    background: var(--p-lingo-accent-hover-background);
 }
 
 .language-expand-toggle .pi {
@@ -1107,7 +1107,7 @@ h1 > span {
 
 .add-language {
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     text-decoration: underline;
     padding: 0 0.5rem;
 }
@@ -1137,7 +1137,7 @@ h1 > span {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     min-width: 0;
 }
 
@@ -1151,8 +1151,8 @@ h1 > span {
 
 .scheme-language {
     padding: 0.5rem 1rem;
-    background: var(--p-menubar-item-icon-color);
-    border: 0.0625rem solid var(--p-menubar-item-icon-color);
+    background: var(--p-lingo-language-chip-background);
+    border: 0.0625rem solid var(--p-lingo-language-chip-background);
     border-radius: 0.125rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-content-color);

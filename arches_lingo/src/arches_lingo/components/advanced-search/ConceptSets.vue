@@ -223,6 +223,13 @@ async function handleAddToSet(selectedIds: Set<string>) {
     }
 }
 
+function getActiveSetAriaCurrent(setItem: ConceptSetItem) {
+    if (setItem.id === props.activeConceptSetId) {
+        return "true";
+    }
+    return undefined;
+}
+
 function loadSet(setItem: ConceptSetItem) {
     emit("load-set", setItem.id);
 }
@@ -324,6 +331,7 @@ watch(
                 plain
                 class="set-info"
                 :data-concept-set-id="setItem.id"
+                :aria-current="getActiveSetAriaCurrent(setItem)"
                 :pt="{
                     root: {
                         style: {
@@ -478,7 +486,7 @@ watch(
     flex-wrap: wrap;
     justify-content: flex-end;
     padding-bottom: 0.5rem;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     gap: 0.375rem;
 }
 
@@ -509,7 +517,7 @@ watch(
 
 .set-item--active {
     background-color: var(--p-highlight-background);
-    border-left: 0.1875rem solid var(--p-primary-400);
+    border-left: 0.1875rem solid var(--p-lingo-selection-indicator-color);
 }
 
 .set-info {

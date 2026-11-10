@@ -119,14 +119,14 @@ defineProps<{
     gap: 0.375rem;
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
 
 .stat-icon {
     font-size: 0.75rem;
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .stat-count {

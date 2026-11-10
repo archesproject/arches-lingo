@@ -295,6 +295,6 @@ function onUpdateModelValue(updatedValue: string[]) {
 
 .concept-hierarchy {
     font-size: small;
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 </style>
