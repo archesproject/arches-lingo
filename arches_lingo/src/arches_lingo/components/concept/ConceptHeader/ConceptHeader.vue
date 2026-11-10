@@ -315,15 +315,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 </script>
 
 <template>
-    <Skeleton
-        v-if="isLoading"
-        height="9rem"
-        class="loading-skeleton"
-    />
-    <div
-        v-show="!isLoading"
-        class="concept-header"
-    >
+    <div class="concept-header">
         <ConceptHeaderToolbar
             :concept="concept"
             :label="label"
@@ -331,10 +323,20 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
             :resource-instance-id="resourceInstanceId"
             :concept-type-tile="conceptTypeTile"
             :is-top-concept="isTopConcept"
+            :is-header-loading="isLoading"
             @update:is-widget-loading="isWidgetLoading = $event"
         />
 
-        <div class="header-content">
+        <div
+            v-if="isLoading"
+            class="header-content"
+        >
+            <Skeleton height="5.5rem" />
+        </div>
+        <div
+            v-show="!isLoading"
+            class="header-content"
+        >
             <div class="concept-header-section">
                 <div class="header-row">
                     <div class="header-item">
