@@ -26,6 +26,7 @@ export interface MatchLinkImportLink {
 }
 
 export interface MatchLinkImportPreview {
+    import_id: number;
     total_links: number;
     counts_by_outcome: MatchLinkImportOutcomeCounts;
     links: MatchLinkImportLink[];

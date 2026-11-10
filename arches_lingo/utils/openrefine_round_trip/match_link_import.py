@@ -39,6 +39,10 @@ from arches_lingo.utils.openrefine_round_trip.match_link_validation import (
 logger = logging.getLogger(__name__)
 
 
+class MatchLinkImportAbandoned(Exception):
+    """The import was given up on while its links were being written."""
+
+
 def claim_match_link_import(match_link_import):
     """Move a pending import to running; False if it was already taken or
     given up on, so a late or repeated worker never applies it a second time."""
@@ -76,11 +80,43 @@ def attribute_edits_to_user(edit_transaction_id, user):
     )
 
 
+def record_completion(match_link_import, validated_links, edit_transaction_id):
+    """Mark a running import complete inside the transaction that wrote its
+    links, so the two commit together or not at all.
+
+    Raises MatchLinkImportAbandoned if the import was given up on meanwhile
+    (see ``reap_stale_imports``), which rolls its links back: a failed import
+    has then never added anything.
+    """
+    is_completion_recorded = MatchLinkImport.objects.filter(
+        pk=match_link_import.pk, status=MatchLinkImport.STATUS_RUNNING
+    ).update(
+        status=MatchLinkImport.STATUS_COMPLETE,
+        finished=timezone.now(),
+        outcome_counts=count_outcomes(validated_links),
+        edit_transaction_id=edit_transaction_id,
+    )
+    if not is_completion_recorded:
+        raise MatchLinkImportAbandoned()
+
+
+def record_failure(match_link_import, error_code):
+    """Only an import still running is failed here; one already given up on
+    keeps the reason it was given."""
+    MatchLinkImport.objects.filter(
+        pk=match_link_import.pk, status=MatchLinkImport.STATUS_RUNNING
+    ).update(
+        status=MatchLinkImport.STATUS_FAILED,
+        finished=timezone.now(),
+        error_code=error_code,
+    )
+
+
 def apply_match_link_import(match_link_import):
     """Validate the stored links again (state may have changed since the
     preview) and write them in one edit transaction.
 
-    The record is saved as soon as the links commit, so its
+    Completion is recorded with the links, so the record's
     ``edit_transaction_id`` survives a failure while indexing them.
     """
     if not claim_match_link_import(match_link_import):
@@ -127,16 +163,22 @@ def apply_match_link_import(match_link_import):
                     resource_by_concept_id[link_to_add["concept_id"]],
                 )
             attribute_edits_to_user(edit_transaction_id, match_link_import.user)
-        if links_to_add:
-            match_link_import.edit_transaction_id = edit_transaction_id
-        match_link_import.outcome_counts = count_outcomes(validated_links)
-        match_link_import.status = MatchLinkImport.STATUS_COMPLETE
+            record_completion(
+                match_link_import,
+                validated_links,
+                edit_transaction_id if links_to_add else None,
+            )
+    except MatchLinkImportAbandoned:
+        logger.warning(
+            "Match link import %s was given up on while it ran; "
+            "its links were not written.",
+            match_link_import.pk,
+        )
+        record_failure(match_link_import, MatchLinkImport.ERROR_INTERRUPTED)
     except Exception:
         logger.exception("Match link import %s failed", match_link_import.pk)
-        match_link_import.status = MatchLinkImport.STATUS_FAILED
-        match_link_import.error_code = MatchLinkImport.ERROR_APPLY_FAILED
-    match_link_import.finished = timezone.now()
-    match_link_import.save()
+        record_failure(match_link_import, MatchLinkImport.ERROR_APPLY_FAILED)
+    match_link_import.refresh_from_db()
 
     if match_link_import.status == MatchLinkImport.STATUS_COMPLETE and links_to_add:
         try:

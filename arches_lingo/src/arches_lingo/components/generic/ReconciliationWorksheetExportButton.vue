@@ -21,7 +21,7 @@ const { isDownloading, downloadWorksheet } =
         icon="pi pi-file-export"
         size="small"
         text
-        :label="$gettext('Reconciliation worksheet')"
+        :label="$gettext('Download reconciliation worksheet')"
         :loading="isDownloading"
         @click="downloadWorksheet(scope)"
     />

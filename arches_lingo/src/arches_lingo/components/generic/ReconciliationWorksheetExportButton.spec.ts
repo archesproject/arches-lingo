@@ -31,7 +31,9 @@ describe("ReconciliationWorksheetExportButton", () => {
         await wrapper.vm.$nextTick();
 
         expect(downloadWorksheet).toHaveBeenCalledWith({ concept_set_id: 3 });
-        expect(wrapper.find("button").text()).toBe("Reconciliation worksheet");
+        expect(wrapper.find("button").text()).toBe(
+            "Download reconciliation worksheet",
+        );
         expect(wrapper.find("button").attributes("data-p-disabled")).toBe(
             "true",
         );

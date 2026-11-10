@@ -59,6 +59,12 @@ async function useImportWithFile(): Promise<
             },
         }),
     );
+    vi.mocked(previewMatchLinkImport).mockResolvedValue({
+        import_id: 7,
+        total_links: 1,
+        counts_by_outcome: { add: 1 },
+        links: [],
+    });
     await exposed.previewFile(UPLOADED_FILE);
     return exposed;
 }

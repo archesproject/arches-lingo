@@ -66,6 +66,20 @@ class Migration(migrations.Migration):
                         help_text="The parsed links of the uploaded file, validated again on apply.",
                     ),
                 ),
+                (
+                    "link_count",
+                    models.PositiveIntegerField(
+                        default=0, help_text="How many links the uploaded file held."
+                    ),
+                ),
+                (
+                    "apply_requested",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="When the requester asked for the previewed links to be applied; empty while the import is only a preview.",
+                        null=True,
+                    ),
+                ),
                 ("outcome_counts", models.JSONField(blank=True, default=dict)),
                 (
                     "edit_transaction_id",
