@@ -1200,10 +1200,15 @@ async function onNodeExpand(node: TreeNode) {
             class="concept-tree"
             selection-mode="single"
             :pt="{
-                node: ({ instance }: TreePassThroughMethodOptions) => ({
+                node: ({
+                    instance,
+                    context,
+                }: TreePassThroughMethodOptions) => ({
                     'data-node-key': instance.node.key,
                     'aria-label': getTreeItemAccessibleName(instance.node),
                     'aria-describedby': treeActionsHintId,
+                    'aria-selected': context.selected,
+                    'aria-checked': undefined,
                 }),
                 nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
                     let className;
