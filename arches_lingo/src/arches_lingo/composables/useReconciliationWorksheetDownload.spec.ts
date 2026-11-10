@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { downloadReconciliationWorksheet } from "@/arches_lingo/api.ts";
 import { useReconciliationWorksheetDownload } from "@/arches_lingo/composables/useReconciliationWorksheetDownload.ts";
-import { saveBlobAsFile } from "@/arches_lingo/utils.ts";
+import { triggerBlobDownload } from "@/arches_lingo/utils.ts";
 
 const toastAdd = vi.fn();
 
@@ -19,7 +19,7 @@ vi.mock("@/arches_lingo/api.ts", () => ({
 }));
 
 vi.mock("@/arches_lingo/utils.ts", () => ({
-    saveBlobAsFile: vi.fn(),
+    triggerBlobDownload: vi.fn(),
 }));
 
 function useDownloadInComponent(): ReturnType<
@@ -41,7 +41,7 @@ describe("useReconciliationWorksheetDownload", () => {
     beforeEach(() => {
         setActivePinia(createPinia());
         toastAdd.mockReset();
-        vi.mocked(saveBlobAsFile).mockReset();
+        vi.mocked(triggerBlobDownload).mockReset();
         vi.mocked(downloadReconciliationWorksheet).mockReset();
     });
 
@@ -58,7 +58,7 @@ describe("useReconciliationWorksheetDownload", () => {
             { scheme_id: "scheme-1" },
             expect.any(String),
         );
-        expect(vi.mocked(saveBlobAsFile).mock.calls[0][1]).toMatch(
+        expect(vi.mocked(triggerBlobDownload).mock.calls[0][1]).toMatch(
             /^reconciliation-worksheet-\d{4}-\d{2}-\d{2}\.csv$/,
         );
     });
@@ -73,7 +73,7 @@ describe("useReconciliationWorksheetDownload", () => {
         await downloadWorksheet({ scheme_id: "scheme-1" }, "aat-terms.CSV");
 
         expect(
-            vi.mocked(saveBlobAsFile).mock.calls.map((call) => call[1]),
+            vi.mocked(triggerBlobDownload).mock.calls.map((call) => call[1]),
         ).toEqual(["aat-terms.csv", "aat-terms.CSV"]);
     });
 
@@ -86,7 +86,7 @@ describe("useReconciliationWorksheetDownload", () => {
         const isDownloaded = await downloadWorksheet({ concept_set_id: 3 });
 
         expect(isDownloaded).toBe(false);
-        expect(saveBlobAsFile).toHaveBeenCalledTimes(0);
+        expect(triggerBlobDownload).toHaveBeenCalledTimes(0);
         expect(toastAdd).toHaveBeenCalledWith(
             expect.objectContaining({
                 severity: "error",
