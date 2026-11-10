@@ -316,6 +316,8 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         # Row 10 links to Concept 1's own URI: added one way, and flagged.
         self.assertTrue(links[8]["is_internal_concept"])
         self.assertFalse(links[0]["is_internal_concept"])
+        # Row 7 is Concept 1's own URI: not linked at all, so not flagged.
+        self.assertFalse(links[5]["is_internal_concept"])
 
     def test_cells_are_split_aliased_and_compared_loosely(self):
         self.add_exact_match(self.concepts[3], "http://example.org/already")
