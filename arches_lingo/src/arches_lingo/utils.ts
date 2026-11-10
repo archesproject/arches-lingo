@@ -1,3 +1,5 @@
+import { nextTick } from "vue";
+
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
@@ -573,6 +575,34 @@ const FOCUSABLE_SELECTOR = [
 // that can't carry one is otherwise unreachable from the keyboard (2.4.3).
 export function focusFirstFocusableElement(container: HTMLElement | null) {
     container?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
+}
+
+/**
+ * Call after removing an item from a rendered list, with the list as it is
+ * now. The removed row's button had focus, so without this focus drops to
+ * <body> (2.4.3). Once the list has re-rendered, this focuses the item that
+ * took the removed one's place (or the one before it, if the last was
+ * removed), or calls `focusWhenEmpty` when nothing is left.
+ */
+export async function focusNeighborAfterRemoval<Item>({
+    remainingItems,
+    removedIndex,
+    focusItem,
+    focusWhenEmpty,
+}: {
+    remainingItems: Item[];
+    removedIndex: number;
+    focusItem: (item: Item) => void;
+    focusWhenEmpty: () => void;
+}) {
+    const itemToFocus =
+        remainingItems[removedIndex] ?? remainingItems[removedIndex - 1];
+    await nextTick();
+    if (itemToFocus) {
+        focusItem(itemToFocus);
+    } else {
+        focusWhenEmpty();
+    }
 }
 
 type SplitterLayout = "horizontal" | "vertical";

@@ -12,6 +12,7 @@ import {
     canUserDereferenceResource,
     dataIsScheme,
     dataIsConcept,
+    focusNeighborAfterRemoval,
     getSplitterGutterPassThrough,
     treeFromSchemes,
 } from "@/arches_lingo/utils.ts";
@@ -265,5 +266,39 @@ describe("Splitter gutter pass-through", () => {
 
         expect(visible.gutter.style.display).toBe("flex");
         expect(hidden.gutter.style.display).toBe("none");
+    });
+});
+
+describe("Focus after removing a list item", () => {
+    async function getFocusTarget(
+        remainingItems: string[],
+        removedIndex: number,
+    ) {
+        let focusedTarget: string | null = null;
+        await focusNeighborAfterRemoval({
+            remainingItems,
+            removedIndex,
+            focusItem: (item) => {
+                focusedTarget = item;
+            },
+            focusWhenEmpty: () => {
+                focusedTarget = "empty";
+            },
+        });
+        return focusedTarget;
+    }
+
+    it("focuses the item that took the removed one's place", async () => {
+        // "b" was removed from ["a", "b", "c"].
+        expect(await getFocusTarget(["a", "c"], 1)).toBe("c");
+    });
+
+    it("focuses the previous item when the last one was removed", async () => {
+        // "c" was removed from ["a", "b", "c"].
+        expect(await getFocusTarget(["a", "b"], 2)).toBe("b");
+    });
+
+    it("falls back when the list is now empty", async () => {
+        expect(await getFocusTarget([], 0)).toBe("empty");
     });
 });
