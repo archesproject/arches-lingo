@@ -63,6 +63,13 @@ const searchResultsTotalPages = ref(0);
 const resultsMaxHeight = ref("60vh");
 const isLoading = ref(false);
 const isLoadingAdditionalResults = ref(false);
+let pendingAdditionalResultsFetch: Promise<void> | null = null;
+const loadMoreButtonIcon = computed(() => {
+    if (isLoadingAdditionalResults.value) {
+        return "pi pi-spin pi-spinner";
+    }
+    return undefined;
+});
 const hasSearchResponse = ref(false);
 const isResultsPanelOpen = ref(false);
 
@@ -100,14 +107,6 @@ function getResultLinks() {
     ];
 }
 
-function getLastResultsPanelFocusable() {
-    const panelFocusables =
-        rootRef.value?.querySelectorAll<HTMLElement>(
-            ".result-link, .load-more-button",
-        ) ?? [];
-    return panelFocusables[panelFocusables.length - 1];
-}
-
 function getResultPositionDescription(resultIndex: number) {
     return $gettext("Result %{position} of %{total}", {
         position: String(resultIndex + 1),
@@ -117,13 +116,6 @@ function getResultPositionDescription(resultIndex: number) {
 
 function getInputElement() {
     return rootRef.value?.querySelector<HTMLInputElement>(".search-input");
-}
-
-function isInsideSearch(eventTarget: EventTarget | null) {
-    return (
-        eventTarget instanceof Node &&
-        Boolean(rootRef.value?.contains(eventTarget))
-    );
 }
 
 function focusInput() {
@@ -246,12 +238,21 @@ function announceSearchResults(pageNumber: number) {
     }
 }
 
-async function loadMoreResults() {
+function loadMoreResults() {
+    if (pendingAdditionalResultsFetch) {
+        return pendingAdditionalResultsFetch;
+    }
     if (isLoading.value || !hasMoreResults.value) {
-        return;
+        return Promise.resolve();
     }
 
-    await fetchData(query.value, searchResultsPage.value + 1);
+    pendingAdditionalResultsFetch = fetchData(
+        query.value,
+        searchResultsPage.value + 1,
+    ).finally(() => {
+        pendingAdditionalResultsFetch = null;
+    });
+    return pendingAdditionalResultsFetch;
 }
 
 function loadMoreIfScrolledToEnd() {
@@ -278,23 +279,13 @@ async function loadMoreResultsAndFocusFirstNew() {
 }
 
 function onSearchKeydown(event: KeyboardEvent) {
-    if (!isResultsPanelVisible.value) {
+    if (!isResultsPanelVisible.value || event.key !== "Escape") {
         return;
     }
 
-    const isTabFromLastResult =
-        event.key === "Tab" &&
-        !event.shiftKey &&
-        event.target === getLastResultsPanelFocusable();
-
-    if (event.key === "Escape") {
-        event.stopPropagation();
-        closeResultsPanel();
-    } else if (!isTabFromLastResult) {
-        return;
-    }
-
+    event.stopPropagation();
     event.preventDefault();
+    closeResultsPanel();
     focusInput();
 }
 
@@ -316,18 +307,6 @@ function onResultsKeydown(event: KeyboardEvent) {
     }
 
     onArrowKeyInResults(event);
-}
-
-function onSearchFocusOut(event: FocusEvent) {
-    if (event.relatedTarget && !isInsideSearch(event.relatedTarget)) {
-        closeResultsPanel();
-    }
-}
-
-function onDocumentPointerDown(event: PointerEvent) {
-    if (!isInsideSearch(event.target)) {
-        closeResultsPanel();
-    }
 }
 
 function onInputClick() {
@@ -364,12 +343,10 @@ async function openSearchResult(
 
 onMounted(() => {
     focusInput();
-    document.addEventListener("pointerdown", onDocumentPointerDown);
     window.addEventListener("resize", updateResultsMaxHeight);
 });
 
 onUnmounted(() => {
-    document.removeEventListener("pointerdown", onDocumentPointerDown);
     window.removeEventListener("resize", updateResultsMaxHeight);
     window.clearTimeout(searchDelayTimeoutId);
     window.clearTimeout(resultsAnnouncementTimeoutId);
@@ -402,7 +379,6 @@ watch(orderMode, (newOrderMode, previousOrderMode) => {
         ref="root"
         class="basic-search"
         @keydown="onSearchKeydown"
-        @focusout="onSearchFocusOut"
     >
         <div class="search-input-row">
             <i
@@ -496,7 +472,8 @@ watch(orderMode, (newOrderMode, previousOrderMode) => {
             <Button
                 v-if="hasMoreResults"
                 class="load-more-button"
-                :loading="isLoadingAdditionalResults"
+                :icon="loadMoreButtonIcon"
+                :aria-busy="isLoadingAdditionalResults"
                 size="small"
                 text
                 :label="
