@@ -1053,6 +1053,47 @@ function getTreeItemAccessibleName(node: TreeNode) {
         .join(", ");
 }
 
+function findDisplayedNodeByKey(
+    nodes: TreeNode[],
+    nodeKey: string,
+): TreeNode | undefined {
+    for (const node of nodes) {
+        if (node.key === nodeKey) {
+            return node;
+        }
+        const matchingDescendant = node.children
+            ? findDisplayedNodeByKey(node.children, nodeKey)
+            : undefined;
+        if (matchingDescendant) {
+            return matchingDescendant;
+        }
+    }
+}
+
+function onTreeKeydownCapture(event: KeyboardEvent) {
+    const treeItemElement = event.target as HTMLElement;
+    const nodeKey = treeItemElement.dataset.nodeKey;
+    if (
+        event.key !== "ArrowRight" ||
+        treeItemElement.getAttribute("role") !== "treeitem" ||
+        !nodeKey ||
+        expandedKeys.value[nodeKey]
+    ) {
+        return;
+    }
+
+    const node = findDisplayedNodeByKey(displayTree.value, nodeKey);
+    const hasUnloadedChildren = node?.leaf === false && !node.children?.length;
+    if (!node || !hasUnloadedChildren) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    expandedKeys.value = { ...expandedKeys.value, [nodeKey]: true };
+    onNodeExpand(node);
+}
+
 async function onNodeExpand(node: TreeNode) {
     const conceptId: string = node.data?.id;
     if (!conceptId || node.data?.top_concepts !== undefined) return;
@@ -1194,6 +1235,7 @@ async function onNodeExpand(node: TreeNode) {
             @focusin="onTreeFocusIn"
             @focusout="onTreeFocusOut"
             @keydown="onTreeKeydown"
+            @keydown.capture="onTreeKeydownCapture"
         >
             <template #default="slotProps">
                 <div :id="`tree-node-${slotProps.node.key}`">
