@@ -1,10 +1,14 @@
-import { defineComponent, h, ref } from "vue";
+import { defineComponent, h, nextTick, ref } from "vue";
 
 import { mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EventBus } from "@primeuix/utils/eventbus";
+import PrimeVue from "primevue/config";
+import Toast from "primevue/toast";
 
-import { useAccessibleToasts } from "@/arches_lingo/composables/useAccessibleToasts.ts";
+import {
+    TOAST_MESSAGE_PASS_THROUGH,
+    useAccessibleToasts,
+} from "@/arches_lingo/composables/useAccessibleToasts.ts";
 
 import type { ToastMessageOptions } from "primevue/toast";
 
@@ -13,8 +17,6 @@ const isAccessibilityMode = ref(true);
 vi.mock("@/arches_lingo/stores/useAppSettingsStore.ts", () => ({
     useAppSettingsStore: () => ({ isAccessibilityMode }),
 }));
-
-vi.mock("primevue/toasteventbus", () => ({ default: EventBus() }));
 
 async function addToast(message: ToastMessageOptions) {
     const { default: ToastEventBus } = await import("primevue/toasteventbus");
@@ -26,14 +28,23 @@ async function addToast(message: ToastMessageOptions) {
     return message;
 }
 
+// Like ArchesLingo: the composable's owner renders <Toast> as a child.
 function mountWithAccessibleToasts() {
     return mount(
         defineComponent({
             setup() {
                 useAccessibleToasts();
-                return () => h("div");
+                return () =>
+                    h(Toast, { pt: { message: TOAST_MESSAGE_PASS_THROUGH } });
             },
         }),
+        {
+            attachTo: document.body,
+            global: {
+                plugins: [PrimeVue],
+                stubs: { transition: false, "transition-group": false },
+            },
+        },
     );
 }
 
@@ -67,5 +78,25 @@ describe("useAccessibleToasts", () => {
 
         expect(error.life).toBe(8000);
         wrapper.unmount();
+    });
+
+    it("focuses each new toast's own close button, not an older one", async () => {
+        const opener = document.createElement("button");
+        document.body.append(opener);
+        opener.focus();
+        const wrapper = mountWithAccessibleToasts();
+
+        await addToast({ severity: "error", summary: "First" });
+        await nextTick();
+        const firstToast = document.activeElement?.closest("[data-toast-id]");
+        expect(firstToast?.textContent).toContain("First");
+
+        await addToast({ severity: "error", summary: "Second" });
+        await nextTick();
+        const secondToast = document.activeElement?.closest("[data-toast-id]");
+        expect(secondToast?.textContent).toContain("Second");
+
+        wrapper.unmount();
+        opener.remove();
     });
 });
