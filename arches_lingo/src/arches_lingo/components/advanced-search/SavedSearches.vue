@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, useTemplateRef, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -24,6 +24,7 @@ import {
     SECONDARY,
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { focusNeighborAfterRemoval } from "@/arches_lingo/utils.ts";
 
 import type {
     AdvancedSearchQuery,
@@ -50,6 +51,13 @@ const savedSearches = ref<SavedSearchItem[]>([]);
 const showSaveDialog = ref(false);
 const newSearchName = ref("");
 const isLoading = ref(false);
+const savedSearchesElement = useTemplateRef<HTMLElement>(
+    "savedSearchesElement",
+);
+
+function focusInSavedSearches(selector: string) {
+    savedSearchesElement.value?.querySelector<HTMLElement>(selector)?.focus();
+}
 
 async function loadSavedSearches() {
     try {
@@ -95,9 +103,21 @@ async function saveCurrentSearch() {
 async function deleteSearch(search: SavedSearchItem) {
     try {
         await deleteSavedSearch(search.id);
+        const deletedSearchIndex = savedSearches.value.findIndex(
+            (item) => item.id === search.id,
+        );
         savedSearches.value = savedSearches.value.filter(
             (item) => item.id !== search.id,
         );
+        await focusNeighborAfterRemoval({
+            remainingItems: savedSearches.value,
+            removedIndex: deletedSearchIndex,
+            focusItem: (remainingSearch) =>
+                focusInSavedSearches(
+                    `[data-saved-search-id="${remainingSearch.id}"]`,
+                ),
+            focusWhenEmpty: () => focusInSavedSearches(".save-current-button"),
+        });
         toast.add({
             severity: SUCCESS,
             life: DEFAULT_TOAST_LIFE,
@@ -151,12 +171,16 @@ watch(
 </script>
 
 <template>
-    <div class="saved-searches">
+    <div
+        ref="savedSearchesElement"
+        class="saved-searches"
+    >
         <div class="section-actions">
             <Button
                 :label="$gettext('Save Current')"
                 icon="pi pi-save"
                 size="small"
+                class="save-current-button"
                 @click="showSaveDialog = true"
             />
         </div>
@@ -177,6 +201,7 @@ watch(
                 text
                 plain
                 class="search-info"
+                :data-saved-search-id="search.id"
                 :pt="{
                     root: {
                         style: {

@@ -26,6 +26,7 @@ import {
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { focusNeighborAfterRemoval } from "@/arches_lingo/utils.ts";
 import { useConceptSetStore } from "@/arches_lingo/stores/useConceptSetStore.ts";
 
 import type { ConceptSetDetail, ConceptSetItem } from "@/arches_lingo/types.ts";
@@ -135,15 +136,13 @@ async function handleDeleteSet(setItem: ConceptSetItem) {
         conceptSets.value = conceptSets.value.filter(
             (existingSet) => existingSet.id !== setItem.id,
         );
-        const setToFocus =
-            conceptSets.value[deletedSetIndex] ??
-            conceptSets.value[deletedSetIndex - 1];
-        await nextTick();
-        if (setToFocus) {
-            conceptSetList.value?.focusSet(setToFocus.id);
-        } else {
-            conceptSetList.value?.focusNewSetButton();
-        }
+        await focusNeighborAfterRemoval({
+            remainingItems: conceptSets.value,
+            removedIndex: deletedSetIndex,
+            focusItem: (remainingSet) =>
+                conceptSetList.value?.focusSet(remainingSet.id),
+            focusWhenEmpty: () => conceptSetList.value?.focusNewSetButton(),
+        });
         toast.add({
             severity: SUCCESS,
             life: DEFAULT_TOAST_LIFE,
