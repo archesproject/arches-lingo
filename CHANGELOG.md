@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add concept merge workflow, with merge history on the concept header [#801](https://github.com/archesproject/arches-lingo/pull/801)
 -   Add concept match detection: find concepts that probably mean the same thing, within or across schemes, and link them with exactMatch or merge them [#802](https://github.com/archesproject/arches-lingo/pull/802)
 -   Add an OpenRefine reconciliation service for published schemes, with suggest, preview and data extension [#809](https://github.com/archesproject/arches-lingo/pull/809)
+-   Add a reconciliation worksheet export (by scheme, concept set or advanced search) for matching concepts to external authorities in OpenRefine, and a match link import that brings the matches back as exactMatch, closeMatch or relatedMatch links [#812](https://github.com/archesproject/arches-lingo/pull/812)
 
 ### Changed
 

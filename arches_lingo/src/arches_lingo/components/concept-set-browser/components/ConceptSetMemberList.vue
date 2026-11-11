@@ -8,9 +8,11 @@ import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
+import ReconciliationWorksheetExportButton from "@/arches_lingo/components/generic/ReconciliationWorksheetExportButton.vue";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getConceptIcon } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type { ConceptSetDetail } from "@/arches_lingo/types.ts";
@@ -28,6 +30,7 @@ const emit = defineEmits<{
 const { $gettext } = useGettext();
 const route = useRoute();
 const router = useRouter();
+const { isEditor } = storeToRefs(useUserStore());
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const isOnConceptPage = computed(() => route.name === routeNames.concept);
@@ -114,6 +117,10 @@ function handleRemoveSelected() {
                 outlined
                 :disabled="selectedConceptIds.size === 0"
                 @click="handleRemoveSelected"
+            />
+            <ReconciliationWorksheetExportButton
+                v-if="isEditor && props.setDetail.members.length > 0"
+                :scope="{ concept_set_id: props.setDetail.id }"
             />
         </div>
 

@@ -7,6 +7,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 import Message from "primevue/message";
 import PanelToggleHeader from "@/arches_lingo/components/generic/PanelToggleHeader.vue";
+import MatchLinkImportDialog from "@/arches_lingo/components/generic/MatchLinkImportDialog/MatchLinkImportDialog.vue";
 import CandidateMergeFlow from "@/arches_lingo/components/ConceptMatching/components/CandidateMergeFlow/CandidateMergeFlow.vue";
 import MatchCandidateList from "@/arches_lingo/components/ConceptMatching/components/MatchCandidateList/MatchCandidateList.vue";
 import MatchReviewActions from "@/arches_lingo/components/ConceptMatching/components/MatchReviewActions.vue";
@@ -80,6 +81,7 @@ const {
 } = useConceptMatchRuns({ activeRunId });
 
 const showCriteria = ref(true);
+const showMatchLinkImportDialog = ref(false);
 const mergingCandidate = ref<ConceptMatchCandidate | null>(null);
 
 const selectedCandidateIds = computed(() => Array.from(selectedIds.value));
@@ -322,6 +324,26 @@ function closeMerge(): void {
                     :is-starting-run="isCreatingRun"
                     @run-requested="onRunRequested"
                 />
+
+                <div class="external-links">
+                    <p class="intro">
+                        {{
+                            $gettext(
+                                "Matched concepts to an external authority in OpenRefine? Bring the links back here.",
+                            )
+                        }}
+                    </p>
+                    <Button
+                        icon="pi pi-link"
+                        :label="$gettext('Import Match Links')"
+                        :severity="SECONDARY"
+                        @click="showMatchLinkImportDialog = true"
+                    />
+                </div>
+                <MatchLinkImportDialog
+                    v-if="showMatchLinkImportDialog"
+                    @close="showMatchLinkImportDialog = false"
+                />
             </div>
 
             <div class="matches-results">
@@ -470,6 +492,15 @@ function closeMerge(): void {
     margin: 0;
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-header-item-label);
+}
+
+.concept-matching .matches-criteria .external-links {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding-block-start: 1rem;
+    border-block-start: 0.0625rem solid var(--p-content-border-color);
 }
 
 .concept-matching .matches-body .matches-results {
