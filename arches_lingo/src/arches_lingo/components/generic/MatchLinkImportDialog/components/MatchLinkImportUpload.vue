@@ -7,6 +7,12 @@ import FileUpload from "primevue/fileupload";
 
 const FILE_SELECTED_EVENT = "file-selected" as const;
 
+// Inline, since a :deep() rule reaching into FileUpload loses to PrimeVue's own.
+const CHOOSE_BUTTON_STYLE = {
+    fontSize: "var(--p-lingo-font-size-small)",
+    borderRadius: "0.125rem",
+};
+
 const { isDisabled, isSchemeScoped } = defineProps<{
     isDisabled: boolean;
     isSchemeScoped: boolean;
@@ -29,7 +35,11 @@ function onFileSelected(event: { files: File[] }): void {
 
 <template>
     <div class="match-link-import-upload">
-        <span :id="fileLabelId">{{ $gettext("Match links file (CSV)") }}</span>
+        <span
+            :id="fileLabelId"
+            class="file-label"
+            >{{ $gettext("Match links file (CSV)") }}</span
+        >
         <div
             :id="helpTextId"
             class="help"
@@ -73,6 +83,7 @@ function onFileSelected(event: { files: File[] }): void {
                 id: chooseButtonId,
                 'aria-labelledby': `${fileLabelId} ${chooseButtonId}`,
                 'aria-describedby': helpTextId,
+                style: CHOOSE_BUTTON_STYLE,
             }"
             :multiple="false"
             :disabled="isDisabled"
@@ -86,6 +97,13 @@ function onFileSelected(event: { files: File[] }): void {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+}
+
+.match-link-import-upload .file-label {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
 }
 
 .match-link-import-upload .help {
@@ -97,6 +115,6 @@ function onFileSelected(event: { files: File[] }): void {
 .match-link-import-upload .help-text {
     margin: 0;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-text-muted-color);
+    color: var(--p-header-item-label);
 }
 </style>
