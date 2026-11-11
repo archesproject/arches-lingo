@@ -25,6 +25,7 @@ import {
 
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useWidgetConfigStore } from "@/arches_vue_components/stores/useWidgetConfigStore.ts";
 import { setLocalizedValue } from "@/arches_vue_components/datatypes/file-list/utils.ts";
 import { storeToRefs } from "pinia";
 
@@ -40,7 +41,7 @@ import type { Language } from "@/arches_vue_components/types.ts";
 import type { NonLocalizedTextAliasedNodeData } from "@/arches_vue_components/datatypes/non-localized-text/types.ts";
 import type {
     FileListAliasedNodeData,
-    FileMetadataField,
+    FileListCardXNodeXWidgetData,
     FileReference,
 } from "@/arches_vue_components/datatypes/file-list/types.ts";
 
@@ -53,11 +54,6 @@ import type {
 type PossiblyNewFile = FileReference & {
     file?: File;
 };
-
-const FILE_WIDGET_METADATA_FIELDS: FileMetadataField[] = [
-    "altText",
-    "attribution",
-];
 
 const props = defineProps<{
     tileData: ConceptImages | undefined;
@@ -75,6 +71,7 @@ const languageStore = useLanguageStore();
 
 const digitalObjectResource = ref<DigitalObjectInstance>();
 const digitalObjectLoaded = ref(false);
+const contentCardXNodeXWidgetData = ref<FileListCardXNodeXWidgetData>();
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -95,7 +92,35 @@ const { targetDigitalObjectResourceInstanceId } = storeToRefs(
 
 onMounted(() => {
     getDigitalObjectInstance(targetDigitalObjectResourceInstanceId.value);
+    getContentCardXNodeXWidgetData();
 });
+
+// Lingo collects title and description in its own Title and Description
+// fields and copies them into the file record on save, so hide them in the
+// file widget the way a card hides a node: flip the field's visible bit.
+async function getContentCardXNodeXWidgetData() {
+    try {
+        const cardXNodeXWidgetData =
+            (await useWidgetConfigStore().fetchWidgetConfig(
+                DIGITAL_OBJECT_GRAPH_SLUG,
+                "content",
+            )) as FileListCardXNodeXWidgetData;
+        // The store shares one cached object, so copy rather than mutate it.
+        contentCardXNodeXWidgetData.value = {
+            ...cardXNodeXWidgetData,
+            config: {
+                ...cardXNodeXWidgetData.config,
+                metadataFields: {
+                    ...cardXNodeXWidgetData.config.metadataFields,
+                    title: { visible: false },
+                    description: { visible: false },
+                },
+            },
+        };
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 watch(
     () => formRef.value,
@@ -371,10 +396,14 @@ function resetForm() {
                         :render-context="MULTILINE_RENDER_CONTEXT"
                     />
                 </div>
-                <div class="widget-container column">
+                <div
+                    v-if="contentCardXNodeXWidgetData"
+                    class="widget-container column"
+                >
                     <GenericWidget
                         node-alias="content"
                         graph-slug="digital_object_system"
+                        :card-x-node-x-widget-data="contentCardXNodeXWidgetData"
                         :aliased-node-data="
                             digitalObjectResource?.aliased_data?.content
                                 ?.aliased_data.content ?? null
@@ -382,7 +411,6 @@ function resetForm() {
                         :mode="EDIT"
                         :should-show-label="false"
                         :should-show-metadata-language-select="true"
-                        :visible-metadata-fields="FILE_WIDGET_METADATA_FIELDS"
                     />
                 </div>
             </Form>
