@@ -30,6 +30,7 @@ dependencies = [
     "arches_vue_components>=2.0.2",
     "arches_querysets>=1.2.0",
     "arches_controlled_lists>=1.2.0",
+    "django-ratelimit>=4.1.0",
 ]
 version = "1.2.0"
 

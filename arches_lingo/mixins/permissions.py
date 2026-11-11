@@ -1,7 +1,10 @@
 from http import HTTPStatus
 
-from django.http import JsonResponse
+from django.http import Http404, HttpResponseNotFound, JsonResponse
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
+from django.views.decorators.csrf import csrf_exempt
 
 from arches.app.utils.response import JSONErrorResponse
 
@@ -10,7 +13,9 @@ from arches_lingo.permissions import (
     is_authenticated_user,
     is_lingo_admin,
     is_lingo_editor,
+    reconciliation_enabled,
 )
+from arches_lingo.utils.reconciliation.rate_limit import seconds_until_allowed
 
 
 class AnonymousAccessMixin:
@@ -23,6 +28,42 @@ class AnonymousAccessMixin:
                 status=403,
             )
         return super().dispatch(request, *args, **kwargs)
+
+
+class ReconciliationAccessMixin:
+    """Open the read-only reconciliation service to anonymous, cross-origin callers.
+
+    OpenRefine cannot hold an Arches session or send a CSRF token, and its browser
+    UI fetches from another origin, so the service ignores the anonymous access
+    setting and allows any origin. While disabled it is indistinguishable from an
+    absent endpoint. Callers over LINGO_RECONCILIATION_RATE_LIMIT get a 429.
+    """
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        if not reconciliation_enabled():
+            raise Http404()
+        retry_after_seconds = seconds_until_allowed(request)
+        if retry_after_seconds:
+            response = JSONErrorResponse(
+                title=_("Too many reconciliation requests."),
+                message=ngettext(
+                    "Try again in %(seconds)s second.",
+                    "Try again in %(seconds)s seconds.",
+                    retry_after_seconds,
+                )
+                % {"seconds": retry_after_seconds},
+                status=HTTPStatus.TOO_MANY_REQUESTS,
+            )
+            response["Retry-After"] = str(retry_after_seconds)
+        else:
+            try:
+                response = super().dispatch(request, *args, **kwargs)
+            except Http404:
+                response = HttpResponseNotFound()
+        # Every response carries it, so the browser lets OpenRefine read its status.
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
 
 
 class AuthenticatedUserMixin:

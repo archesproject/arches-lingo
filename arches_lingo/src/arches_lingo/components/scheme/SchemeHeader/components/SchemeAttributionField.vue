@@ -146,6 +146,12 @@ async function saveAttribution() {
     align-items: center;
 }
 
+.attribution-header-item .header-item-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--scheme-header-field-min-height);
+}
+
 .attribution-value {
     flex-basis: 100%;
     width: 100%;

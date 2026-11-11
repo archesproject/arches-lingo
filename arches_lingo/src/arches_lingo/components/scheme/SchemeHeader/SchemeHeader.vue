@@ -20,6 +20,7 @@ import ReinstateDialog from "@/arches_lingo/components/generic/ReinstateDialog.v
 import SchemeIdentifierField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue";
 import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue";
 import SchemeAttributionField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeAttributionField.vue";
+import SchemeReconciliationServiceField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeReconciliationServiceField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
 import GetAsMenu from "@/arches_lingo/components/generic/GetAsMenu.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
@@ -27,12 +28,11 @@ import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStat
 import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
-    DEFAULT_TOAST_LIFE,
     ERROR,
     LOCKED_LIFECYCLE_STATE_ID,
     NEW_CONCEPT,
+    PUBLISHED_LIFECYCLE_STATE_ID,
     SECONDARY,
-    SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -49,6 +49,7 @@ import {
     unlockScheme,
     unretireSchemeConcepts,
 } from "@/arches_lingo/api.ts";
+import { useCopyToClipboard } from "@/arches_lingo/composables/useCopyToClipboard.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
@@ -100,6 +101,7 @@ const { openEditLog } = useEditLog(() => props.graphSlug);
 const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
+const { copyToClipboard } = useCopyToClipboard();
 const { $gettext, interpolate } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
@@ -169,10 +171,19 @@ const hasPersistedResourceInstance = computed(() => {
 
 const store = useResourceStore();
 const { isEditor, isLingoAdmin } = useUserStore();
-const { publicServerAddress } = storeToRefs(useAppSettingsStore());
+const { publicServerAddress, reconciliationEnabled } = storeToRefs(
+    useAppSettingsStore(),
+);
 
 const isLocked = computed(
     () => currentLifecycleState.value?.id === LOCKED_LIFECYCLE_STATE_ID,
+);
+// Only published and locked schemes are offered by the reconciliation service.
+const isReconcilable = computed(
+    () =>
+        reconciliationEnabled.value &&
+        (isLocked.value ||
+            currentLifecycleState.value?.id === PUBLISHED_LIFECYCLE_STATE_ID),
 );
 const isLockLoading = ref(false);
 
@@ -267,12 +278,10 @@ const schemeUri = computed(() => {
     );
 });
 
-async function copyUriToClipboard(uri: string) {
-    await navigator.clipboard.writeText(uri);
-    toast.add({
-        severity: SUCCESS,
-        life: DEFAULT_TOAST_LIFE,
-        summary: $gettext("URI copied to clipboard"),
+async function copyUriToClipboard(uri: string): Promise<void> {
+    await copyToClipboard(uri, {
+        copiedSummary: $gettext("URI copied to clipboard"),
+        failedSummary: $gettext("Unable to copy the URI"),
     });
 }
 
@@ -757,6 +766,16 @@ async function onReinstateConfirmed(cascade: boolean) {
                             defaultSchemeURITemplate
                         "
                         @update="onSchemeURITemplateUpdate"
+                    />
+                </div>
+
+                <div
+                    v-if="isReconcilable"
+                    class="header-row"
+                >
+                    <SchemeReconciliationServiceField
+                        :scheme-identifier="identifierValue"
+                        :scheme-name="label?.value"
                     />
                 </div>
 

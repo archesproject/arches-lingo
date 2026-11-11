@@ -24,7 +24,9 @@ from arches.app.models.models import ResourceInstance, TileModel
 from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.const import (
+    CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
     CONCEPTS_GRAPH_ID,
+    RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
     SCHEMES_GRAPH_ID,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     URI_CONTENT_NODE,
@@ -47,6 +49,8 @@ nodegroup_alias: {
     "object": "<object_node_alias>",
     "object_language": "<object_language_node_alias>" (optional)
     "default_predicate": "<default_predicate_value>" (optional)
+    "object_references_node": "<node_id>" (optional; emit one triple per resource
+        the raw tile references, see expand_object_references)
 }
 """
 TILE_TREE_TO_TRIPLE_MAPPING = {
@@ -79,12 +83,14 @@ TILE_TREE_TO_TRIPLE_MAPPING = {
         "predicate": "classification_status_ascribed_relation",
         "object": "classification_status_ascribed_classification",
         "default_predicate": "broader",
+        "object_references_node": CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
     },
     # Associated Concepts
     "relation_status": {
         "predicate": "relation_status_ascribed_relation",
         "object": "relation_status_ascribed_comparate",
         "default_predicate": "related",
+        "object_references_node": RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
     },
     # Mapping/match relationships to concepts in other vocabularies. The comparate
     # holds an external (or locally-resolvable) URI rather than a resource instance,
@@ -161,6 +167,8 @@ def extract_triples_from_aliased_tiles(nodegroup_alias, tile_trees):
                 # A flag (not a node lookup) carried through to the writer.
                 triple[triple_component] = node_alias
                 continue
+            if triple_component == "object_references_node":
+                continue
             if node_alias in ["inScheme", "hasTopConcept"]:
                 # Predicate for concept -> scheme relationship is not stored as a node
                 # value but instead derived from the relationship itself
@@ -178,8 +186,42 @@ def extract_triples_from_aliased_tiles(nodegroup_alias, tile_trees):
                     # top_concept_of and part_of_scheme during partial hierarchy export)
                     predicate = tile_tree
                 triple[triple_component] = predicate
-        triples.append(triple)
+        if "object_references_node" in mapping:
+            triples.extend(
+                expand_object_references(
+                    triple, tile_tree, mapping["object_references_node"]
+                )
+            )
+        else:
+            triples.append(triple)
     return triples
+
+
+def expand_object_references(triple, tile_tree, references_node_id):
+    """Return one triple per resource the tile references.
+
+    The node is a single-value resource-instance datatype, so the tile tree only
+    exposes its first reference, yet retiring a polyhierarchical concept can leave
+    several references in one tile (see ``reparent_children``). Each one is a
+    real relationship, so each gets its own triple.
+    """
+    tile_data = getattr(tile_tree, "data", None) or {}
+    # dict.fromkeys drops a resource the tile names twice, keeping the order.
+    referenced_resource_ids = list(
+        dict.fromkeys(
+            resource_reference["resourceId"]
+            for resource_reference in tile_data.get(references_node_id) or []
+            if resource_reference.get("resourceId")
+        )
+    )
+    if len(referenced_resource_ids) < 2:
+        return [triple]
+    expanded_triples = []
+    for resource_id in referenced_resource_ids:
+        expanded_triple = defaultdict(str, triple)
+        expanded_triple["object"] = ResourceInstance(resourceinstanceid=resource_id)
+        expanded_triples.append(expanded_triple)
+    return expanded_triples
 
 
 def build_triples_for_resource(resource):
