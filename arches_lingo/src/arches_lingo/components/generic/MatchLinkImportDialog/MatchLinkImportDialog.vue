@@ -12,9 +12,11 @@ import MatchLinkImportPreview from "@/arches_lingo/components/generic/MatchLinkI
 import MatchLinkImportResult from "@/arches_lingo/components/generic/MatchLinkImportDialog/components/MatchLinkImportResult.vue";
 import MatchLinkImportUpload from "@/arches_lingo/components/generic/MatchLinkImportDialog/components/MatchLinkImportUpload.vue";
 
+import { MERGE_DIALOG_FRAME_PASS_THROUGH } from "@/arches_lingo/components/concept/ConceptMerge/constants.ts";
 import { useMatchLinkImport } from "@/arches_lingo/components/generic/MatchLinkImportDialog/composables/useMatchLinkImport.ts";
 import { OUTCOME_ADD } from "@/arches_lingo/components/generic/MatchLinkImportDialog/utils.ts";
 import {
+    DANGER,
     DEFAULT_TOAST_LIFE,
     ERROR,
     INFO,
@@ -22,6 +24,20 @@ import {
 } from "@/arches_lingo/constants.ts";
 
 const CLOSE_EVENT = "close" as const;
+
+const DIALOG_PASS_THROUGH = {
+    ...MERGE_DIALOG_FRAME_PASS_THROUGH,
+    root: {
+        style: {
+            ...MERGE_DIALOG_FRAME_PASS_THROUGH.root.style,
+            width: "60rem",
+            maxWidth: "95vw",
+        },
+    },
+    content: {
+        style: { padding: "1.25rem", paddingBlockStart: "1rem" },
+    },
+};
 
 // Set when opened from a scheme, so only that scheme's concepts receive links.
 const { schemeId = undefined } = defineProps<{
@@ -125,7 +141,7 @@ function onVisibilityChange(isNowVisible: boolean): void {
         :modal="true"
         :draggable="false"
         :header="$gettext('Import Match Links')"
-        :style="{ width: '60rem', maxWidth: '95vw' }"
+        :pt="DIALOG_PASS_THROUGH"
         @update:visible="onVisibilityChange"
     >
         <div class="dialog-body">
@@ -178,12 +194,15 @@ function onVisibilityChange(isNowVisible: boolean): void {
         <template #footer>
             <div class="dialog-footer">
                 <Button
+                    class="footer-button"
+                    icon="pi pi-times"
                     :label="dismissLabel"
-                    :severity="SECONDARY"
+                    :severity="hasStartedApplying ? SECONDARY : DANGER"
                     @click="onVisibilityChange(false)"
                 />
                 <Button
                     v-if="!finishedImport"
+                    class="footer-button"
                     icon="pi pi-link"
                     :label="addLinksLabel"
                     :disabled="!canApply"
@@ -235,5 +254,10 @@ function onVisibilityChange(isNowVisible: boolean): void {
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
+}
+
+.match-link-import-dialog .dialog-footer .footer-button {
+    font-size: var(--p-lingo-font-size-small);
+    border-radius: 0.125rem;
 }
 </style>

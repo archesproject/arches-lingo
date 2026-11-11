@@ -69,6 +69,7 @@ const hasInternalConceptLinks = computed(() =>
 
         <Select
             v-model="selectedOutcome"
+            size="small"
             class="outcome-filter"
             option-label="label"
             option-value="outcome"
@@ -162,6 +163,17 @@ const hasInternalConceptLinks = computed(() =>
 .match-link-import-preview .outcome-filter {
     align-self: flex-start;
     min-width: 16rem;
+    border-radius: 0.125rem;
+}
+
+.match-link-import-preview :deep(.p-datatable-tbody > tr > td) {
+    font-size: var(--p-lingo-font-size-smallnormal);
+}
+
+.match-link-import-preview :deep(.p-datatable-column-title) {
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: var(--p-lingo-font-size-small);
+    color: var(--p-neutral-500);
 }
 
 .match-link-import-preview .match-uri {
