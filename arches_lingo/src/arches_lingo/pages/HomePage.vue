@@ -19,7 +19,7 @@ import BreakdownsGrid from "@/arches_lingo/components/dashboard/BreakdownsGrid.v
 import DashboardStatCards from "@/arches_lingo/components/dashboard/DashboardStatCards.vue";
 import MissingTranslationsPanel from "@/arches_lingo/components/dashboard/MissingTranslationsPanel.vue";
 import RecentActivityTable from "@/arches_lingo/components/dashboard/RecentActivityTable.vue";
-import ReconciliationEndpointPanel from "@/arches_lingo/components/generic/ReconciliationEndpointPanel.vue";
+import ReconciliationEndpointPanel from "@/arches_lingo/components/dashboard/ReconciliationEndpointPanel.vue";
 
 import type { Language } from "@/arches_vue_components/types.ts";
 import type {

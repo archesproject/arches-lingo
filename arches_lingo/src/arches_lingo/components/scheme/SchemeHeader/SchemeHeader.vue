@@ -20,10 +20,10 @@ import ReinstateDialog from "@/arches_lingo/components/generic/ReinstateDialog.v
 import SchemeIdentifierField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue";
 import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue";
 import SchemeAttributionField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeAttributionField.vue";
+import SchemeReconciliationServiceField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeReconciliationServiceField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
 import GetAsMenu from "@/arches_lingo/components/generic/GetAsMenu.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
-import ReconciliationEndpointPanel from "@/arches_lingo/components/generic/ReconciliationEndpointPanel.vue";
 
 import {
     DANGER,
@@ -171,7 +171,9 @@ const hasPersistedResourceInstance = computed(() => {
 
 const store = useResourceStore();
 const { isEditor, isLingoAdmin } = useUserStore();
-const { publicServerAddress } = storeToRefs(useAppSettingsStore());
+const { publicServerAddress, reconciliationEnabled } = storeToRefs(
+    useAppSettingsStore(),
+);
 
 const isLocked = computed(
     () => currentLifecycleState.value?.id === LOCKED_LIFECYCLE_STATE_ID,
@@ -179,8 +181,9 @@ const isLocked = computed(
 // Only published and locked schemes are offered by the reconciliation service.
 const isReconcilable = computed(
     () =>
-        isLocked.value ||
-        currentLifecycleState.value?.id === PUBLISHED_LIFECYCLE_STATE_ID,
+        reconciliationEnabled.value &&
+        (isLocked.value ||
+            currentLifecycleState.value?.id === PUBLISHED_LIFECYCLE_STATE_ID),
 );
 const isLockLoading = ref(false);
 
@@ -766,13 +769,15 @@ async function onReinstateConfirmed(cascade: boolean) {
                     />
                 </div>
 
-                <ReconciliationEndpointPanel
+                <div
                     v-if="isReconcilable"
                     class="header-row"
-                    :scheme-identifier="identifierValue"
-                    :scheme-name="label?.value"
-                    :heading-level="3"
-                />
+                >
+                    <SchemeReconciliationServiceField
+                        :scheme-identifier="identifierValue"
+                        :scheme-name="label?.value"
+                    />
+                </div>
 
                 <div class="header-row">
                     <SchemeAttributionField
