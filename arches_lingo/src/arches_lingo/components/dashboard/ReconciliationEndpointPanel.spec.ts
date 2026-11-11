@@ -3,7 +3,7 @@ import PrimeVue from "primevue/config";
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import ReconciliationEndpointPanel from "@/arches_lingo/components/generic/ReconciliationEndpointPanel.vue";
+import ReconciliationEndpointPanel from "@/arches_lingo/components/dashboard/ReconciliationEndpointPanel.vue";
 
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 
@@ -29,14 +29,7 @@ vi.mock("vue3-gettext", () => ({
     }),
 }));
 
-function mountPanel(
-    settingsOverrides: Partial<AppSettings>,
-    props: {
-        schemeIdentifier?: string;
-        schemeName?: string;
-        headingLevel?: 2 | 3;
-    } = {},
-): VueWrapper {
+function mountPanel(settingsOverrides: Partial<AppSettings>): VueWrapper {
     useAppSettingsStore().settings = {
         allow_anonymous_access: false,
         reconciliation_enabled: true,
@@ -49,8 +42,10 @@ function mountPanel(
         ...settingsOverrides,
     };
     return mount(ReconciliationEndpointPanel, {
-        props,
-        global: { plugins: [PrimeVue] },
+        global: {
+            plugins: [PrimeVue],
+            mocks: { $gettext: (text: string) => text },
+        },
     });
 }
 
@@ -78,34 +73,16 @@ describe("ReconciliationEndpointPanel", () => {
             scheme_reconciliation_service_url_template: null,
         });
 
-        expect(wrapper.find(".reconciliation-endpoint").exists()).toBe(false);
+        expect(wrapper.find(".dashboard-section").exists()).toBe(false);
     });
 
-    it("offers the global service, naming the scheme to choose as the type", () => {
-        const wrapper = mountPanel({}, { schemeName: "Test Scheme" });
+    it("offers the global service", () => {
+        const wrapper = mountPanel({});
 
         expect(displayedServiceUrl(wrapper)).toBe(GLOBAL_SERVICE_URL);
-        expect(wrapper.find(".hint").text()).toContain(
-            'choose "Test Scheme" as the type',
+        expect(wrapper.find(".hint-text").text()).toContain(
+            "against published schemes",
         );
-    });
-
-    it("offers a scheme's own service when the scheme has an identifier", () => {
-        const wrapper = mountPanel({}, { schemeIdentifier: "aat" });
-
-        expect(displayedServiceUrl(wrapper)).toBe(
-            "https://lingo.example.org/api/lingo/schemes/aat/reconcile",
-        );
-    });
-
-    it("falls back to the global service when the identifier is not a slug", () => {
-        const wrapper = mountPanel(
-            {},
-            { schemeIdentifier: "getty.aat", schemeName: "Getty AAT" },
-        );
-
-        expect(displayedServiceUrl(wrapper)).toBe(GLOBAL_SERVICE_URL);
-        expect(wrapper.find(".hint").text()).toContain("as the type");
     });
 
     it("copies the service URL", async () => {
@@ -126,14 +103,12 @@ describe("ReconciliationEndpointPanel", () => {
     });
 
     it("names the region by its heading and describes the URL by the hint", () => {
-        const wrapper = mountPanel({}, { headingLevel: 3 });
-        const heading = wrapper.find("h3");
-        const hint = wrapper.find(".hint");
+        const wrapper = mountPanel({});
+        const heading = wrapper.find("h2");
+        const hint = wrapper.find(".hint-text");
 
         expect(
-            wrapper
-                .find(".reconciliation-endpoint")
-                .attributes("aria-labelledby"),
+            wrapper.find(".dashboard-section").attributes("aria-labelledby"),
         ).toBe(heading.attributes("id"));
         expect(wrapper.find("input").attributes("aria-describedby")).toBe(
             hint.attributes("id"),
