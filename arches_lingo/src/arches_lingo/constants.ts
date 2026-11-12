@@ -36,6 +36,8 @@ export const CONCEPT_TYPE_LIST_ID = "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2";
 
 export const DEFAULT_TOAST_LIFE = 5000;
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
+export const QUEUED_EXPORT_TOAST_LIFE = 10000;
+
 export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;
 
