@@ -26,6 +26,7 @@ import type {
     SavedSearchItem,
     Scheme,
     SchemeInstance,
+    ThesaurusExportResponse,
     TileData,
     User,
     ConceptMergeHistoryEntry,
@@ -814,7 +815,7 @@ export const exportThesaurus = async (
     resourceid: string,
     format: string,
     fileName?: string,
-) => {
+): Promise<ThesaurusExportResponse> => {
     const formData = new FormData();
     formData.append("resourceid", resourceid);
     formData.append("format", format);

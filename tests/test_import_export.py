@@ -733,6 +733,38 @@ class ExportViewTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTrue(mock_start.called)
         self.assertEqual(response.json()["result"], {"load_id": "test-load-id"})
+        self.assertEqual(response.json()["status"], "complete")
+
+    @patch.object(
+        LingoResourceExporter,
+        "start",
+        return_value={"success": True, "data": "delegated_to_celery"},
+    )
+    def test_export_delegated_to_celery_reports_queued_status(self, mock_start):
+        self.client.force_login(self.lingo_editor)
+
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["status"], "queued")
+        self.assertNotIn("file", response.json())
+
+    def test_synchronous_export_reports_complete_status_with_file(self):
+        file_details = {"name": "scheme.zip", "url": "/media/scheme.zip", "fileid": "1"}
+
+        def fake_start(exporter, request):
+            exporter.load_event = LoadEvent(
+                load_details=json.dumps({"file": file_details})
+            )
+            return {"success": True, "data": {"message": "success"}}
+
+        self.client.force_login(self.lingo_editor)
+        with patch.object(LingoResourceExporter, "start", fake_start):
+            response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["status"], "complete")
+        self.assertEqual(response.json()["file"], file_details)
 
     @patch.object(
         LingoResourceExporter,

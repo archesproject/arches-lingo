@@ -1,6 +1,10 @@
 from django.utils.translation import gettext_lazy as _
 
 CELERY_CONCEPT_COUNT_THRESHOLD = 1000
+EXPORT_STATUS_QUEUED = "queued"
+EXPORT_STATUS_COMPLETE = "complete"
+DELEGATED_TO_CELERY = "delegated_to_celery"
+
 
 ### Groups ###
 LINGO_EDITOR_GROUP_NAME = "Lingo Editor"
