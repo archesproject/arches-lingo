@@ -10,6 +10,7 @@ import {
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import { type Ref, toRaw } from "vue";
 import type { FileListAliasedNodeData } from "@/arches_vue_components/datatypes/file-list/types.ts";
+import type { LanguageValue } from "@/arches_vue_components/datatypes/string/types.ts";
 import type { ResourceInstanceListAliasedNodeData } from "@/arches_vue_components/datatypes/resource-instance-list/types.ts";
 import type {
     ConceptInstance,
@@ -42,11 +43,46 @@ export function getDigitalObjectImageUrl(
     return fileReference?.url ? getFileUrl(fileReference.url) : undefined;
 }
 
+// Older versions of the image editor saved this instead of real alt text.
+export const PLACEHOLDER_ALT_TEXT = "Replaceable alt text";
+
+// Arches stores file metadata per language ({code: {value, direction}}),
+// though arches-vue-components 2.0.x types it as a string. Accept both.
+type StoredFileMetadata =
+    | string
+    | Record<string, LanguageValue>
+    | null
+    | undefined;
+
+function getFileMetadataValue(
+    storedValue: StoredFileMetadata,
+    languageCode: string,
+): string {
+    const value =
+        typeof storedValue === "string"
+            ? storedValue
+            : storedValue?.[languageCode]?.value ?? "";
+    return value.trim();
+}
+
+// Uses the alt text in the given language, then the file's title in that
+// language, then "". Never the file name: it rarely describes the image.
 export function getDigitalObjectImageAlt(
     resource: DigitalObjectInstance,
+    languageCode: string,
 ): string {
     const fileReference = getDigitalObjectFileReference(resource);
-    return fileReference?.altText || fileReference?.name || "";
+    const altText = getFileMetadataValue(
+        fileReference?.altText as StoredFileMetadata,
+        languageCode,
+    );
+    if (altText && altText !== PLACEHOLDER_ALT_TEXT) {
+        return altText;
+    }
+    return getFileMetadataValue(
+        fileReference?.title as StoredFileMetadata,
+        languageCode,
+    );
 }
 
 export async function createDigitalObject(

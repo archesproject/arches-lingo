@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import Image from "primevue/image";
 
@@ -10,6 +11,7 @@ import {
     getDigitalObjectImageAlt,
     getDigitalObjectImageUrl,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 
@@ -25,13 +27,16 @@ const {
 }>();
 
 const { $gettext } = useGettext();
+const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 const imageUrl = computed(function () {
     return digitalObject ? getDigitalObjectImageUrl(digitalObject) : undefined;
 });
 
 const imageAlt = computed(function () {
-    return digitalObject ? getDigitalObjectImageAlt(digitalObject) : "";
+    return digitalObject
+        ? getDigitalObjectImageAlt(digitalObject, selectedLanguage.value.code)
+        : "";
 });
 
 const imageName = computed(function () {
