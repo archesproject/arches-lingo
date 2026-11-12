@@ -461,6 +461,16 @@ export interface Notification {
     }>;
 }
 
+export interface ExportedFile {
+    fileid: string;
+    name: string;
+    url: string;
+}
+
+export type ThesaurusExportResponse =
+    | { status: "queued" }
+    | { status: "complete"; file: ExportedFile | null };
+
 export interface PaginatorDetails {
     current_page: number;
     total_pages: number;

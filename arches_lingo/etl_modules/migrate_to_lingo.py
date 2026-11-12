@@ -15,7 +15,6 @@ from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 
-from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.etl_modules.save import save_to_tiles
 from arches.app.etl_modules.decorators import load_data_async
 from arches.app.etl_modules.base_import_module import BaseImportModule
@@ -1150,9 +1149,9 @@ class LingoResourceImporter(BaseImportModule):
                 .flatten()
             )
             try:
-                if num_concepts_to_import <= 1000:
+                if num_concepts_to_import <= const.CELERY_CONCEPT_COUNT_THRESHOLD:
                     self.run_load_task()
-                elif num_concepts_to_import > 1000:
+                elif num_concepts_to_import > const.CELERY_CONCEPT_COUNT_THRESHOLD:
                     if not task_management.check_if_celery_available():
                         return self.return_with_error(
                             task_management.CeleryNotAvailableError()
