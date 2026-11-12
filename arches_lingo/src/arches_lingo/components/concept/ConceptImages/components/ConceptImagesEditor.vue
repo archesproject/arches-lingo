@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
+import {
+    computed,
+    inject,
+    nextTick,
+    onMounted,
+    ref,
+    useTemplateRef,
+    watch,
+} from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "openvue/usetoast";
@@ -27,6 +35,7 @@ import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptIma
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { useWidgetConfigStore } from "@/arches_vue_components/stores/useWidgetConfigStore.ts";
 import { setLocalizedValue } from "@/arches_vue_components/datatypes/file-list/utils.ts";
+import { buildLanguageAliasedNodeData } from "@/arches_vue_components/datatypes/language/utils.ts";
 import { storeToRefs } from "pinia";
 
 import {
@@ -72,6 +81,14 @@ const languageStore = useLanguageStore();
 const digitalObjectResource = ref<DigitalObjectInstance>();
 const digitalObjectLoaded = ref(false);
 const contentCardXNodeXWidgetData = ref<FileListCardXNodeXWidgetData>();
+const recordLanguageCode = ref<string>();
+
+const recordLanguage = computed<Language>(
+    () =>
+        languageStore.availableLanguages.find(
+            (language) => language.code === recordLanguageCode.value,
+        ) ?? languageStore.selectedLanguage,
+);
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -115,6 +132,7 @@ async function getContentCardXNodeXWidgetData() {
                     title: { visible: false },
                     description: { visible: false },
                 },
+                metadataLanguageSelect: { visible: true },
             },
         };
     } catch (error) {
@@ -137,6 +155,9 @@ async function getDigitalObjectInstance(resourceInstanceId?: string) {
                 resourceInstanceId,
             );
         }
+        recordLanguageCode.value = getInitialRecordLanguageCode(
+            digitalObjectResource.value?.aliased_data,
+        );
         digitalObjectLoaded.value = true;
         isLoading.value = false;
     } catch (error) {
@@ -144,19 +165,34 @@ async function getDigitalObjectInstance(resourceInstanceId?: string) {
     }
 }
 
-function getTileLanguage(
+function getTileLanguageCode(
     tileAliasedData: object | undefined,
     languageNodeAlias: string,
-): Language {
+): string | undefined {
     const languageNode = (
         tileAliasedData as
             | Record<string, { node_value?: unknown } | undefined>
             | undefined
     )?.[languageNodeAlias];
+    const languageCode = languageNode?.node_value;
+    return typeof languageCode === "string" && languageCode
+        ? languageCode
+        : undefined;
+}
+
+function getInitialRecordLanguageCode(
+    digitalObjectInstanceAliases: DigitalObjectInstanceAliases | undefined,
+): string {
     return (
-        languageStore.availableLanguages.find(
-            (language) => language.code === languageNode?.node_value,
-        ) ?? languageStore.selectedLanguage
+        getTileLanguageCode(
+            digitalObjectInstanceAliases?.name?.aliased_data,
+            "name_language",
+        ) ??
+        getTileLanguageCode(
+            digitalObjectInstanceAliases?.statement?.aliased_data,
+            "statement_language",
+        ) ??
+        languageStore.selectedLanguage.code
     );
 }
 
@@ -179,12 +215,12 @@ function withRecordTitleAndDescription(
         ...file,
         title: setLocalizedValue(
             file.title,
-            getTileLanguage(nameAliasedData, "name_language"),
+            recordLanguage.value,
             getNonLocalizedText(nameAliasedData?.name_content),
         ),
         description: setLocalizedValue(
             file.description,
-            getTileLanguage(statementAliasedData, "statement_language"),
+            recordLanguage.value,
             getNonLocalizedText(statementAliasedData?.statement_content),
         ),
     };
@@ -197,20 +233,28 @@ async function save(e: FormSubmitEvent) {
         const submittedFormData = e.values;
         const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
             digitalObjectResource.value?.aliased_data ?? {};
+        const recordLanguageAliasedNodeData = buildLanguageAliasedNodeData(
+            recordLanguage.value.code,
+            languageStore.availableLanguages,
+        );
 
         if (submittedFormData.name_content) {
             digitalObjectInstanceAliases.name = {
                 ...digitalObjectInstanceAliases.name,
-                aliased_data: { name_content: submittedFormData.name_content },
-            };
+                aliased_data: {
+                    name_content: submittedFormData.name_content,
+                    name_language: recordLanguageAliasedNodeData,
+                },
+            } as DigitalObjectInstanceAliases["name"];
         }
         if (submittedFormData.statement_content) {
             digitalObjectInstanceAliases.statement = {
                 ...digitalObjectInstanceAliases.statement,
                 aliased_data: {
                     statement_content: submittedFormData.statement_content,
+                    statement_language: recordLanguageAliasedNodeData,
                 },
-            };
+            } as unknown as DigitalObjectInstanceAliases["statement"];
         }
 
         const submittedContentFiles =
@@ -410,7 +454,11 @@ function resetForm() {
                         "
                         :mode="EDIT"
                         :should-show-label="false"
-                        :should-show-metadata-language-select="true"
+                        :metadata-language-code="recordLanguageCode"
+                        @update:metadata-language-code="
+                            (languageCode: string) =>
+                                (recordLanguageCode = languageCode)
+                        "
                     />
                 </div>
             </Form>
@@ -420,11 +468,6 @@ function resetForm() {
 <style scoped>
 :deep(.p-fileupload-advanced) {
     border: none;
-}
-
-:deep(.file-list) {
-    display: flex;
-    gap: 1rem;
 }
 
 :deep(.p-fileupload-header) {
