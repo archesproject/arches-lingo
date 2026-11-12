@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
+import {
+    computed,
+    inject,
+    nextTick,
+    onMounted,
+    ref,
+    useTemplateRef,
+    watch,
+} from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -9,6 +17,9 @@ import { Form } from "@primevue/forms";
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
+// Lingo 1.2 only: on 1.3, render `content` with GenericWidget and import the
+// file-list utils and types from @/arches_vue_components.
+import FileListMetadataWidget from "@/arches_lingo/components/widgets/FileListMetadataWidget/FileListMetadataWidget.vue";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -24,6 +35,10 @@ import {
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
 
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useWidgetConfigStore } from "@/arches_vue_components/stores/useWidgetConfigStore.ts";
+import { setLocalizedValue } from "@/arches_lingo/components/widgets/FileListMetadataWidget/utils.ts";
+import { buildLanguageAliasedNodeData } from "@/arches_vue_components/datatypes/language/utils.ts";
 import { storeToRefs } from "pinia";
 
 import {
@@ -34,13 +49,17 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
+import type { Language } from "@/arches_vue_components/types.ts";
+import type { NonLocalizedTextAliasedNodeData } from "@/arches_vue_components/datatypes/non-localized-text/types.ts";
 import type {
     FileListAliasedNodeData,
+    FileListCardXNodeXWidgetData,
     FileReference,
-} from "@/arches_vue_components/datatypes/file-list/types.ts";
+} from "@/arches_lingo/components/widgets/FileListMetadataWidget/types.ts";
 
 import type {
     ConceptImages,
+    DigitalObjectContentAliases,
     DigitalObjectInstance,
     DigitalObjectInstanceAliases,
 } from "@/arches_lingo/types.ts";
@@ -61,9 +80,30 @@ const props = defineProps<{
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const languageStore = useLanguageStore();
 
 const digitalObjectResource = ref<DigitalObjectInstance>();
 const digitalObjectLoaded = ref(false);
+const contentCardXNodeXWidgetData = ref<FileListCardXNodeXWidgetData>();
+// One language for the whole digital object: the file widget's language
+// picker sets it, and save() writes it to name_language and
+// statement_language and files title and description under it.
+const recordLanguageCode = ref<string>();
+
+const recordLanguage = computed<Language>(
+    () =>
+        languageStore.availableLanguages.find(
+            (language) => language.code === recordLanguageCode.value,
+        ) ?? languageStore.selectedLanguage,
+);
+
+// Lingo's types use 2.0.x's file-list types, where metadata is a string;
+// the stored value is localized, as the backport widget types it.
+const contentAliasedNodeData = computed(
+    () =>
+        (digitalObjectResource.value?.aliased_data?.content?.aliased_data
+            .content ?? null) as unknown as FileListAliasedNodeData | null,
+);
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -84,7 +124,37 @@ const { targetDigitalObjectResourceInstanceId } = storeToRefs(
 
 onMounted(() => {
     getDigitalObjectInstance(targetDigitalObjectResourceInstanceId.value);
+    getContentCardXNodeXWidgetData();
 });
+
+// Lingo collects title and description in its own Title and Description
+// fields and copies them into the file record on save, so hide them in the
+// file widget the way a card hides a node: flip the field's visible bit.
+// Flip the language picker's bit on, so editors can set the record language.
+async function getContentCardXNodeXWidgetData() {
+    try {
+        const cardXNodeXWidgetData =
+            (await useWidgetConfigStore().fetchWidgetConfig(
+                DIGITAL_OBJECT_GRAPH_SLUG,
+                "content",
+            )) as FileListCardXNodeXWidgetData;
+        // The store shares one cached object, so copy rather than mutate it.
+        contentCardXNodeXWidgetData.value = {
+            ...cardXNodeXWidgetData,
+            config: {
+                ...cardXNodeXWidgetData.config,
+                metadataFields: {
+                    ...cardXNodeXWidgetData.config.metadataFields,
+                    title: { visible: false },
+                    description: { visible: false },
+                },
+                metadataLanguageSelect: { visible: true },
+            },
+        };
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 watch(
     () => formRef.value,
@@ -101,6 +171,9 @@ async function getDigitalObjectInstance(resourceInstanceId?: string) {
                 resourceInstanceId,
             );
         }
+        recordLanguageCode.value = getInitialRecordLanguageCode(
+            digitalObjectResource.value?.aliased_data,
+        );
         digitalObjectLoaded.value = true;
         isLoading.value = false;
     } catch (error) {
@@ -108,35 +181,113 @@ async function getDigitalObjectInstance(resourceInstanceId?: string) {
     }
 }
 
+// Lingo types the *_language nodes loosely (statement_language as a
+// reference), but they are core `language` nodes holding a language code.
+function getTileLanguageCode(
+    tileAliasedData: object | undefined,
+    languageNodeAlias: string,
+): string | undefined {
+    const languageNode = (
+        tileAliasedData as
+            | Record<string, { node_value?: unknown } | undefined>
+            | undefined
+    )?.[languageNodeAlias];
+    const languageCode = languageNode?.node_value;
+    return typeof languageCode === "string" && languageCode
+        ? languageCode
+        : undefined;
+}
+
+function getInitialRecordLanguageCode(
+    digitalObjectInstanceAliases: DigitalObjectInstanceAliases | undefined,
+): string {
+    return (
+        getTileLanguageCode(
+            digitalObjectInstanceAliases?.name?.aliased_data,
+            "name_language",
+        ) ??
+        getTileLanguageCode(
+            digitalObjectInstanceAliases?.statement?.aliased_data,
+            "statement_language",
+        ) ??
+        languageStore.selectedLanguage.code
+    );
+}
+
+function getNonLocalizedText(aliasedNodeData: object | undefined): string {
+    return (
+        (aliasedNodeData as NonLocalizedTextAliasedNodeData | undefined)
+            ?.node_value ?? ""
+    );
+}
+
+function withRecordTitleAndDescription(
+    file: PossiblyNewFile,
+    digitalObjectInstanceAliases: DigitalObjectInstanceAliases,
+): PossiblyNewFile {
+    const nameAliasedData = digitalObjectInstanceAliases.name?.aliased_data;
+    const statementAliasedData =
+        digitalObjectInstanceAliases.statement?.aliased_data;
+
+    return {
+        ...file,
+        title: setLocalizedValue(
+            file.title,
+            recordLanguage.value,
+            getNonLocalizedText(nameAliasedData?.name_content),
+        ),
+        description: setLocalizedValue(
+            file.description,
+            recordLanguage.value,
+            getNonLocalizedText(statementAliasedData?.statement_content),
+        ),
+    };
+}
+
 async function save(e: FormSubmitEvent) {
     isLoading.value = true;
 
     try {
         const submittedFormData = e.values;
-        const contentFiles =
-            (
-                submittedFormData.content as {
-                    node_value: PossiblyNewFile[] | null;
-                }
-            )?.node_value ?? null;
-
         const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
             digitalObjectResource.value?.aliased_data ?? {};
+        const recordLanguageAliasedNodeData = buildLanguageAliasedNodeData(
+            recordLanguage.value.code,
+            languageStore.availableLanguages,
+        );
 
         if (submittedFormData.name_content) {
             digitalObjectInstanceAliases.name = {
                 ...digitalObjectInstanceAliases.name,
-                aliased_data: { name_content: submittedFormData.name_content },
-            };
+                aliased_data: {
+                    name_content: submittedFormData.name_content,
+                    name_language: recordLanguageAliasedNodeData,
+                },
+            } as DigitalObjectInstanceAliases["name"];
         }
         if (submittedFormData.statement_content) {
             digitalObjectInstanceAliases.statement = {
                 ...digitalObjectInstanceAliases.statement,
                 aliased_data: {
                     statement_content: submittedFormData.statement_content,
+                    statement_language: recordLanguageAliasedNodeData,
                 },
-            };
+            } as unknown as DigitalObjectInstanceAliases["statement"];
         }
+
+        const submittedContentFiles =
+            (
+                submittedFormData.content as {
+                    node_value: PossiblyNewFile[] | null;
+                }
+            )?.node_value ?? null;
+        const contentFiles =
+            submittedContentFiles?.map((file) =>
+                withRecordTitleAndDescription(
+                    file,
+                    digitalObjectInstanceAliases,
+                ),
+            ) ?? null;
 
         // files do not respect json.stringify
         const fileJsonObjects = (contentFiles ?? []).map((file) => {
@@ -151,7 +302,10 @@ async function save(e: FormSubmitEvent) {
                 url: null,
                 file_id: null,
                 content: URL.createObjectURL(file.file),
-                altText: "Replaceable alt text",
+                altText: file.altText,
+                title: file.title,
+                description: file.description,
+                attribution: file.attribution,
             };
         });
 
@@ -160,7 +314,7 @@ async function save(e: FormSubmitEvent) {
             aliased_data: {
                 content: {
                     node_value: fileJsonObjects,
-                } as unknown as FileListAliasedNodeData,
+                } as unknown as DigitalObjectContentAliases["content"],
             },
         };
 
@@ -304,16 +458,19 @@ function resetForm() {
                         :render-context="MULTILINE_RENDER_CONTEXT"
                     />
                 </div>
-                <div class="widget-container column">
-                    <GenericWidget
+                <div
+                    v-if="contentCardXNodeXWidgetData"
+                    class="widget-container column"
+                >
+                    <FileListMetadataWidget
                         node-alias="content"
-                        graph-slug="digital_object_system"
-                        :aliased-node-data="
-                            digitalObjectResource?.aliased_data?.content
-                                ?.aliased_data.content ?? null
+                        :card-x-node-x-widget-data="contentCardXNodeXWidgetData"
+                        :aliased-node-data="contentAliasedNodeData"
+                        :metadata-language-code="recordLanguageCode"
+                        @update:metadata-language-code="
+                            (languageCode: string) =>
+                                (recordLanguageCode = languageCode)
                         "
-                        :mode="EDIT"
-                        :should-show-label="false"
                     />
                 </div>
             </Form>
@@ -323,11 +480,6 @@ function resetForm() {
 <style scoped>
 :deep(.p-fileupload-advanced) {
     border: none;
-}
-
-:deep(.file-list) {
-    display: flex;
-    gap: 1rem;
 }
 
 :deep(.p-fileupload-header) {
