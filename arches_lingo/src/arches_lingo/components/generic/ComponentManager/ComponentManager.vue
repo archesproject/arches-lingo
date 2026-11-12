@@ -307,7 +307,10 @@ provide(openPanelComponentKey, openPanelComponent);
 <template>
     <div class="component-manager">
         <!-- only shown on large screens -->
-        <Splitter class="component-splitter component-splitter-horizontal">
+        <Splitter
+            class="component-splitter component-splitter-horizontal"
+            :class="{ 'editor-closed': editorState === CLOSED }"
+        >
             <SplitterPanel
                 v-show="editorState !== MAXIMIZED"
                 class="content"
@@ -344,12 +347,16 @@ provide(openPanelComponentKey, openPanelComponent);
                 </div>
             </SplitterPanel>
 
+            <!-- OpenVue's Splitter re-measures its panels before the DOM updates
+            when the panel count changes, so the editor panel is always rendered
+            and only its content is unmounted while the editor is closed. -->
             <SplitterPanel
-                v-if="editorState !== CLOSED"
+                v-show="editorState !== CLOSED"
                 :size="50"
                 class="splitter-panel-parent"
             >
                 <ComponentEditor
+                    v-if="editorState !== CLOSED"
                     :key="editorKey"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
@@ -380,6 +387,7 @@ provide(openPanelComponentKey, openPanelComponent);
         <!-- only shown on small screens -->
         <Splitter
             class="component-splitter component-splitter-vertical"
+            :class="{ 'editor-closed': editorState === CLOSED }"
             layout="vertical"
         >
             <SplitterPanel
@@ -419,11 +427,12 @@ provide(openPanelComponentKey, openPanelComponent);
             </SplitterPanel>
 
             <SplitterPanel
-                v-if="editorState !== CLOSED"
+                v-show="editorState !== CLOSED"
                 :size="50"
                 class="splitter-panel-parent"
             >
                 <ComponentEditor
+                    v-if="editorState !== CLOSED"
                     :key="editorKey"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
@@ -551,6 +560,10 @@ provide(openPanelComponentKey, openPanelComponent);
 :deep(.scheme-header .add-button:hover) {
     background: var(--p-highlight-background);
     color: var(--p-text-hover-muted-color);
+}
+
+.editor-closed :deep(.p-splitter-gutter) {
+    display: none;
 }
 
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {
