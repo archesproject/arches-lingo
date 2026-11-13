@@ -94,6 +94,54 @@ let editorTriggerElement: HTMLElement | null = null;
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Every row is a tab stop, like the delete button inside it, so Tab moves
+// row, its delete button, next row.  PrimeVue instead keeps a single tabbable
+// row (none at all once a row is selected) and moves tabindex="-1" onto rows
+// directly in the DOM on row clicks and row keydowns, so put the rows back in
+// the tab order after each of those.  The microtask runs after every handler
+// for the event, whichever order PrimeVue's and this one run in.
+function restoreRowTabStops(event: Event) {
+    if (!(event.currentTarget instanceof HTMLElement)) {
+        return;
+    }
+    const tableBody = event.currentTarget.closest("tbody");
+    queueMicrotask(() => {
+        tableBody
+            ?.querySelectorAll<HTMLElement>("tr[data-p-selectable-row='true']")
+            .forEach((row) => {
+                row.tabIndex = 0;
+            });
+    });
+}
+
+// A focused row is otherwise named by all of its cell text, which includes the
+// delete button's label.  Name it by the resource alone; the delete button is
+// the next tab stop and names itself.
+function getRowAccessibleName(resource: ResourceSummary | undefined) {
+    if (!resource) {
+        return undefined;
+    }
+    const resourceName = resource.display_name || $gettext("Untitled");
+    if (!props.showGraphType) {
+        return resourceName;
+    }
+    return $gettext(
+        "%{name}, %{type}",
+        { name: resourceName, type: resource.graph_name },
+        true,
+    );
+}
+
+// PrimeVue's DataTable gives the row index within the current page.
+function getRowPassThrough({ context }: { context: { index: number } }) {
+    return {
+        tabindex: 0,
+        "aria-label": getRowAccessibleName(resources.value[context.index]),
+        onClick: restoreRowTabStops,
+        onKeydown: restoreRowTabStops,
+    };
+}
+
 const editorTitle = computed(() => {
     if (isCreatingNew.value) return $gettext("New Resource");
     if (!selectedResource.value) return "";
@@ -399,6 +447,7 @@ defineExpose({
                         data-key="resourceinstanceid"
                         striped-rows
                         class="resource-table"
+                        :pt="{ bodyRow: getRowPassThrough }"
                         @page="onPage"
                         @row-select="onRowSelect"
                         @row-unselect.stop
