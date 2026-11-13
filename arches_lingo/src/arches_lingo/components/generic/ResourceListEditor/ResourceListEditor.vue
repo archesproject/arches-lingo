@@ -19,6 +19,11 @@ import { useToast } from "primevue/usetoast";
 import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
 import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
+    useConfirmDiscard,
+    useEditorDirtyState,
+} from "@/arches_lingo/composables/useEditorDirtyState.ts";
+import { useEscapeToCloseEditor } from "@/arches_lingo/composables/useEscapeToCloseEditor.ts";
+import {
     deleteLingoResource,
     fetchResourceReferenceCount,
 } from "@/arches_lingo/api.ts";
@@ -58,12 +63,17 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     "select-resource": [resource: ResourceSummary];
+    // Emitted once the user has confirmed discarding any unsaved changes, so
+    // the page resets its editor state only after that choice.
+    "create-resource": [];
 }>();
 
 const toast = useToast();
 const confirm = useConfirm();
 const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
 const { $gettext, interpolate, $ngettext } = useGettext();
+const { isEditorDirty } = useEditorDirtyState();
+const { confirmDiscard } = useConfirmDiscard();
 
 const isLoading = ref(true);
 const resources = ref<ResourceSummary[]>([]);
@@ -165,7 +175,8 @@ async function resetPanelSizes() {
 }
 
 function openEditor() {
-    if (!isEditorOpen.value) {
+    const wasEditorOpen = isEditorOpen.value;
+    if (!wasEditorOpen) {
         editorTriggerElement =
             document.activeElement instanceof HTMLElement
                 ? document.activeElement
@@ -173,23 +184,46 @@ function openEditor() {
     }
     isEditorOpen.value = true;
     editorInstanceKey.value++;
-    resetPanelSizes();
+    // Keep a width the user dragged while they move between rows.
+    if (!wasEditorOpen) {
+        resetPanelSizes();
+    }
+}
+
+// Switching rows or starting a new resource replaces the editor, so ask first
+// when it has unsaved changes.
+function runAfterConfirmingDiscard(replaceEditor: () => void) {
+    if (isEditorOpen.value && isEditorDirty.value) {
+        confirmDiscard({ onDiscard: replaceEditor });
+    } else {
+        replaceEditor();
+    }
 }
 
 function onRowSelect(event: { data: ResourceSummary }) {
-    isCreatingNew.value = false;
-    selectedResource.value = event.data;
-    if (props.editorEnabled !== false) {
-        openEditor();
-    }
-    emit("select-resource", event.data);
+    runAfterConfirmingDiscard(() => {
+        isCreatingNew.value = false;
+        selectedResource.value = event.data;
+        if (props.editorEnabled !== false) {
+            openEditor();
+        }
+        emit("select-resource", event.data);
+    });
 }
 
 function openBlankEditor() {
-    selectedResource.value = null;
-    isCreatingNew.value = true;
-    openEditor();
+    runAfterConfirmingDiscard(() => {
+        selectedResource.value = null;
+        isCreatingNew.value = true;
+        emit("create-resource");
+        openEditor();
+    });
 }
+
+useEscapeToCloseEditor({
+    isEditorOpen: () => isEditorOpen.value,
+    closeEditor,
+});
 
 function focusPageTitle() {
     if (pageTitleRef.value) {

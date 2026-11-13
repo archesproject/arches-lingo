@@ -34,10 +34,6 @@ async function onSelectResource(resource: ResourceSummary) {
     await selectResource(resource);
 }
 
-function onCreateNew() {
-    clearSelection();
-}
-
 function onSave(savedTileData: {
     resourceinstance: string;
     tileid: string | null;
@@ -58,6 +54,7 @@ function onSave(savedTileData: {
         :editor-enabled="isEditor"
         :is-editor-loading="isLoadingTile"
         @select-resource="onSelectResource"
+        @create-resource="clearSelection"
     >
         <template #list-actions="{ openBlankEditor }">
             <Button
@@ -65,12 +62,7 @@ function onSave(savedTileData: {
                 :label="$gettext('Add Source')"
                 icon="pi pi-plus-circle"
                 class="add-button"
-                @click="
-                    () => {
-                        onCreateNew();
-                        openBlankEditor();
-                    }
-                "
+                @click="openBlankEditor()"
             />
         </template>
 
