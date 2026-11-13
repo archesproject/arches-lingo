@@ -677,3 +677,32 @@ export function scaleWithRootFontSize(pixelsAtDefaultFontSize: number) {
             DEFAULT_ROOT_FONT_SIZE_IN_PIXELS,
     );
 }
+
+export function escapeRegExp(text: string) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Split a label into the parts that match the tree filter (case-insensitive)
+ * and the parts that don't, so matches can be highlighted. The filter is
+ * user text and is matched literally.
+ */
+export function splitLabelForFilterHighlight(
+    label: string,
+    filter?: string,
+): { text: string; highlight: boolean }[] {
+    if (!filter) {
+        return [{ text: label, highlight: false }];
+    }
+
+    const filterPattern = new RegExp(`(${escapeRegExp(filter)})`, "gi");
+    const lowercaseFilter = filter.toLowerCase();
+
+    return label
+        .split(filterPattern)
+        .filter((part) => part !== "")
+        .map((part) => ({
+            text: part,
+            highlight: part.toLowerCase() === lowercaseFilter,
+        }));
+}

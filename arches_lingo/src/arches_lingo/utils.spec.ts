@@ -16,6 +16,7 @@ import {
     focusWithoutScrolling,
     getSplitterGutterPassThrough,
     scaleWithRootFontSize,
+    splitLabelForFilterHighlight,
     treeFromSchemes,
 } from "@/arches_lingo/utils.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
@@ -328,5 +329,33 @@ describe("Focus and sizing helpers", () => {
         focusWithoutScrolling(button);
         expect(document.activeElement).toBe(button);
         expect(button.hasAttribute("tabindex")).toBe(false);
+    });
+});
+
+describe("splitLabelForFilterHighlight", () => {
+    it("highlights matches case-insensitively", () => {
+        expect(splitLabelForFilterHighlight("Oak and oak", "OAK")).toEqual([
+            { text: "Oak", highlight: true },
+            { text: " and ", highlight: false },
+            { text: "oak", highlight: true },
+        ]);
+    });
+
+    it.each(["(", "+", "?", "[", "a.c", "\\"])(
+        "treats %s as literal text",
+        (filter) => {
+            const parts = splitLabelForFilterHighlight("abc (a.c) + ?", filter);
+            expect(parts.map((part) => part.text).join("")).toBe(
+                "abc (a.c) + ?",
+            );
+        },
+    );
+
+    it("matches regex characters literally", () => {
+        expect(splitLabelForFilterHighlight("abc (a.c)", "a.c")).toEqual([
+            { text: "abc (", highlight: false },
+            { text: "a.c", highlight: true },
+            { text: ")", highlight: false },
+        ]);
     });
 });
