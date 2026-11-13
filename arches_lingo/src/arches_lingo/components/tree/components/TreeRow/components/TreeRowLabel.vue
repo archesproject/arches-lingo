@@ -6,7 +6,10 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
-import { getDisplayedLifecycleStateName } from "@/arches_lingo/utils.ts";
+import {
+    getDisplayedLifecycleStateName,
+    splitLabelForFilterHighlight,
+} from "@/arches_lingo/utils.ts";
 
 import type { TreeNode } from "primevue/treenode";
 
@@ -16,28 +19,6 @@ const { node, filterValue } = defineProps<{
 }>();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
-
-function tokenizeLabel(
-    label: string,
-    filter?: string,
-): { text: string; highlight: boolean }[] {
-    if (!filter) {
-        return [{ text: label, highlight: false }];
-    }
-
-    const regex = new RegExp(`(${filter})`, "gi");
-    const parts = label.split(regex);
-
-    return parts.reduce<{ text: string; highlight: boolean }[]>((acc, part) => {
-        if (part) {
-            acc.push({
-                text: part,
-                highlight: part.toLowerCase() === filter.toLowerCase(),
-            });
-        }
-        return acc;
-    }, []);
-}
 
 const tokenizedLabel = computed(() => {
     if (!node.data) {
@@ -50,7 +31,7 @@ const tokenizedLabel = computed(() => {
         systemLanguage.value.code,
     ).value;
 
-    return tokenizeLabel(unstyledLabel, filterValue);
+    return splitLabelForFilterHighlight(unstyledLabel, filterValue);
 });
 
 const lifecycleStateId = computed(
