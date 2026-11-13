@@ -39,7 +39,7 @@ const cardEditorRef = useTemplateRef("cardEditorRef");
 const formFacade = reactive({
     states: {} as Record<string, { dirty: boolean }>,
     submit() {
-        cardEditorRef.value?.save();
+        return cardEditorRef.value?.save();
     },
     focusFirstField() {
         const cardEditorElement = cardEditorRef.value?.$el;
