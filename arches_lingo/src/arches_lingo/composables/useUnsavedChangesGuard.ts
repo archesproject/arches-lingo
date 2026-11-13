@@ -1,11 +1,8 @@
 import { onMounted, onUnmounted } from "vue";
 
-import { useGettext } from "vue3-gettext";
-import { useConfirm } from "primevue/useconfirm";
-
 import {
+    useConfirmDiscard,
     useEditorDirtyState,
-    unsavedChangesConfirmOptions,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import type { Router, RouteLocationNormalized } from "vue-router";
@@ -23,9 +20,8 @@ import type { Router, RouteLocationNormalized } from "vue-router";
  * `useGettext`, and Vue lifecycle hooks).
  */
 export function useUnsavedChangesGuard(router: Router) {
-    const { $gettext } = useGettext();
-    const confirm = useConfirm();
     const { isEditorDirty } = useEditorDirtyState();
+    const { confirmDiscard } = useConfirmDiscard();
 
     const removeGuard = router.beforeEach((to, from) => {
         if (!isEditorDirty.value) {
@@ -36,10 +32,12 @@ export function useUnsavedChangesGuard(router: Router) {
             return true;
         }
 
+        // Dismissing the confirm (Escape or its close button) cancels the
+        // navigation, so the guard always settles.
         return new Promise<boolean>((resolve) => {
-            confirm.require({
-                ...unsavedChangesConfirmOptions($gettext, () => resolve(true)),
-                reject: () => resolve(false),
+            confirmDiscard({
+                onDiscard: () => resolve(true),
+                onKeepEditing: () => resolve(false),
             });
         });
     });

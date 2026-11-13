@@ -4,6 +4,7 @@ import {
     markRaw,
     nextTick,
     onMounted,
+    onUnmounted,
     provide,
     ref,
     useId,
@@ -11,7 +12,6 @@ import {
 } from "vue";
 
 import { useRoute } from "vue-router";
-import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -38,8 +38,8 @@ import {
 import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
+    useConfirmDiscard,
     useEditorDirtyState,
-    unsavedChangesConfirmOptions,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
@@ -61,9 +61,9 @@ const props = defineProps<{
 
 const toast = useToast();
 const route = useRoute();
-const confirm = useConfirm();
 const { $gettext } = useGettext();
-const { isEditorDirty } = useEditorDirtyState();
+const { isEditorDirty, isUnsavedChangesConfirmOpen } = useEditorDirtyState();
+const { confirmDiscard } = useConfirmDiscard();
 const { announce } = useAnnouncer();
 const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
 
@@ -126,50 +126,54 @@ watch(resourceInstanceId, async () => {
     await loadResourceInstanceLifecycleState();
 });
 
-const isConfirmDialogOpen = ref(false);
-
 onMounted(() => {
     if (route.params.id === NEW) {
         initNewLabel();
     }
 });
 
-window.addEventListener(
-    "keydown",
-    (event) => {
-        if (event.key === "Escape" && editorState.value !== CLOSED) {
-            if (isConfirmDialogOpen.value) {
-                return;
-            }
-            if (isEditorDirty.value) {
-                // Stop propagation so PrimeVue's document-level keydown handler
-                // doesn't immediately close the dialog we're about to open.
-                event.stopPropagation();
-                confirmDiscard(closeEditor);
-            } else {
-                closeEditor();
-            }
-        }
-    },
-    true,
-);
+// Escape closes the editor from anywhere on the page, unless something
+// layered over the page should handle that Escape first.
+const ESCAPE_OWNER_SELECTOR = [
+    ".p-dialog",
+    ".p-drawer",
+    ".p-popover",
+    "[data-pc-section='overlay']",
+    "[role='combobox'][aria-expanded='true']",
+    "[aria-haspopup][aria-expanded='true']",
+].join(", ");
 
-function confirmDiscard(callback: () => void) {
-    isConfirmDialogOpen.value = true;
-
-    confirm.require({
-        ...unsavedChangesConfirmOptions($gettext, () => {
-            isConfirmDialogOpen.value = false;
-            callback();
-        }),
-        reject: () => {
-            isConfirmDialogOpen.value = false;
-        },
-        onHide: () => {
-            isConfirmDialogOpen.value = false;
-        },
-    });
+function isEscapeOwnedByOverlay(event: KeyboardEvent) {
+    const target = event.target;
+    return (
+        target instanceof Element &&
+        target.closest(ESCAPE_OWNER_SELECTOR) !== null
+    );
 }
+
+function onWindowKeydown(event: KeyboardEvent) {
+    if (event.key !== "Escape" || editorState.value === CLOSED) {
+        return;
+    }
+    if (
+        event.defaultPrevented ||
+        isUnsavedChangesConfirmOpen.value ||
+        isEscapeOwnedByOverlay(event)
+    ) {
+        return;
+    }
+    if (isEditorDirty.value) {
+        // Stop propagation so PrimeVue's document-level keydown handler
+        // doesn't immediately close the dialog we're about to open.
+        event.stopPropagation();
+        confirmDiscard({ onDiscard: closeEditor });
+    } else {
+        closeEditor();
+    }
+}
+
+onMounted(() => window.addEventListener("keydown", onWindowKeydown, true));
+onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown, true));
 
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditorAfterSave);
@@ -255,7 +259,9 @@ function doOpenEditor(componentName: string, tileId?: string) {
 
 function openEditor(componentName: string, tileId?: string) {
     if (editorState.value !== CLOSED && isEditorDirty.value) {
-        confirmDiscard(() => doOpenEditor(componentName, tileId));
+        confirmDiscard({
+            onDiscard: () => doOpenEditor(componentName, tileId),
+        });
     } else {
         doOpenEditor(componentName, tileId);
     }
