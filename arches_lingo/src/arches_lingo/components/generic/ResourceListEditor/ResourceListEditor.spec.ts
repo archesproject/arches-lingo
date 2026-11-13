@@ -213,3 +213,60 @@ describe("ResourceListEditor unsaved changes", () => {
         expect(confirmRequire).toHaveBeenCalledTimes(0);
     });
 });
+
+describe("ResourceListEditor keyboard access", () => {
+    function getRowTabIndexes(
+        wrapper: Awaited<ReturnType<typeof mountEditor>>,
+    ) {
+        return wrapper
+            .findAll(".resource-table tbody tr")
+            .map((row) => row.attributes("tabindex"));
+    }
+
+    beforeEach(() => {
+        useEditorDirtyState().isEditorDirty.value = false;
+        useEditorDirtyState().isUnsavedChangesConfirmOpen.value = false;
+    });
+
+    it("puts every row in the tab order when nothing is selected", async () => {
+        const wrapper = await mountEditor();
+
+        expect(getRowTabIndexes(wrapper)).toEqual(["0", "0"]);
+        wrapper.unmount();
+    });
+
+    it("keeps every row in the tab order after arrowing between rows", async () => {
+        const wrapper = await mountEditor();
+        const firstRow = wrapper.find(".resource-table tbody tr");
+
+        await firstRow.trigger("keydown", { code: "ArrowDown" });
+        await flushPromises();
+
+        expect(getRowTabIndexes(wrapper)).toEqual(["0", "0"]);
+        wrapper.unmount();
+    });
+
+    it("names each row by its resource, not by the delete button too", async () => {
+        const wrapper = await mountEditor();
+
+        const rowNames = wrapper
+            .findAll(".resource-table tbody tr")
+            .map((row) => row.attributes("aria-label"));
+
+        expect(rowNames).toEqual(["Resource first", "Resource second"]);
+        wrapper.unmount();
+    });
+
+    it("keeps every row in the tab order while the editor is open", async () => {
+        const wrapper = await mountEditor();
+
+        wrapper
+            .findComponent(DataTable)
+            .vm.$emit("row-select", { data: resources[1] });
+        await flushPromises();
+
+        expect(wrapper.find(".editor-panel").exists()).toBe(true);
+        expect(getRowTabIndexes(wrapper)).toEqual(["0", "0"]);
+        wrapper.unmount();
+    });
+});
