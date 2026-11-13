@@ -12,12 +12,11 @@ import {
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
-import { useConfirm } from "primevue/useconfirm";
 
 import { CLOSE, MAXIMIZE, MINIMIZE } from "@/arches_lingo/constants.ts";
 import {
+    useConfirmDiscard,
     useEditorDirtyState,
-    unsavedChangesConfirmOptions,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 const props = defineProps<{
@@ -30,8 +29,8 @@ const props = defineProps<{
 const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 
 const { $gettext } = useGettext();
-const confirm = useConfirm();
 const { isEditorDirty } = useEditorDirtyState();
+const { confirmDiscard } = useConfirmDiscard();
 
 const toggleSizeButton = useTemplateRef("toggleSizeButton");
 const hasAutoFocused = ref(false);
@@ -139,9 +138,7 @@ function toggleSize() {
 
 function onCloseClicked() {
     if (isFormDirty.value) {
-        confirm.require(
-            unsavedChangesConfirmOptions($gettext, () => emit(CLOSE)),
-        );
+        confirmDiscard({ onDiscard: () => emit(CLOSE) });
     } else {
         emit(CLOSE);
     }
