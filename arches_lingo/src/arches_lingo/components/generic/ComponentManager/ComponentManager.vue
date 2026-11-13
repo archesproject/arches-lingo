@@ -4,7 +4,6 @@ import {
     markRaw,
     nextTick,
     onMounted,
-    onUnmounted,
     provide,
     ref,
     useId,
@@ -41,6 +40,7 @@ import {
     useConfirmDiscard,
     useEditorDirtyState,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
+import { useEscapeToCloseEditor } from "@/arches_lingo/composables/useEscapeToCloseEditor.ts";
 
 import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
 import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
@@ -62,7 +62,7 @@ const props = defineProps<{
 const toast = useToast();
 const route = useRoute();
 const { $gettext } = useGettext();
-const { isEditorDirty, isUnsavedChangesConfirmOpen } = useEditorDirtyState();
+const { isEditorDirty } = useEditorDirtyState();
 const { confirmDiscard } = useConfirmDiscard();
 const { announce } = useAnnouncer();
 const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
@@ -132,48 +132,10 @@ onMounted(() => {
     }
 });
 
-// Escape closes the editor from anywhere on the page, unless something
-// layered over the page should handle that Escape first.
-const ESCAPE_OWNER_SELECTOR = [
-    ".p-dialog",
-    ".p-drawer",
-    ".p-popover",
-    "[data-pc-section='overlay']",
-    "[role='combobox'][aria-expanded='true']",
-    "[aria-haspopup][aria-expanded='true']",
-].join(", ");
-
-function isEscapeOwnedByOverlay(event: KeyboardEvent) {
-    const target = event.target;
-    return (
-        target instanceof Element &&
-        target.closest(ESCAPE_OWNER_SELECTOR) !== null
-    );
-}
-
-function onWindowKeydown(event: KeyboardEvent) {
-    if (event.key !== "Escape" || editorState.value === CLOSED) {
-        return;
-    }
-    if (
-        event.defaultPrevented ||
-        isUnsavedChangesConfirmOpen.value ||
-        isEscapeOwnedByOverlay(event)
-    ) {
-        return;
-    }
-    if (isEditorDirty.value) {
-        // Stop propagation so PrimeVue's document-level keydown handler
-        // doesn't immediately close the dialog we're about to open.
-        event.stopPropagation();
-        confirmDiscard({ onDiscard: closeEditor });
-    } else {
-        closeEditor();
-    }
-}
-
-onMounted(() => window.addEventListener("keydown", onWindowKeydown, true));
-onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown, true));
+useEscapeToCloseEditor({
+    isEditorOpen: () => editorState.value !== CLOSED,
+    closeEditor,
+});
 
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditorAfterSave);
