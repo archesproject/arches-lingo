@@ -78,6 +78,9 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isLoading = ref(true);
+// Separate from isLoading so a failed save keeps the form, and the user's
+// input, mounted.
+const isSaving = ref(false);
 const { targetDigitalObjectResourceInstanceId } = storeToRefs(
     useConceptImagesEditorStore(),
 );
@@ -109,7 +112,7 @@ async function getDigitalObjectInstance(resourceInstanceId?: string) {
 }
 
 async function save(e: FormSubmitEvent) {
-    isLoading.value = true;
+    isSaving.value = true;
 
     try {
         const submittedFormData = e.values;
@@ -120,8 +123,9 @@ async function save(e: FormSubmitEvent) {
                 }
             )?.node_value ?? null;
 
-        const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
-            digitalObjectResource.value?.aliased_data ?? {};
+        const digitalObjectInstanceAliases: DigitalObjectInstanceAliases = {
+            ...digitalObjectResource.value?.aliased_data,
+        };
 
         if (submittedFormData.name_content) {
             digitalObjectInstanceAliases.name = {
@@ -167,28 +171,21 @@ async function save(e: FormSubmitEvent) {
         const hasNewFiles = (contentFiles ?? []).some(
             (file) => file.file instanceof File,
         );
-        if (hasNewFiles) {
-            if (digitalObjectResource.value) {
-                digitalObjectResource.value.aliased_data = {
-                    ...digitalObjectInstanceAliases,
-                };
-            } else {
-                digitalObjectResource.value = {
-                    aliased_data: {
-                        ...digitalObjectInstanceAliases,
-                    },
-                } as unknown as DigitalObjectInstance;
-            }
+        const pendingDigitalObjectResource = {
+            ...digitalObjectResource.value,
+            aliased_data: digitalObjectInstanceAliases,
+        } as DigitalObjectInstance;
 
+        if (hasNewFiles) {
             const formDataForDigitalObject = await createFormDataForFileUpload(
-                digitalObjectResource as Ref<DigitalObjectInstance>,
+                ref(pendingDigitalObjectResource) as Ref<DigitalObjectInstance>,
                 digitalObjectInstanceAliases,
                 { ...submittedFormData, content: contentFiles },
             );
-            if (digitalObjectResource.value?.resourceinstanceid) {
+            if (pendingDigitalObjectResource.resourceinstanceid) {
                 await updateLingoResourceFromForm(
                     DIGITAL_OBJECT_GRAPH_SLUG,
-                    digitalObjectResource.value.resourceinstanceid,
+                    pendingDigitalObjectResource.resourceinstanceid,
                     formDataForDigitalObject,
                 );
             } else {
@@ -205,12 +202,10 @@ async function save(e: FormSubmitEvent) {
             }
         } else {
             if (digitalObjectResource.value) {
-                digitalObjectResource.value.aliased_data =
-                    digitalObjectInstanceAliases;
                 await updateLingoResource(
                     DIGITAL_OBJECT_GRAPH_SLUG,
-                    digitalObjectResource.value.resourceinstanceid,
-                    digitalObjectResource.value,
+                    pendingDigitalObjectResource.resourceinstanceid,
+                    pendingDigitalObjectResource,
                 );
             } else {
                 const digitalObject = await createDigitalObject(
@@ -245,7 +240,7 @@ async function save(e: FormSubmitEvent) {
             detail: error instanceof Error ? error.message : undefined,
         });
     } finally {
-        isLoading.value = false;
+        isSaving.value = false;
         onSaveSettled?.();
     }
 }
@@ -259,10 +254,10 @@ function resetForm() {
 
 <template>
     <Skeleton
-        v-show="isLoading"
+        v-show="isLoading || isSaving"
         style="width: 100%; height: 100%"
     />
-    <div v-show="!isLoading">
+    <div v-show="!isLoading && !isSaving">
         <div class="form-header">
             <h3>{{ props.sectionTitle }}</h3>
             <div class="form-description">
