@@ -3,6 +3,7 @@ import { inject, ref, useTemplateRef, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useRouter } from "vue-router";
+import { useToast } from "primevue/usetoast";
 import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
@@ -10,7 +11,11 @@ import Skeleton from "primevue/skeleton";
 import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { EDIT } from "@/arches_lingo/constants.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDIT,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
@@ -30,6 +35,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const toast = useToast();
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -90,13 +96,18 @@ async function save(e: FormSubmitEvent) {
             });
         }
 
+        refreshReportSection!(props.componentName);
         refreshSchemeHierarchy!();
         closeEditor!();
     } catch (error) {
-        console.error(error);
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to save data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
     } finally {
         isSaving.value = false;
-        refreshReportSection!(props.componentName);
         onSaveSettled?.();
     }
 }
@@ -104,11 +115,11 @@ async function save(e: FormSubmitEvent) {
 
 <template>
     <Skeleton
-        v-if="isSaving"
+        v-show="isSaving"
         style="width: 100%; height: 100%"
     />
 
-    <div v-else>
+    <div v-show="!isSaving">
         <div class="form-header">
             <h3>{{ props.sectionTitle }}</h3>
             <div class="form-description">
