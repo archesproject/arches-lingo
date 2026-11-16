@@ -22,13 +22,21 @@ const emit = defineEmits<{
     (event: "update:winner", languageCode: string, tileId: string): void;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 
 function candidateSourceText(candidate: PrefLabelCandidate) {
     if (candidate.isFromSurvivor) {
-        return $gettext('on "%{name}"', { name: survivorLabel ?? "" });
+        return interpolate(
+            $gettext('on "%{name}"'),
+            { name: survivorLabel ?? "" },
+            true,
+        );
     }
-    return $gettext('from "%{name}"', { name: absorbedLabel ?? "" });
+    return interpolate(
+        $gettext('from "%{name}"'),
+        { name: absorbedLabel ?? "" },
+        true,
+    );
 }
 </script>
 

@@ -106,7 +106,7 @@ const emit = defineEmits<{
     merged: [];
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const currentStep = ref(
@@ -376,9 +376,12 @@ async function onMergeConfirmed() {
                         <div class="merge-step-body merge-step-body--fill">
                             <p class="merge-step-intro">
                                 {{
-                                    $gettext(
-                                        'Choose the concept to merge into "%{name}". "%{name}" stays, the values you pick are copied onto it, and within the same scheme the other concept can be retired (or, if it is a draft, deleted) afterwards.',
+                                    interpolate(
+                                        $gettext(
+                                            'Choose the concept to merge into "%{name}". "%{name}" stays, the values you pick are copied onto it, and within the same scheme the other concept can be retired (or, if it is a draft, deleted) afterwards.',
+                                        ),
                                         { name: survivorLabel ?? "" },
+                                        true,
                                     )
                                 }}
                             </p>

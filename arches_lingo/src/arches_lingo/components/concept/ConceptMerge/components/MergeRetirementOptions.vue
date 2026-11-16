@@ -45,7 +45,7 @@ const emit = defineEmits<{
     ): void;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const conceptStore = useConceptStore();
 
 const children = ref<Concept[]>([]);
@@ -63,14 +63,20 @@ const childrenText = computed(function () {
         count: String(children.value.length),
     };
     if (isDeletion) {
-        return $gettext(
-            '"%{name}" has %{count} direct child concept(s). How should they be handled when it is deleted?',
+        return interpolate(
+            $gettext(
+                '"%{name}" has %{count} direct child concept(s). How should they be handled when it is deleted?',
+            ),
             values,
+            true,
         );
     }
-    return $gettext(
-        '"%{name}" has %{count} direct child concept(s). How should they be handled when it is retired?',
+    return interpolate(
+        $gettext(
+            '"%{name}" has %{count} direct child concept(s). How should they be handled when it is retired?',
+        ),
         values,
+        true,
     );
 });
 
@@ -102,24 +108,32 @@ const reparentToParentsDescription = computed(function () {
 });
 
 const reparentToSurvivorDesc = computed(function () {
-    return $gettext('Child concepts become children of "%{survivor}".', {
-        survivor: survivorLabel ?? "",
-    });
+    return interpolate(
+        $gettext('Child concepts become children of "%{survivor}".'),
+        { survivor: survivorLabel ?? "" },
+        true,
+    );
 });
 
 const survivorBeneathAbsorbedText = computed(function () {
-    return $gettext(
-        '"%{survivor}" sits beneath "%{absorbed}", so the children can only be attached to their existing parents.',
+    return interpolate(
+        $gettext(
+            '"%{survivor}" sits beneath "%{absorbed}", so the children can only be attached to their existing parents.',
+        ),
         { survivor: survivorLabel ?? "", absorbed: absorbedLabel ?? "" },
+        true,
     );
 });
 
 // The merge stays available: the server re-checks the hierarchy and applies the
 // default strategy, or refuses it if that would break the hierarchy.
 const fetchErrorText = computed(function () {
-    return $gettext(
-        'Could not check the child concepts of "%{name}". Any children it has will be attached to the surviving concept where the hierarchy allows it.',
+    return interpolate(
+        $gettext(
+            'Could not check the child concepts of "%{name}". Any children it has will be attached to the surviving concept where the hierarchy allows it.',
+        ),
         { name: absorbedLabel ?? "" },
+        true,
     );
 });
 

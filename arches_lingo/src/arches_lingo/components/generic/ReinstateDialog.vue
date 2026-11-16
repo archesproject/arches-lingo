@@ -20,27 +20,36 @@ const emit = defineEmits<{
     cancel: [];
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 
 const selectedCascade = ref(false);
 
 const confirmationText = computed(function () {
-    return $gettext(
-        'Are you sure you want to reinstate "%{name}"? It will return to Editing state.',
+    return interpolate(
+        $gettext(
+            'Are you sure you want to reinstate "%{name}"? It will return to Editing state.',
+        ),
         { name: resourceName ?? "" },
+        true,
     );
 });
 
 const childrenText = computed(function () {
     if (resourceType === "scheme") {
-        return $gettext(
-            'Would you also like to reinstate the concepts within "%{name}"?',
+        return interpolate(
+            $gettext(
+                'Would you also like to reinstate the concepts within "%{name}"?',
+            ),
             { name: resourceName ?? "" },
+            true,
         );
     }
-    return $gettext(
-        'Would you also like to reinstate the child concepts within "%{name}"?',
+    return interpolate(
+        $gettext(
+            'Would you also like to reinstate the child concepts within "%{name}"?',
+        ),
         { name: resourceName ?? "" },
+        true,
     );
 });
 

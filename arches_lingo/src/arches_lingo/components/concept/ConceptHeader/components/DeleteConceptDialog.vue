@@ -30,7 +30,7 @@ const emit = defineEmits<{
     cancel: [];
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const conceptStore = useConceptStore();
 
 const narrower = ref<Concept[]>([]);
@@ -51,12 +51,15 @@ const isDelete = computed(function () {
 });
 
 const childrenText = computed(function () {
-    return $gettext(
-        '"%{name}" has %{count} direct child concept(s). How should they be handled?',
+    return interpolate(
+        $gettext(
+            '"%{name}" has %{count} direct child concept(s). How should they be handled?',
+        ),
         {
             name: conceptName ?? "",
             count: String(narrower.value.length),
         },
+        true,
     );
 });
 
@@ -69,13 +72,17 @@ const dialogHeader = computed(function () {
 
 const confirmationText = computed(function () {
     if (isDelete.value) {
-        return $gettext('Are you sure you want to delete "%{name}"?', {
-            name: conceptName ?? "",
-        });
+        return interpolate(
+            $gettext('Are you sure you want to delete "%{name}"?'),
+            { name: conceptName ?? "" },
+            true,
+        );
     }
-    return $gettext('Are you sure you want to deprecate "%{name}"?', {
-        name: conceptName ?? "",
-    });
+    return interpolate(
+        $gettext('Are you sure you want to deprecate "%{name}"?'),
+        { name: conceptName ?? "" },
+        true,
+    );
 });
 
 const deleteChildrenTitle = computed(function () {
