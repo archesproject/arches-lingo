@@ -14,6 +14,7 @@ import { applyHighContrast, isHighContrastPreferred } from '@/arches_lingo/theme
 import { useUserStore } from '@/arches_lingo/stores/useUserStore.ts';
 import { useAppSettingsStore } from '@/arches_lingo/stores/useAppSettingsStore.ts';
 import { routeNames } from '@/arches_lingo/routes.ts';
+import { getSafeNextPath } from '@/arches_lingo/utils.ts';
 
 applyHighContrast(isHighContrastPreferred());
 
@@ -38,6 +39,10 @@ router.beforeEach(async (to, from, next) => {
         isSamePageNavigation ? Promise.resolve() : userStore.refresh(),
         appSettingsStore.initialize(),
     ]);
+
+    if (to.name === routeNames.login && !userStore.isAnonymous) {
+        return next(getSafeNextPath(to.query.next) ?? { name: routeNames.dashboard });
+    }
 
     const isAlwaysPublic = to.matched.some((record) => record.meta.alwaysPublic);
     if (isAlwaysPublic) return next();

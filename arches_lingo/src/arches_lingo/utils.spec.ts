@@ -14,6 +14,7 @@ import {
     dataIsConcept,
     focusNeighborAfterRemoval,
     focusWithoutScrolling,
+    getSafeNextPath,
     getSplitterGutterPassThrough,
     scaleWithRootFontSize,
     splitLabelForFilterHighlight,
@@ -357,5 +358,38 @@ describe("splitLabelForFilterHighlight", () => {
             { text: "a.c", highlight: true },
             { text: ")", highlight: false },
         ]);
+    });
+});
+
+describe("getSafeNextPath", () => {
+    it.each(["/", "/concept/123?scheme=1", "/schemes#top"])(
+        "accepts the same-origin path %s",
+        (path) => {
+            expect(getSafeNextPath(path)).toBe(path);
+        },
+    );
+
+    it.each([
+        "https://example.com/",
+        "//example.com/",
+        "/\\example.com/",
+        "/\t/example.com/",
+        "/\n/example.com/",
+        "/\r/example.com/",
+        "/\t\\example.com/",
+        " /dashboard",
+        "/dash board",
+        "/\u0000/example.com/",
+        "javascript:alert(1)",
+        "concept/123",
+        "",
+        undefined,
+        null,
+    ])("rejects %s", (value) => {
+        expect(getSafeNextPath(value)).toBeUndefined();
+    });
+
+    it("uses the first value of a repeated query param", () => {
+        expect(getSafeNextPath(["/dashboard", "//evil"])).toBe("/dashboard");
     });
 });

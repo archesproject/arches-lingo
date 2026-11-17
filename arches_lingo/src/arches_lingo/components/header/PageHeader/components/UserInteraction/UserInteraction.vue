@@ -2,7 +2,7 @@
 import { computed, ref, useTemplateRef } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import Button from "primevue/button";
 import Popover from "primevue/popover";
@@ -18,6 +18,7 @@ import type { PopoverMethods } from "primevue/popover";
 
 const { $gettext, interpolate } = useGettext();
 const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore();
 const { user, isAnonymous } = storeToRefs(userStore);
 
@@ -67,7 +68,7 @@ function onUserMenuShow() {
 }
 
 function navigateToLogin() {
-    router.push({ name: routeNames.login });
+    router.push({ name: routeNames.login, query: { next: route.fullPath } });
 }
 </script>
 

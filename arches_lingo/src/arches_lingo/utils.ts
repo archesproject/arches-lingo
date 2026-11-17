@@ -706,3 +706,46 @@ export function splitLabelForFilterHighlight(
             highlight: part.toLowerCase() === lowercaseFilter,
         }));
 }
+
+function hasUrlUnsafeCharacter(text: string) {
+    return [...text].some((character) => {
+        const characterCode = character.charCodeAt(0);
+        return (
+            characterCode <= 0x20 ||
+            characterCode === 0x7f ||
+            /\s/.test(character)
+        );
+    });
+}
+
+/**
+ * Return `value` if it is a same-origin path that is safe to redirect to
+ * after sign-in (for example "/concept/123?scheme=1"), otherwise undefined.
+ * Rejects absolute URLs, protocol-relative "//host" and "/\\host" forms, and
+ * anything containing whitespace or control characters. The result is the
+ * path as the browser parses it, so it cannot resolve to another origin.
+ */
+export function getSafeNextPath(value: unknown): string | undefined {
+    const candidate = Array.isArray(value) ? value[0] : value;
+    if (typeof candidate !== "string") {
+        return undefined;
+    }
+    if (
+        !candidate.startsWith("/") ||
+        /^\/[/\\]/.test(candidate) ||
+        hasUrlUnsafeCharacter(candidate)
+    ) {
+        return undefined;
+    }
+
+    let parsedUrl: URL;
+    try {
+        parsedUrl = new URL(candidate, window.location.origin);
+    } catch {
+        return undefined;
+    }
+    if (parsedUrl.origin !== window.location.origin) {
+        return undefined;
+    }
+    return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+}
