@@ -4,7 +4,11 @@ import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
-import InputText from "primevue/inputtext";
+import InputNumber from "primevue/inputnumber";
+
+import type { InputNumberInputEvent } from "primevue/inputnumber";
+
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 
 import { createConceptIdentifierCounter } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
@@ -39,7 +43,7 @@ const conceptIdentifierCounterInputId = useId();
 const conceptIdentifierCounterEditButtonId = useId();
 
 const isEditingConceptIdentifierCounter = ref(false);
-const conceptIdentifierCounterStartNumberDraft = ref("1");
+const conceptIdentifierCounterStartNumberDraft = ref<number | null>(1);
 const isSavingConceptIdentifierCounter = ref(false);
 
 const shouldShowConceptIdentifierCounterEditButton = computed(() => {
@@ -57,13 +61,24 @@ const shouldShowConceptIdentifierCounterEditButton = computed(() => {
     );
 });
 
+const isStartNumberDraftEmpty = computed(
+    () => conceptIdentifierCounterStartNumberDraft.value === null,
+);
+
+function onStartNumberInput(event: InputNumberInputEvent) {
+    if (typeof event.value === "number") {
+        conceptIdentifierCounterStartNumberDraft.value = event.value;
+        return;
+    }
+    conceptIdentifierCounterStartNumberDraft.value = null;
+}
+
 async function editConceptIdentifierCounter() {
     if (!props.conceptIdentifierCounter) {
-        conceptIdentifierCounterStartNumberDraft.value = "1";
+        conceptIdentifierCounterStartNumberDraft.value = 1;
     } else {
-        conceptIdentifierCounterStartNumberDraft.value = String(
-            props.conceptIdentifierCounter.start_number,
-        );
+        conceptIdentifierCounterStartNumberDraft.value =
+            props.conceptIdentifierCounter.start_number;
     }
 
     isEditingConceptIdentifierCounter.value = true;
@@ -72,7 +87,7 @@ async function editConceptIdentifierCounter() {
 }
 
 async function cancelEditingConceptIdentifierCounter() {
-    conceptIdentifierCounterStartNumberDraft.value = "1";
+    conceptIdentifierCounterStartNumberDraft.value = 1;
     isEditingConceptIdentifierCounter.value = false;
     await nextTick();
     focusFirstElementById(
@@ -82,7 +97,8 @@ async function cancelEditingConceptIdentifierCounter() {
 }
 
 async function saveConceptIdentifierCounter() {
-    if (!props.resourceInstanceId) {
+    const startNumber = conceptIdentifierCounterStartNumberDraft.value;
+    if (!props.resourceInstanceId || startNumber === null) {
         return;
     }
 
@@ -91,7 +107,7 @@ async function saveConceptIdentifierCounter() {
     try {
         const updatedCounter = await createConceptIdentifierCounter(
             props.resourceInstanceId,
-            Number(conceptIdentifierCounterStartNumberDraft.value),
+            startNumber,
         );
 
         emit("update", { conceptIdentifierCounter: updatedCounter });
@@ -120,13 +136,16 @@ async function saveConceptIdentifierCounter() {
         </span>
 
         <template v-if="isEditingConceptIdentifierCounter">
-            <InputText
-                :id="conceptIdentifierCounterInputId"
+            <InputNumber
                 v-model="conceptIdentifierCounterStartNumberDraft"
+                :input-id="conceptIdentifierCounterInputId"
                 :aria-labelledby="conceptIdentifierCounterLabelId"
+                :min="1"
+                :use-grouping="false"
                 size="small"
+                @input="onStartNumberInput"
             />
-            <Button
+            <DisabledReasonButton
                 icon="pi pi-check"
                 variant="text"
                 severity="success"
@@ -134,6 +153,8 @@ async function saveConceptIdentifierCounter() {
                 :rounded="true"
                 :aria-label="$gettext('Save concept identifier counter')"
                 :loading="isSavingConceptIdentifierCounter"
+                :is-disabled="isStartNumberDraftEmpty"
+                :disabled-reason="$gettext('Enter a valid start number')"
                 @click="saveConceptIdentifierCounter"
             />
             <Button
