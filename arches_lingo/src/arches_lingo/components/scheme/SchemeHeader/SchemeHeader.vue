@@ -283,7 +283,7 @@ const defaultSchemeURITemplate = computed(() => {
     }
 
     const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
-    return `${normalizedBaseUrl}/scheme/<scheme_identifier>/concept/<concept_identifier>`;
+    return `${normalizedBaseUrl}/schemes/<scheme_identifier>/concepts/<concept_identifier>`;
 });
 
 const schemeUri = computed(() => {

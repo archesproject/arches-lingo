@@ -166,6 +166,7 @@ URI_CONTENT_NODE = "bf73e64a-4888-11ee-8a8d-11afefc4bff7"
 # identifier
 IDENTIFIER_NODEGROUP = "bf73e5d1-4888-11ee-8a8d-11afefc4bff7"
 IDENTIFIER_CONTENT_NODE = "bf73e6ba-4888-11ee-8a8d-11afefc4bff7"
+IDENTIFIER_SOURCE = "arches-lingo"
 
 # match_status
 MATCH_STATUS_NODEGROUP = "4cfaaa64-0ed7-11ef-9493-0a58a9feac02"
