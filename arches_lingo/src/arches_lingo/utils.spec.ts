@@ -4,6 +4,7 @@ import {
     EDITING_LIFECYCLE_STATE_ID,
     GUIDE_TERM_ICON,
     LOCKED_LIFECYCLE_STATE_ID,
+    NEW,
     PUBLISHED_LIFECYCLE_STATE_ID,
     RETIRED_LIFECYCLE_STATE_ID,
     SCHEME_ICON,
@@ -14,12 +15,14 @@ import {
     dataIsConcept,
     focusNeighborAfterRemoval,
     focusWithoutScrolling,
+    getCurrentResourceId,
     getSafeNextPath,
     getSplitterGutterPassThrough,
     scaleWithRootFontSize,
     splitLabelForFilterHighlight,
     treeFromSchemes,
 } from "@/arches_lingo/utils.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
 
 import type { Language } from "@/arches_vue_components/types.ts";
@@ -392,4 +395,50 @@ describe("getSafeNextPath", () => {
     it("uses the first value of a repeated query param", () => {
         expect(getSafeNextPath(["/dashboard", "//evil"])).toBe("/dashboard");
     });
+});
+
+function makeRoute(
+    name: string,
+    params: Record<string, string> = {},
+    meta: Record<string, unknown> = {},
+) {
+    return { name, params, meta };
+}
+
+describe("getCurrentResourceId", () => {
+    it("reads params.id on concept and scheme routes", () => {
+        expect(
+            getCurrentResourceId(makeRoute(routeNames.concept, { id: "c1" })),
+        ).toBe("c1");
+        expect(
+            getCurrentResourceId(makeRoute(routeNames.scheme, { id: "s1" })),
+        ).toBe("s1");
+    });
+
+    it("prefers the resolved id on identifier routes", () => {
+        expect(
+            getCurrentResourceId(
+                makeRoute(
+                    routeNames.conceptByIdentifier,
+                    { scheme: "abc", concept: "12" },
+                    { resolvedResourceId: "c2" },
+                ),
+            ),
+        ).toBe("c2");
+    });
+
+    it("returns NEW on /concept/new", () => {
+        expect(
+            getCurrentResourceId(makeRoute(routeNames.concept, { id: NEW })),
+        ).toBe(NEW);
+    });
+
+    it.each([routeNames.source, routeNames.contributor])(
+        "ignores the id on %s routes",
+        (name) => {
+            expect(
+                getCurrentResourceId(makeRoute(name, { id: "r1" })),
+            ).toBeUndefined();
+        },
+    );
 });

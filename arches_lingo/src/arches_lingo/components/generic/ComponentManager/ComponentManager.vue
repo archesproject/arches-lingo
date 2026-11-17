@@ -43,7 +43,10 @@ import {
 import { useEscapeToCloseEditor } from "@/arches_lingo/composables/useEscapeToCloseEditor.ts";
 
 import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
-import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
+import {
+    focusWithoutScrolling,
+    getCurrentResourceId,
+} from "@/arches_lingo/utils.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { getSplitterGutterPassThrough } from "@/arches_lingo/utils.ts";
 
@@ -98,13 +101,8 @@ const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
 
 const resourceInstanceId = computed<string | undefined>(() => {
-    if (route.meta.resolvedResourceId) {
-        return route.meta.resolvedResourceId as string;
-    }
-    if (route.params.id && route.params.id !== NEW) {
-        return route.params.id as string;
-    }
-    return undefined;
+    const currentResourceId = getCurrentResourceId(route);
+    return currentResourceId === NEW ? undefined : currentResourceId;
 });
 
 const graphSlug = props.componentData[0]?.graphSlug;
