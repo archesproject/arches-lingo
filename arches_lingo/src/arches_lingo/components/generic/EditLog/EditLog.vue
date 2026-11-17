@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, nextTick, onMounted, ref } from "vue";
+import { storeToRefs } from "pinia";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -48,7 +49,7 @@ const resourceInstanceLifecycleState = inject<{
 
 const toast = useToast();
 const { $gettext } = useGettext();
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 
 const canEditResourceInstances = computed(() => {
     return Boolean(
@@ -180,7 +181,7 @@ function shouldShowCardNameRow(editEntry: EditLogEntry) {
 function canRevert(editEntry: EditLogEntry) {
     return (
         !nonRevertableEditTypes.has(editEntry.edittype) &&
-        isEditor &&
+        isEditor.value &&
         canEditResourceInstances.value
     );
 }

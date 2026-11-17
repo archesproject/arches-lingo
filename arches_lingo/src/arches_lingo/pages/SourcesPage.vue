@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -16,7 +17,7 @@ import type { ResourceSummary } from "@/arches_lingo/types";
 const GRAPH_SLUG = "textual_work";
 
 const { $gettext } = useGettext();
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 
 const resourceListEditorRef = useTemplateRef("resourceListEditorRef");
 const refreshTrigger = ref(0);

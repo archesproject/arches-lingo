@@ -23,7 +23,7 @@ import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const conceptStore = useConceptStore();
 
@@ -57,7 +57,7 @@ const schemeEntries = computed(() =>
 
 function buildSchemeList() {
     schemes.value = [...conceptStore.schemes];
-    if (isEditor && !schemes.value.some((scheme) => scheme.id === NEW)) {
+    if (isEditor.value && !schemes.value.some((scheme) => scheme.id === NEW)) {
         schemes.value.unshift({ id: NEW, labels: [], top_concepts: [] });
     }
 }

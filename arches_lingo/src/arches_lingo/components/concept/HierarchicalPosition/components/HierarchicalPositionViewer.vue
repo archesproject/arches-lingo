@@ -103,7 +103,7 @@ const createTooltipText = computed(() => {
         "This concept is not editable in its current lifecycle state",
     );
 });
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 const isDeletePending = ref(false);
 const expandedGroupIndices = ref(new Set<number>());
 const collapsedGroupIndices = ref(new Set<number>());

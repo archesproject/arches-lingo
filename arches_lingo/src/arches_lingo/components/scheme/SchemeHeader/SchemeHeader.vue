@@ -194,7 +194,7 @@ const hasPersistedResourceInstance = computed(() => {
 });
 
 const store = useResourceStore();
-const { isEditor, isLingoAdmin } = useUserStore();
+const { isEditor, isLingoAdmin } = storeToRefs(useUserStore());
 const { publicServerAddress } = storeToRefs(useAppSettingsStore());
 
 const isLocked = computed(
@@ -256,7 +256,7 @@ watch(
 
 const canEditResourceInstances = computed(() => {
     return (
-        isEditor &&
+        isEditor.value &&
         !isLocked.value &&
         hasPersistedResourceInstance.value &&
         Boolean(currentLifecycleState.value?.can_edit_resource_instances)
@@ -265,7 +265,7 @@ const canEditResourceInstances = computed(() => {
 
 const canDeleteResourceInstances = computed(() => {
     return (
-        isEditor &&
+        isEditor.value &&
         !isLocked.value &&
         hasPersistedResourceInstance.value &&
         Boolean(currentLifecycleState.value?.can_delete_resource_instances)

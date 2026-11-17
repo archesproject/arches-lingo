@@ -88,7 +88,7 @@ const createTooltipText = computed(() => {
         "This concept is not editable in its current lifecycle state",
     );
 });
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 const { targetDigitalObjectResourceInstanceId } = storeToRefs(
     useConceptImagesEditorStore(),
 );
