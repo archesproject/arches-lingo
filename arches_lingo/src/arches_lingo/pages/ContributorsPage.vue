@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -24,7 +25,7 @@ interface GraphTypeOption {
 }
 
 const { $gettext } = useGettext();
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 const { isEditorDirty } = useEditorDirtyState();
 const { confirmDiscard } = useConfirmDiscard();
 
