@@ -33,6 +33,7 @@ import type {
     SearchResultItem,
 } from "@/arches_lingo/types";
 import type { Router } from "vue-router/dist/vue-router";
+import type { RouteLocationNormalizedLoaded } from "vue-router";
 import type { ConceptInstance } from "@/arches_lingo/types.ts";
 
 export function dataIsScheme(data: Concept | Scheme) {
@@ -748,4 +749,40 @@ export function getSafeNextPath(value: unknown): string | undefined {
         return undefined;
     }
     return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+}
+
+export const CONCEPT_ROUTE_NAMES: ReadonlySet<string> = new Set([
+    routeNames.concept,
+    routeNames.conceptByIdentifier,
+]);
+
+export const SCHEME_ROUTE_NAMES: ReadonlySet<string> = new Set([
+    routeNames.scheme,
+    routeNames.schemeByIdentifier,
+]);
+
+/**
+ * Map scheme/concept URI to the current resource ID, if available.
+ */
+export function getCurrentResourceId(
+    route: Pick<RouteLocationNormalizedLoaded, "name" | "meta" | "params">,
+): string | undefined {
+    const routeName = String(route.name ?? "");
+    if (
+        !CONCEPT_ROUTE_NAMES.has(routeName) &&
+        !SCHEME_ROUTE_NAMES.has(routeName)
+    ) {
+        return undefined;
+    }
+    const resolvedResourceId = route.meta.resolvedResourceId as
+        | string
+        | undefined;
+    const idParam = route.params.id as string | undefined;
+    return resolvedResourceId || idParam || undefined;
+}
+
+export function isConceptRoute(
+    route: Pick<RouteLocationNormalizedLoaded, "name">,
+) {
+    return CONCEPT_ROUTE_NAMES.has(String(route.name ?? ""));
 }

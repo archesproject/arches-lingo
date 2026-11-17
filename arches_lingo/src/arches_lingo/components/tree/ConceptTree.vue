@@ -49,6 +49,7 @@ import {
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
+    getCurrentResourceId,
     getDisplayedLifecycleStateName,
     treeFromSchemes,
     navigateToSchemeOrConcept,
@@ -472,11 +473,10 @@ watch(
             }
 
             await nextTick();
-            scrollToItemInTree(
-                (route.meta.resolvedResourceId as string) ||
-                    (route.params.id as string),
-                true,
-            );
+            const currentResourceId = getCurrentResourceId(route);
+            if (currentResourceId) {
+                scrollToItemInTree(currentResourceId, true);
+            }
             return;
         }
 
@@ -635,7 +635,10 @@ async function handleTreeOpened() {
         return;
     }
 
-    scrollToItemInTree(route.params.id as string, true);
+    const currentResourceId = getCurrentResourceId(route);
+    if (currentResourceId) {
+        scrollToItemInTree(currentResourceId, true);
+    }
 }
 
 function scrollToOccurrenceKeyInTree(
@@ -912,9 +915,8 @@ async function selectNodeFromRoute(
     newRoute: typeof route,
     shouldScroll: boolean,
 ) {
-    const routeNodeId =
-        (newRoute.meta.resolvedResourceId as string) ||
-        (newRoute.params.id as string);
+    // Undefined on routes that aren't a concept or scheme (e.g. sources).
+    const routeNodeId = getCurrentResourceId(newRoute);
 
     removeAllNewNodes();
 
