@@ -147,7 +147,11 @@ const editorTitle = computed(() => {
     if (!selectedResource.value) return "";
     const displayName =
         selectedResource.value.display_name || $gettext("Untitled");
-    return $gettext(`Now Editing: ${displayName}`);
+    return interpolate(
+        $gettext("Now Editing: %{name}"),
+        { name: displayName },
+        true,
+    );
 });
 
 watch(
