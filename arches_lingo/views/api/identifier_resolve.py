@@ -1,22 +1,15 @@
 from django.http import Http404, JsonResponse
 from django.views import View
 
-from arches.app.models.models import ResourceIdentifier, TileModel
+from arches.app.models.models import TileModel
 
 from arches_lingo.const import URI_CONTENT_NODE, URI_NODEGROUP
+from arches_lingo.utils.identifier_resolution import resolve_identifier_route
 
 
 class IdentifierResolveView(View):
-    def get(self, request, **kwargs):
-        identifier = kwargs.get("concept_identifier") or kwargs.get("scheme_identifier")
-        resource_id = (
-            ResourceIdentifier.objects.filter(
-                identifier=identifier,
-                source="arches-lingo",
-            )
-            .values_list("resourceid", flat=True)
-            .first()
-        )
+    def get(self, request, scheme_identifier, concept_identifier=None):
+        resource_id = resolve_identifier_route(scheme_identifier, concept_identifier)
 
         if resource_id is None:
             raise Http404()
