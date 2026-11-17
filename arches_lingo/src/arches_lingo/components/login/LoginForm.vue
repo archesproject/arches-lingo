@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref, useTemplateRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
@@ -11,8 +11,11 @@ import { login } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { getSafeNextPath } from "@/arches_lingo/utils.ts";
 
 import LoginLinks from "@/arches_lingo/components/login/LoginLinks.vue";
+
+import type { ComponentPublicInstance } from "vue";
 
 const { $gettext } = useGettext();
 const toast = useToast();
@@ -22,19 +25,44 @@ const userStore = useUserStore();
 
 const username = ref();
 const password = ref();
+const isSubmitting = ref(false);
+
+const usernameInput = useTemplateRef<ComponentPublicInstance>("usernameInput");
+const passwordInput = useTemplateRef<ComponentPublicInstance>("passwordInput");
+
+onMounted(() => {
+    (usernameInput.value?.$el as HTMLElement | undefined)?.focus();
+});
+
+// ?next= (header Login, MFA) wins, then a guard redirect, then the dashboard
+function getPostLoginDestination() {
+    return (
+        getSafeNextPath(route.query.next) ??
+        route.redirectedFrom ?? { name: routeNames.dashboard }
+    );
+}
 
 const submit = async () => {
+    if (isSubmitting.value) {
+        return;
+    }
+    isSubmitting.value = true;
+
     try {
         await login(username.value, password.value);
         userStore.setUser(null);
-        router.push(route.redirectedFrom || { name: routeNames.root });
+        await router.push(getPostLoginDestination());
     } catch (error) {
+        password.value = "";
+        (passwordInput.value?.$el as HTMLElement | undefined)?.focus();
         toast.add({
             severity: ERROR,
             life: DEFAULT_ERROR_TOAST_LIFE,
             summary: $gettext("Sign in failed."),
             detail: error instanceof Error ? error.message : undefined,
         });
+    } finally {
+        isSubmitting.value = false;
     }
 };
 </script>
@@ -53,12 +81,14 @@ const submit = async () => {
         </div>
         <div class="main-form">
             <InputText
+                ref="usernameInput"
                 v-model="username"
                 :placeholder="$gettext('Username')"
                 :aria-label="$gettext('Username')"
                 autocomplete="username"
             />
             <InputText
+                ref="passwordInput"
                 v-model="password"
                 :placeholder="$gettext('Password')"
                 :aria-label="$gettext('Password')"
@@ -68,6 +98,8 @@ const submit = async () => {
             <Button
                 type="submit"
                 :label="$gettext('Sign In')"
+                :loading="isSubmitting"
+                :disabled="isSubmitting"
             />
         </div>
         <div class="form-footer">

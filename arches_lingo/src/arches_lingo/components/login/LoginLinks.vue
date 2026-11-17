@@ -1,12 +1,25 @@
 <script setup lang="ts">
 import arches from "arches";
+import { computed } from "vue";
+import { useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
 import { SECONDARY } from "@/arches_lingo/constants.ts";
+import { getSafeNextPath } from "@/arches_lingo/utils.ts";
 
 const { $gettext } = useGettext();
+const route = useRoute();
+
+// Pass the post-login destination through the MFA flow
+const multiFactorLoginUrl = computed(() => {
+    const nextPath =
+        getSafeNextPath(route.query.next) ??
+        getSafeNextPath(route.redirectedFrom?.fullPath) ??
+        "/dashboard";
+    return `${arches.urls.auth}?next=${encodeURIComponent(nextPath)}`;
+});
 </script>
 
 <template>
@@ -23,7 +36,7 @@ const { $gettext } = useGettext();
             as="a"
             class="login-action"
             :label="$gettext('Multi-factor login')"
-            :href="arches.urls.auth + '?next=/'"
+            :href="multiFactorLoginUrl"
             :severity="SECONDARY"
             :outlined="true"
         />
