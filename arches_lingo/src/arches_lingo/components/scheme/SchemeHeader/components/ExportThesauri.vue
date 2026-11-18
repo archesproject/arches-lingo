@@ -68,19 +68,15 @@ function notifyExportQueued() {
     });
 }
 
-function notifyExportComplete(exportedFile: ExportedFile | null) {
+function notifyExportComplete(exportedFile: ExportedFile) {
     toast.add({
         severity: SUCCESS,
         life: DEFAULT_TOAST_LIFE,
         summary: $gettext("Export complete"),
-        detail: exportedFile
-            ? $gettext(
-                  "Your download of %{fileName} should begin automatically. It is also available in the Notifications panel.",
-                  { fileName: exportedFile.name },
-              )
-            : $gettext(
-                  "Your export is ready to download from the Notifications panel.",
-              ),
+        detail: $gettext(
+            "Your download of %{fileName} should begin automatically. It is also available in the Notifications panel.",
+            { fileName: exportedFile.name },
+        ),
     });
 }
 
@@ -100,9 +96,7 @@ async function exportThesauri() {
         if (exportResponse.status === "queued") {
             notifyExportQueued();
         } else {
-            if (exportResponse.file) {
-                downloadExportedFile(exportResponse.file);
-            }
+            downloadExportedFile(exportResponse.file);
             notifyExportComplete(exportResponse.file);
         }
         visible.value = false;
@@ -170,7 +164,7 @@ async function exportThesauri() {
                 aria-live="polite"
             >
                 <ProgressSpinner
-                    style="width: 3rem; height: 3rem"
+                    class="loading-spinner"
                     stroke-width="4"
                     aria-hidden="true"
                 />
@@ -342,6 +336,11 @@ async function exportThesauri() {
     gap: 1rem;
     padding-block: 1rem;
     text-align: center;
+}
+
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
 }
 
 .loading-message {
