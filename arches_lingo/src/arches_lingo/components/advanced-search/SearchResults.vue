@@ -258,10 +258,9 @@ function onPageChange(event: { page: number }) {
                         class="view-concept-button"
                         :tabindex="getResultTabIndex(resultIndex)"
                         :aria-label="
-                            interpolate(
-                                'View concept %{label}',
-                                { label: getResultLabel(item) },
-                            )
+                            interpolate('View concept %{label}', {
+                                label: getResultLabel(item),
+                            })
                         "
                         @click="navigateToConcept(item.id)"
                     />

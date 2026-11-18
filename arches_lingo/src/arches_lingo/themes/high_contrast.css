@@ -113,6 +113,28 @@
     --p-lingo-language-chip-background: var(--p-surface-200);
     --p-lingo-dimmed-already-present-opacity: 1;
     --p-lingo-dimmed-unavailable-opacity: 1;
+
+    --p-lingo-scheme-card-focus-outline: 0.25rem solid var(--p-text-color);
+    --p-lingo-scheme-card-focus-outline-offset: 0.125rem;
+    --p-lingo-new-scheme-card-color: var(--p-button-primary-color);
+    --p-lingo-new-scheme-card-background: var(--p-button-primary-background);
+    --p-lingo-new-scheme-card-border-color: var(--p-header-toolbar-border);
+    --p-lingo-new-scheme-card-circle-background: var(
+        --p-button-primary-hover-background
+    );
+    --p-lingo-new-scheme-card-circle-border-color: var(
+        --p-button-primary-color
+    );
+    --p-lingo-new-scheme-card-button-color: var(--p-button-primary-background);
+    --p-lingo-new-scheme-card-button-background: var(--p-button-primary-color);
+    --p-lingo-new-scheme-card-button-border-color: var(
+        --p-button-primary-color
+    );
+    --p-lingo-new-scheme-card-button-hover-color: var(--p-button-primary-color);
+    --p-lingo-new-scheme-card-button-hover-background: transparent;
+    --p-lingo-new-scheme-card-button-focus-ring-color: var(
+        --p-button-primary-background
+    );
 }
 
 :root.arches-high-contrast.arches-dark {
@@ -206,6 +228,9 @@
     --p-lingo-selection-indicator-color: var(--p-primary-300);
     --p-lingo-form-subtitle-color: var(--p-surface-300);
     --p-lingo-language-chip-background: var(--p-surface-700);
+    --p-lingo-new-scheme-card-button-border-color: var(
+        --p-button-primary-color
+    );
 }
 
 :root.arches-high-contrast .p-tag {
