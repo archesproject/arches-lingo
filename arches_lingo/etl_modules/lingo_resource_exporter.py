@@ -18,6 +18,7 @@ from arches.app.models.models import (
     LoadEvent,
     ResourceInstance,
     TempFile,
+    TileModel,
     User,
 )
 from arches.app.utils.data_management.resources.formats.rdffile import RdfWriter
@@ -93,8 +94,14 @@ class LingoResourceExporter:
         )
         self.load_event = load_event
 
-        scheme_ids, concept_ids = self._get_resource_ids_for_export(self.resourceid)
-        if len(concept_ids) > const.CELERY_CONCEPT_COUNT_THRESHOLD:
+        concept_count = self._count_concepts_for_export(self.resourceid)
+        if concept_count is None:
+            error = _(
+                "The selected resource could not be found and cannot be exported."
+            )
+            return self._handle_error(error)
+
+        if concept_count > const.CELERY_CONCEPT_COUNT_THRESHOLD:
             if not task_management.check_if_celery_available():
                 error = _(
                     "The thesaurus exceeds the threshold for synchronous export, but Celery is not available. Please contact your system administrator."
@@ -111,7 +118,11 @@ class LingoResourceExporter:
                     "UPDATE load_event SET taskid = %s WHERE loadid = %s",
                     (task.task_id, self.loadid),
                 )
-            return {"success": True, "data": "delegated_to_celery"}
+            return {
+                "success": True,
+                "status": const.EXPORT_STATUS_QUEUED,
+                "data": const.DELEGATED_TO_CELERY,
+            }
 
         try:
             response = self.run_export_task(self.resourceid, filename, format)
@@ -202,6 +213,61 @@ class LingoResourceExporter:
         for triples in (*scheme_triples.values(), *concept_triples.values()):
             referenced_ids |= collect_referenced_resource_ids(triples)
         return build_resource_uri_map(subject_ids | referenced_ids)
+
+    def _count_concepts_for_export(self, resourceid):
+        graph_id = (
+            ResourceInstance.objects.filter(pk=resourceid)
+            .values_list("graph_id", flat=True)
+            .first()
+        )
+        if graph_id is None:
+            return None
+
+        if str(graph_id) == const.SCHEMES_GRAPH_ID:
+            part_of_scheme_node = const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID
+            return (
+                TileModel.objects.filter(
+                    nodegroup_id=part_of_scheme_node,
+                    **{
+                        f"data__{part_of_scheme_node}__contains": [
+                            {"resourceId": str(resourceid)}
+                        ]
+                    },
+                )
+                .values("resourceinstance_id")
+                .distinct()
+                .count()
+            )
+
+        if str(graph_id) == const.CONCEPTS_GRAPH_ID:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    WITH RECURSIVE concept_and_descendants(concept_id) AS (
+                        SELECT %(root_concept_id)s::uuid
+                        UNION
+                        SELECT narrower_tile.resourceinstanceid
+                          FROM tiles narrower_tile
+                          JOIN concept_and_descendants broader
+                            ON narrower_tile.nodegroupid = %(nodegroup_id)s::uuid
+                           AND (narrower_tile.tiledata -> %(broader_node_id)s)
+                               @> jsonb_build_array(
+                                   jsonb_build_object(
+                                       'resourceId', broader.concept_id::text
+                                   )
+                               )
+                    )
+                    SELECT count(*) FROM concept_and_descendants
+                    """,
+                    {
+                        "root_concept_id": str(resourceid),
+                        "nodegroup_id": const.CLASSIFICATION_STATUS_NODEGROUP,
+                        "broader_node_id": const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+                    },
+                )
+                return cursor.fetchone()[0]
+
+        return None
 
     def _get_resource_ids_for_export(self, resourceid):
         """
@@ -386,6 +452,8 @@ class LingoResourceExporter:
 
             return {
                 "success": True,
+                "status": const.EXPORT_STATUS_COMPLETE,
+                "file": file_details,
                 "data": {
                     "message": "success",
                     "load_details": json.dumps(self.load_event.load_details),
