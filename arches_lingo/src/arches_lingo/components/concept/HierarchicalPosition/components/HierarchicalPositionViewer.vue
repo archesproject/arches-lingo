@@ -477,7 +477,13 @@ function getTreeNodeStyle(depth: number) {
                                     class="controls edit-button"
                                     icon="pi pi-file-edit"
                                     variant="text"
-                                    :aria-label="$gettext('edit')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Edit relationship to %{parent}',
+                                            { parent: getParentLabel(group) },
+                                            true,
+                                        )
+                                    "
                                     :disabled="group.isTopConcept"
                                     @click="
                                         openEditor!(componentName, group.tileid)
@@ -490,7 +496,13 @@ function getTreeNodeStyle(depth: number) {
                                     class="controls delete-button"
                                     icon="pi pi-trash"
                                     variant="text"
-                                    :aria-label="$gettext('delete')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Delete relationship to %{parent}',
+                                            { parent: getParentLabel(group) },
+                                            true,
+                                        )
+                                    "
                                     @click="confirmDelete(group)"
                                 />
                             </div>
@@ -715,7 +727,7 @@ function getTreeNodeStyle(depth: number) {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    min-width: 24rem;
+    min-width: min(24rem, 100%);
     padding: 1.5rem;
 }
 

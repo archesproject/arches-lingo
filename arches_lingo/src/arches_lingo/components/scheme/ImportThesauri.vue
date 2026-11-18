@@ -97,7 +97,7 @@ async function submit() {
         :pt="{
             root: {
                 style: {
-                    minWidth: '40rem',
+                    minWidth: 'min(40rem, 100%)',
                     borderRadius: '0.25rem',
                     fontFamily: 'var(--p-lingo-font-family)',
                     border: '0.125rem solid var(--p-dialog-color)',
@@ -129,7 +129,10 @@ async function submit() {
                     <label for="skos-file-upload">{{
                         $gettext("SKOS File")
                     }}</label>
-                    <p class="help-text">
+                    <p
+                        id="skos-file-upload-help"
+                        class="help-text"
+                    >
                         {{
                             $gettext(
                                 "Supported formats: RDF/XML (.xml, .rdf), Turtle (.ttl), N-Triples (.nt)",
@@ -143,7 +146,12 @@ async function submit() {
                         :auto="false"
                         :choose-label="$gettext('Choose File')"
                         :multiple="false"
-                        :pt="{ input: { id: 'skos-file-upload' } }"
+                        :pt="{
+                            input: {
+                                id: 'skos-file-upload',
+                                'aria-describedby': 'skos-file-upload-help',
+                            },
+                        }"
                         @select="updateFileValue"
                     />
                 </div>
@@ -168,17 +176,29 @@ async function submit() {
                         >
                             <RadioButton
                                 v-model="overwriteOption"
+                                name="overwrite-option"
                                 :input-id="option.value"
                                 :value="option.value"
                                 :initial-value="option.value"
-                                :aria-label="option.tooltip"
                                 :invalid="!overwriteOption"
                                 :disabled="option.disabled"
+                                :pt="{
+                                    input: {
+                                        'aria-describedby': `${option.value}-description`,
+                                    },
+                                }"
                             />
                             <label
                                 :for="option.value"
                                 class="radio-label"
                                 >{{ option.label }}</label
+                            >
+                            <!-- The tooltip is hover-only, so expose its text to
+                                 assistive technology as the radio's description. -->
+                            <span
+                                :id="`${option.value}-description`"
+                                class="p-hidden-accessible"
+                                >{{ option.tooltip }}</span
                             >
                         </span>
                     </div>

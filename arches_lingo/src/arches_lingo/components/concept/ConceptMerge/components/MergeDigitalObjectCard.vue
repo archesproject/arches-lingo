@@ -13,10 +13,15 @@ import {
 
 import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 
-const { digitalObject, alreadyOnSurvivor } = defineProps<{
+const {
+    digitalObject,
+    alreadyOnSurvivor,
+    valueId = undefined,
+} = defineProps<{
     // Undefined until the digital objects arrive, or if fetching them failed.
     digitalObject: DigitalObjectInstance | undefined;
     alreadyOnSurvivor?: boolean;
+    valueId?: string;
 }>();
 
 const { $gettext } = useGettext();
@@ -64,7 +69,12 @@ const imageDescription = computed(function () {
                 />
             </div>
             <div class="merge-digital-object-text">
-                <span class="merge-digital-object-name">{{ imageName }}</span>
+                <span
+                    :id="valueId"
+                    class="merge-digital-object-name"
+                >
+                    {{ imageName }}
+                </span>
                 <span
                     v-if="imageDescription"
                     class="merge-digital-object-description"

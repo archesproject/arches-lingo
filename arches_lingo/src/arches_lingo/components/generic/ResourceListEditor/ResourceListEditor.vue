@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, useId, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -29,6 +29,7 @@ import {
     SECONDARY,
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
+import { getSplitterGutterPassThrough } from "@/arches_lingo/utils.ts";
 
 import type {
     PaginatedResourceListResponse,
@@ -65,6 +66,7 @@ const searchQuery = ref("");
 const selectedResource = ref<ResourceSummary | null>(null);
 const isEditorOpen = ref(false);
 const isEditorMaximized = ref(false);
+const listPanelId = useId();
 const isCreatingNew = ref(false);
 const editorInstanceKey = ref(0);
 const pendingSavedResourceInstanceId = ref<string | null>(null);
@@ -259,6 +261,13 @@ defineExpose({
         <Splitter
             :key="isEditorOpen ? 'open' : 'closed'"
             class="resource-splitter"
+            :pt="
+                getSplitterGutterPassThrough({
+                    label: $gettext('Resize the editor panel'),
+                    primaryPanelId: listPanelId,
+                    isVisible: !isEditorMaximized,
+                })
+            "
         >
             <SplitterPanel
                 v-show="!isEditorMaximized"
@@ -266,7 +275,10 @@ defineExpose({
                 :min-size="30"
                 class="list-panel"
             >
-                <div class="list-panel-content">
+                <div
+                    :id="listPanelId"
+                    class="list-panel-content"
+                >
                     <div class="list-header">
                         <div class="list-header-toolbar">
                             <h1 class="page-title">{{ pageTitle }}</h1>
@@ -282,6 +294,7 @@ defineExpose({
                                 <InputIcon class="pi pi-search" />
                                 <InputText
                                     v-model="searchQuery"
+                                    :aria-label="$gettext('Search by name')"
                                     :placeholder="$gettext('Search by name...')"
                                     class="search-input"
                                     @input="onSearchInput"
@@ -348,9 +361,24 @@ defineExpose({
                             v-if="editorEnabled"
                             class="actions-column"
                         >
+                            <template #header>
+                                <span class="p-hidden-accessible">{{
+                                    $gettext("Actions")
+                                }}</span>
+                            </template>
                             <template #body="{ data }">
                                 <Button
-                                    :aria-label="$gettext('Delete resource')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Delete resource: %{name}',
+                                            {
+                                                name:
+                                                    data.display_name ||
+                                                    $gettext('Untitled'),
+                                            },
+                                            true,
+                                        )
+                                    "
                                     icon="pi pi-trash"
                                     severity="danger"
                                     text

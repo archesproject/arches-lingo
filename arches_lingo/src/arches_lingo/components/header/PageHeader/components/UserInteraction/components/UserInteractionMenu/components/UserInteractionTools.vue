@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
@@ -59,11 +59,7 @@ async function issueLogout() {
         <div class="section-title tools-section">{{ $gettext("Tools") }}</div>
 
         <div class="button-container">
-            <Button
-                as="a"
-                :aria-label="$gettext('Logout')"
-                @click="confirmLogout"
-            >
+            <Button @click="confirmLogout">
                 <i
                     class="pi pi-sign-out"
                     aria-hidden="true"
@@ -72,11 +68,10 @@ async function issueLogout() {
             </Button>
 
             <Button
-                as="a"
+                :as="RouterLink"
+                :to="{ name: routeNames.profile }"
                 class="action-button"
-                style="text-decoration: none; cursor: pointer"
-                :aria-label="$gettext('My Profile')"
-                @click="router.push({ name: routeNames.profile })"
+                style="text-decoration: none"
             >
                 <i
                     class="pi pi-user"

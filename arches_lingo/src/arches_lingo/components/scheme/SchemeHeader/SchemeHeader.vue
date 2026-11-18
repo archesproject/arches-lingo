@@ -3,6 +3,7 @@ import { computed, inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
+import { setPageTitleDetail } from "@/arches_lingo/composables/usePageTitle.ts";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useRouter } from "vue-router";
@@ -106,6 +107,7 @@ const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const scheme = ref<ResourceInstanceResult>();
 const schemeResource = ref<Labellable>();
 const label = ref<Label>();
+watch(() => label.value?.value, setPageTitleDetail);
 const data = ref<SchemeHeader>();
 const labelCounts = ref<LanguageLabelCount[]>([]);
 const labelCountsLoading = ref(false);
@@ -621,7 +623,7 @@ async function onReinstateConfirmed(cascade: boolean) {
         <div class="scheme-header-panel">
             <div class="scheme-header-toolbar">
                 <div class="scheme-title">
-                    <h2>
+                    <h1>
                         <span class="scheme-title-text">{{
                             label?.value
                         }}</span>
@@ -631,7 +633,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                         >
                             ({{ label?.language_id }})
                         </span>
-                    </h2>
+                    </h1>
                 </div>
 
                 <div
@@ -670,7 +672,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                         severity="danger"
                         class="delete-button"
                         :label="$gettext('Delete')"
-                        :aria-label="$gettext('Delete Concept')"
+                        :aria-label="$gettext('Delete Scheme')"
                         @click="confirmDelete"
                     />
 
@@ -911,7 +913,7 @@ async function onReinstateConfirmed(cascade: boolean) {
     word-break: break-word;
 }
 
-h2 {
+h1 {
     margin-top: 0;
     margin-bottom: 0;
     font-size: var(--p-lingo-font-size-large);
@@ -919,7 +921,7 @@ h2 {
     min-width: 0;
 }
 
-h2 > span {
+h1 > span {
     min-width: 0;
 }
 

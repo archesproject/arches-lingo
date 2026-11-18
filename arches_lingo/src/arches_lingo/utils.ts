@@ -1,3 +1,5 @@
+import { nextTick } from "vue";
+
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
@@ -11,6 +13,8 @@ import {
     TOP_CONCEPT_ICON,
     CONCEPT_TYPE_NODE_ALIAS,
     PUBLICLY_DEREFERENCEABLE_LIFECYCLE_STATE_IDS,
+    DRAFT_LIFECYCLE_STATE_ID,
+    RETIRED_LIFECYCLE_STATE_ID,
 } from "@/arches_lingo/constants.ts";
 import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
@@ -36,6 +40,25 @@ export function dataIsScheme(data: Concept | Scheme) {
 }
 export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
+}
+
+export function getDisplayedLifecycleStateName(
+    item: Concept | Scheme,
+): string | undefined {
+    const lifecycleStateId = item.resource_instance_lifecycle_state_id;
+    const lifecycleStateName = item.resource_instance_lifecycle_state_name;
+
+    if (!lifecycleStateId || !lifecycleStateName) {
+        return undefined;
+    }
+    if (
+        dataIsScheme(item) ||
+        lifecycleStateId === DRAFT_LIFECYCLE_STATE_ID ||
+        lifecycleStateId === RETIRED_LIFECYCLE_STATE_ID
+    ) {
+        return lifecycleStateName;
+    }
+    return undefined;
 }
 
 export function getConceptIcon(
@@ -537,4 +560,89 @@ export function filterTreeByLifecycleStates(
 
         return visibleNodes;
     }, []);
+}
+
+const FOCUSABLE_SELECTOR = [
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
+// PrimeVue Popover focuses only an [autofocus] element on show, so content
+// that can't carry one is otherwise unreachable from the keyboard (2.4.3).
+export function focusFirstFocusableElement(container: HTMLElement | null) {
+    container?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
+}
+
+/**
+ * Call after removing an item from a rendered list, with the list as it is
+ * now. The removed row's button had focus, so without this focus drops to
+ * <body> (2.4.3). Once the list has re-rendered, this focuses the item that
+ * took the removed one's place (or the one before it, if the last was
+ * removed), or calls `focusWhenEmpty` when nothing is left.
+ */
+export async function focusNeighborAfterRemoval<Item>({
+    remainingItems,
+    removedIndex,
+    focusItem,
+    focusWhenEmpty,
+}: {
+    remainingItems: Item[];
+    removedIndex: number;
+    focusItem: (item: Item) => void;
+    focusWhenEmpty: () => void;
+}) {
+    const itemToFocus =
+        remainingItems[removedIndex] ?? remainingItems[removedIndex - 1];
+    await nextTick();
+    if (itemToFocus) {
+        focusItem(itemToFocus);
+    } else {
+        focusWhenEmpty();
+    }
+}
+
+type SplitterLayout = "horizontal" | "vertical";
+
+/**
+ * PrimeVue puts role="separator" on the Splitter gutter, which isn't
+ * focusable, and leaves the handle inside it, which is, with no role or name
+ * (4.1.2). This moves the separator semantics onto the handle. Pass-through
+ * attributes bind after PrimeVue's own, so these win.
+ *
+ * PrimeVue's aria-valuenow is always the size of the first panel, so
+ * `primaryPanelId` (aria-controls) must be the first panel too. `isVisible`
+ * hides the gutter while one of the two panels is hidden.
+ */
+export function getSplitterGutterPassThrough({
+    label,
+    primaryPanelId,
+    layout = "horizontal",
+    isVisible = true,
+}: {
+    label: string;
+    primaryPanelId: string;
+    layout?: SplitterLayout;
+    isVisible?: boolean;
+}) {
+    return {
+        gutter: {
+            role: "none",
+            style: { display: isVisible ? "flex" : "none" },
+        },
+        gutterHandle: {
+            role: "separator",
+            "aria-label": label,
+            "aria-controls": primaryPanelId,
+            "aria-valuemin": 0,
+            "aria-valuemax": 100,
+            // PrimeVue passes `layout` through, but the line between
+            // side-by-side (horizontal layout) panels is vertical.
+            "aria-orientation":
+                layout === "horizontal" ? "vertical" : "horizontal",
+        },
+    };
 }

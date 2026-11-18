@@ -171,10 +171,17 @@ function confirmDelete(removedResourceInstanceId: string) {
             outlined: true,
         },
         acceptProps: {
-            label: $gettext("Delete"),
+            label: $gettext("Remove"),
             severity: DANGER,
         },
     });
+}
+
+function getImageName(resource: DigitalObjectInstance): string {
+    return (
+        resource.aliased_data.name?.aliased_data.name_content?.display_value ||
+        $gettext("image")
+    );
 }
 
 function newResource() {
@@ -267,7 +274,10 @@ function modifyResource(resourceInstanceId?: string) {
                             v-else
                             class="image-placeholder"
                         >
-                            <i class="pi pi-image" />
+                            <i
+                                class="pi pi-image"
+                                aria-hidden="true"
+                            />
                         </div>
                     </div>
                     <div class="card-body">
@@ -293,7 +303,16 @@ function modifyResource(resourceInstanceId?: string) {
                                     class="controls edit-button"
                                     icon="pi pi-file-edit"
                                     variant="text"
-                                    :aria-label="$gettext('edit')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Edit %{imageName}',
+                                            {
+                                                imageName:
+                                                    getImageName(resource),
+                                            },
+                                            true,
+                                        )
+                                    "
                                     @click="
                                         editResource(
                                             resource.resourceinstanceid,
@@ -304,7 +323,16 @@ function modifyResource(resourceInstanceId?: string) {
                                     v-if="canEditResourceInstances"
                                     class="controls delete-button"
                                     icon="pi pi-trash"
-                                    :aria-label="$gettext('Delete')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Remove %{imageName}',
+                                            {
+                                                imageName:
+                                                    getImageName(resource),
+                                            },
+                                            true,
+                                        )
+                                    "
                                     variant="text"
                                     @click="
                                         confirmDelete(

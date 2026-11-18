@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
@@ -32,6 +32,7 @@ const props = defineProps<{
 
 const loading = ref(false);
 const visible = ref(true);
+const exportFormatIdPrefix = useId();
 
 const exportFormat = ref("xml");
 const exportformatOptions = ref([
@@ -202,12 +203,19 @@ async function exportThesauri() {
                             >
                                 <RadioButton
                                     v-model="exportFormat"
-                                    :input-id="option.value"
+                                    :input-id="`${exportFormatIdPrefix}-${option.value}`"
+                                    :name="exportFormatIdPrefix"
                                     :value="option.value"
                                     :disabled="option.disabled"
+                                    :pt="{
+                                        input: {
+                                            autofocus:
+                                                option.value === exportFormat,
+                                        },
+                                    }"
                                 />
                                 <label
-                                    :for="option.value"
+                                    :for="`${exportFormatIdPrefix}-${option.value}`"
                                     class="radio-label"
                                 >
                                     {{ option.label }}
