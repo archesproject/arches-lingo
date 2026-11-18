@@ -30,6 +30,7 @@ import {
     getDigitalObjectImageUrl,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type {
     ConceptImages,
@@ -89,6 +90,7 @@ const createTooltipText = computed(() => {
     );
 });
 const { isEditor } = useUserStore();
+const languageStore = useLanguageStore();
 const { targetDigitalObjectResourceInstanceId } = storeToRefs(
     useConceptImagesEditorStore(),
 );
@@ -280,7 +282,12 @@ function modifyResource(resourceInstanceId?: string) {
                         <Image
                             v-if="getDigitalObjectImageUrl(resource)"
                             :src="getDigitalObjectImageUrl(resource)"
-                            :alt="getDigitalObjectImageAlt(resource)"
+                            :alt="
+                                getDigitalObjectImageAlt(
+                                    resource,
+                                    languageStore.selectedLanguage.code,
+                                )
+                            "
                             preview
                             class="card-image"
                         />

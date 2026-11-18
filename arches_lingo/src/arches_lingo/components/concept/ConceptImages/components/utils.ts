@@ -1,6 +1,7 @@
 import arches from "arches";
 
 import { useWidgetConfigStore } from "@/arches_vue_components/stores/useWidgetConfigStore.ts";
+import { getFileAltText } from "@/arches_vue_components/datatypes/file-list/utils.ts";
 import {
     createLingoResource,
     createLingoResourceFromForm,
@@ -44,9 +45,13 @@ export function getDigitalObjectImageUrl(
 
 export function getDigitalObjectImageAlt(
     resource: DigitalObjectInstance,
+    languageCode: string,
 ): string {
     const fileReference = getDigitalObjectFileReference(resource);
-    return fileReference?.altText || fileReference?.name || "";
+    if (!fileReference) {
+        return "";
+    }
+    return getFileAltText(fileReference, languageCode) || fileReference.name;
 }
 
 export async function createDigitalObject(

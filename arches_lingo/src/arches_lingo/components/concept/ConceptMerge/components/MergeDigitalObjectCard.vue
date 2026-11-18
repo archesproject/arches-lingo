@@ -10,6 +10,7 @@ import {
     getDigitalObjectImageAlt,
     getDigitalObjectImageUrl,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 
@@ -25,13 +26,20 @@ const {
 }>();
 
 const { $gettext } = useGettext();
+const languageStore = useLanguageStore();
 
 const imageUrl = computed(function () {
     return digitalObject ? getDigitalObjectImageUrl(digitalObject) : undefined;
 });
 
 const imageAlt = computed(function () {
-    return digitalObject ? getDigitalObjectImageAlt(digitalObject) : "";
+    if (!digitalObject) {
+        return "";
+    }
+    return getDigitalObjectImageAlt(
+        digitalObject,
+        languageStore.selectedLanguage.code,
+    );
 });
 
 const imageName = computed(function () {
