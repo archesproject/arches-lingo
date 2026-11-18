@@ -469,7 +469,7 @@ export interface ExportedFile {
 
 export type ThesaurusExportResponse =
     | { status: "queued" }
-    | { status: "complete"; file: ExportedFile | null };
+    | { status: "complete"; file: ExportedFile };
 
 export interface PaginatorDetails {
     current_page: number;
