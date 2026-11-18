@@ -37,6 +37,9 @@ from arches_lingo.const import (
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
     CONCEPTS_GRAPH_ID,
+    DELEGATED_TO_CELERY,
+    EXPORT_STATUS_COMPLETE,
+    EXPORT_STATUS_QUEUED,
     LABEL_LIST_ID,
     LINGO_EDITOR_GROUP_NAME,
 )
@@ -684,7 +687,8 @@ class ExportTests(TestCase):
         mock_apply_async.return_value.task_id = str(uuid.uuid4())
         with translation.override("es"):
             response = self._run_export(self.test_scheme.pk, "ttl")
-        self.assertEqual(response["data"], "delegated_to_celery")
+        self.assertEqual(response["data"], DELEGATED_TO_CELERY)
+        self.assertEqual(response["status"], EXPORT_STATUS_QUEUED)
         task_kwargs = mock_apply_async.call_args.kwargs["kwargs"]
         self.assertEqual(task_kwargs, {"language": "es"})
 
@@ -703,6 +707,39 @@ class ExportTests(TestCase):
                 **task_kwargs,
             )
         self.assertEqual(languages_seen, ["es"])
+
+    def test_concept_count_matches_the_exported_concepts(self):
+        exporter = LingoResourceExporter()
+        exporter.load_event = LoadEvent()
+        for resource in (self.test_scheme, self.test_concept):
+            with self.subTest(resource=resource.name):
+                _scheme_ids, concept_ids = exporter._get_resource_ids_for_export(
+                    str(resource.pk)
+                )
+                self.assertGreater(len(concept_ids), 0)
+                self.assertEqual(
+                    exporter._count_concepts_for_export(str(resource.pk)),
+                    len(concept_ids),
+                )
+
+    @patch(
+        "arches_lingo.etl_modules.lingo_resource_exporter.LingoResourceExporter.run_export_task"
+    )
+    def test_missing_resource_fails_once_without_exporting(self, mock_run_export):
+        admin_user = User.objects.get(username="admin")
+        notifications_before = UserXNotification.objects.filter(
+            recipient=admin_user
+        ).count()
+
+        response = self._run_export(uuid.uuid4(), "ttl")
+
+        self.assertFalse(response["success"])
+        mock_run_export.assert_not_called()
+        notifications_after = UserXNotification.objects.filter(
+            recipient=admin_user
+        ).count()
+        self.assertEqual(notifications_after, notifications_before + 1)
+        self.assertEqual(LoadEvent.objects.latest("load_start_time").status, "failed")
 
 
 class ExportViewTests(TestCase):
@@ -723,7 +760,12 @@ class ExportViewTests(TestCase):
     @patch.object(
         LingoResourceExporter,
         "start",
-        return_value={"success": True, "data": {"load_id": "test-load-id"}},
+        return_value={
+            "success": True,
+            "status": EXPORT_STATUS_COMPLETE,
+            "file": {"name": "scheme.zip", "url": "/media/scheme.zip", "fileid": "1"},
+            "data": {"load_id": "test-load-id"},
+        },
     )
     def test_lingo_editor_can_start_export(self, mock_start):
         self.client.force_login(self.lingo_editor)
@@ -734,11 +776,19 @@ class ExportViewTests(TestCase):
         self.assertTrue(mock_start.called)
         self.assertEqual(response.json()["result"], {"load_id": "test-load-id"})
         self.assertEqual(response.json()["status"], "complete")
+        self.assertEqual(
+            response.json()["file"],
+            {"name": "scheme.zip", "url": "/media/scheme.zip", "fileid": "1"},
+        )
 
     @patch.object(
         LingoResourceExporter,
         "start",
-        return_value={"success": True, "data": "delegated_to_celery"},
+        return_value={
+            "success": True,
+            "status": EXPORT_STATUS_QUEUED,
+            "data": DELEGATED_TO_CELERY,
+        },
     )
     def test_export_delegated_to_celery_reports_queued_status(self, mock_start):
         self.client.force_login(self.lingo_editor)
@@ -748,23 +798,6 @@ class ExportViewTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["status"], "queued")
         self.assertNotIn("file", response.json())
-
-    def test_synchronous_export_reports_complete_status_with_file(self):
-        file_details = {"name": "scheme.zip", "url": "/media/scheme.zip", "fileid": "1"}
-
-        def fake_start(exporter, request):
-            exporter.load_event = LoadEvent(
-                load_details=json.dumps({"file": file_details})
-            )
-            return {"success": True, "data": {"message": "success"}}
-
-        self.client.force_login(self.lingo_editor)
-        with patch.object(LingoResourceExporter, "start", fake_start):
-            response = self.client.post(self.export_url, self.export_payload)
-
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(response.json()["status"], "complete")
-        self.assertEqual(response.json()["file"], file_details)
 
     @patch.object(
         LingoResourceExporter,
