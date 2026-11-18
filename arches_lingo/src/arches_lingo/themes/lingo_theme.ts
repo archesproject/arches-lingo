@@ -89,6 +89,26 @@ export const LingoPreset = definePreset(ArchesPreset, {
             alreadyPresentOpacity: "0.6",
             unavailableOpacity: "0.65",
         },
+        lingoSchemeCard: {
+            focusOutline: "auto",
+            focusOutlineOffset: "0",
+        },
+        lingoNewSchemeCard: {
+            color: "{primary.contrast.color}",
+            background: "{arches.blue}",
+            borderColor: "{surface.900}",
+            circle: {
+                background: "{blue.600}",
+                borderColor: "{surface.900}",
+            },
+            button: {
+                color: "{primary.contrast.color}",
+                background: "{primary.hover.color}",
+                hoverColor: "{primary.contrast.color}",
+                hoverBackground: "{primary.active.color}",
+                focusRingColor: "{primary.contrast.color}",
+            },
+        },
         colorScheme: {
             light: {
                 primary: palette(archesPrimitives.arches.blue),
@@ -143,6 +163,11 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 },
                 schemeCircle: {
                     background: "{steel-blue}",
+                },
+                lingoNewSchemeCard: {
+                    button: {
+                        borderColor: "{primary.200}",
+                    },
                 },
             },
             dark: {
@@ -201,6 +226,11 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 editorForm: {
                     background: "{near-black}",
                     color: "{light-neutral-gray}",
+                },
+                lingoNewSchemeCard: {
+                    button: {
+                        borderColor: "{primary.700}",
+                    },
                 },
             },
         },
