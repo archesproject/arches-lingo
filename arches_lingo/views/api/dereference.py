@@ -5,9 +5,10 @@ from django.http import Http404, HttpResponse
 from django.utils.cache import patch_vary_headers
 from django.views import View
 
-from arches.app.models.models import ResourceIdentifier, ResourceInstance
+from arches.app.models.models import ResourceInstance
 
 from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
+from arches_lingo.utils.identifier_resolution import resolve_identifier_route
 from arches_lingo.utils.concept_lifecycle import (
     PUBLICLY_DEREFERENCEABLE_STATE_IDS,
     RETIRED_STATE_ID,
@@ -85,15 +86,10 @@ class DereferenceableResourceView(View):
         ``id``. In every case the graph kind is confirmed from the loaded resource
         so that only Lingo schemes/concepts are ever serialized as SKOS.
         """
-        identifier = kwargs.get("concept_identifier") or kwargs.get("scheme_identifier")
-        if identifier:
-            resource_id = (
-                ResourceIdentifier.objects.filter(
-                    identifier=identifier,
-                    source="arches-lingo",
-                )
-                .values_list("resourceid", flat=True)
-                .first()
+        scheme_identifier = kwargs.get("scheme_identifier")
+        if scheme_identifier:
+            resource_id = resolve_identifier_route(
+                scheme_identifier, kwargs.get("concept_identifier")
             )
         else:
             resource_id = kwargs.get("id")

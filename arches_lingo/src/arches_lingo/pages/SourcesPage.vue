@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -16,7 +17,7 @@ import type { ResourceSummary } from "@/arches_lingo/types";
 const GRAPH_SLUG = "textual_work";
 
 const { $gettext } = useGettext();
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 
 const resourceListEditorRef = useTemplateRef("resourceListEditorRef");
 const refreshTrigger = ref(0);
@@ -32,10 +33,6 @@ const {
 
 async function onSelectResource(resource: ResourceSummary) {
     await selectResource(resource);
-}
-
-function onCreateNew() {
-    clearSelection();
 }
 
 function onSave(savedTileData: {
@@ -58,6 +55,7 @@ function onSave(savedTileData: {
         :editor-enabled="isEditor"
         :is-editor-loading="isLoadingTile"
         @select-resource="onSelectResource"
+        @create-resource="clearSelection"
     >
         <template #list-actions="{ openBlankEditor }">
             <Button
@@ -65,12 +63,7 @@ function onSave(savedTileData: {
                 :label="$gettext('Add Source')"
                 icon="pi pi-plus-circle"
                 class="add-button"
-                @click="
-                    () => {
-                        onCreateNew();
-                        openBlankEditor();
-                    }
-                "
+                @click="openBlankEditor()"
             />
         </template>
 

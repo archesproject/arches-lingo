@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+import { storeToRefs } from "pinia";
 
 import MultiSelect from "primevue/multiselect";
 import Message from "primevue/message";
@@ -15,6 +16,8 @@ import {
 } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { extractDescriptors } from "@/arches_lingo/utils.ts";
 
 import BreakdownsGrid from "@/arches_lingo/components/dashboard/BreakdownsGrid.vue";
 import DashboardStatCards from "@/arches_lingo/components/dashboard/DashboardStatCards.vue";
@@ -34,6 +37,15 @@ const { $gettext, interpolate } = useGettext();
 const { announce } = useAnnouncer();
 
 const schemes = ref<ResourceInstanceResult[]>([]);
+const { selectedLanguage } = storeToRefs(useLanguageStore());
+
+function getSchemeOptionLabel(scheme: ResourceInstanceResult) {
+    return (
+        extractDescriptors(scheme, selectedLanguage.value).name ||
+        scheme.name ||
+        $gettext("Unnamed scheme")
+    );
+}
 const selectedSchemeIds = ref<string[]>([]);
 
 const isStatsLoading = ref(true);
@@ -197,7 +209,7 @@ watch(
                     v-model="selectedSchemeIds"
                     input-id="scheme-filter"
                     :options="schemes"
-                    option-label="name"
+                    :option-label="getSchemeOptionLabel"
                     option-value="resourceinstanceid"
                     :placeholder="$gettext('All schemes')"
                     :max-selected-labels="2"
@@ -211,11 +223,7 @@ watch(
                     class="scheme-select"
                 >
                     <template #option="slotProps">
-                        {{
-                            slotProps.option.descriptors?.en?.name ||
-                            slotProps.option.name ||
-                            $gettext("Unnamed scheme")
-                        }}
+                        {{ getSchemeOptionLabel(slotProps.option) }}
                     </template>
                 </MultiSelect>
             </div>

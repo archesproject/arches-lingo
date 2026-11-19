@@ -33,6 +33,7 @@ import type {
     SearchResultItem,
 } from "@/arches_lingo/types";
 import type { Router } from "vue-router/dist/vue-router";
+import type { RouteLocationNormalizedLoaded } from "vue-router";
 import type { ConceptInstance } from "@/arches_lingo/types.ts";
 
 export function dataIsScheme(data: Concept | Scheme) {
@@ -676,4 +677,112 @@ export function scaleWithRootFontSize(pixelsAtDefaultFontSize: number) {
         (pixelsAtDefaultFontSize * rootFontSize) /
             DEFAULT_ROOT_FONT_SIZE_IN_PIXELS,
     );
+}
+
+export function escapeRegExp(text: string) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Split a label into the parts that match the tree filter (case-insensitive)
+ * and the parts that don't, so matches can be highlighted. The filter is
+ * user text and is matched literally.
+ */
+export function splitLabelForFilterHighlight(
+    label: string,
+    filter?: string,
+): { text: string; highlight: boolean }[] {
+    if (!filter) {
+        return [{ text: label, highlight: false }];
+    }
+
+    const filterPattern = new RegExp(`(${escapeRegExp(filter)})`, "gi");
+    const lowercaseFilter = filter.toLowerCase();
+
+    return label
+        .split(filterPattern)
+        .filter((part) => part !== "")
+        .map((part) => ({
+            text: part,
+            highlight: part.toLowerCase() === lowercaseFilter,
+        }));
+}
+
+function hasUrlUnsafeCharacter(text: string) {
+    return [...text].some((character) => {
+        const characterCode = character.charCodeAt(0);
+        return (
+            characterCode <= 0x20 ||
+            characterCode === 0x7f ||
+            /\s/.test(character)
+        );
+    });
+}
+
+/**
+ * Return `value` if it is a same-origin path that is safe to redirect to
+ * after sign-in (for example "/concept/123?scheme=1"), otherwise undefined.
+ * Rejects absolute URLs, protocol-relative "//host" and "/\\host" forms, and
+ * anything containing whitespace or control characters. The result is the
+ * path as the browser parses it, so it cannot resolve to another origin.
+ */
+export function getSafeNextPath(value: unknown): string | undefined {
+    const candidate = Array.isArray(value) ? value[0] : value;
+    if (typeof candidate !== "string") {
+        return undefined;
+    }
+    if (
+        !candidate.startsWith("/") ||
+        /^\/[/\\]/.test(candidate) ||
+        hasUrlUnsafeCharacter(candidate)
+    ) {
+        return undefined;
+    }
+
+    let parsedUrl: URL;
+    try {
+        parsedUrl = new URL(candidate, window.location.origin);
+    } catch {
+        return undefined;
+    }
+    if (parsedUrl.origin !== window.location.origin) {
+        return undefined;
+    }
+    return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+}
+
+export const CONCEPT_ROUTE_NAMES: ReadonlySet<string> = new Set([
+    routeNames.concept,
+    routeNames.conceptByIdentifier,
+]);
+
+export const SCHEME_ROUTE_NAMES: ReadonlySet<string> = new Set([
+    routeNames.scheme,
+    routeNames.schemeByIdentifier,
+]);
+
+/**
+ * Map scheme/concept URI to the current resource ID, if available.
+ */
+export function getCurrentResourceId(
+    route: Pick<RouteLocationNormalizedLoaded, "name" | "meta" | "params">,
+): string | undefined {
+    const routeName = String(route.name ?? "");
+    if (
+        !CONCEPT_ROUTE_NAMES.has(routeName) &&
+        !SCHEME_ROUTE_NAMES.has(routeName)
+    ) {
+        return undefined;
+    }
+    const resolvedResourceId = route.meta.resolvedResourceId as
+        | string
+        | undefined;
+    const idParam = route.params.id as string | undefined;
+    return resolvedResourceId || idParam || undefined;
+}
+
+export function isConceptRoute(
+    route: Pick<RouteLocationNormalizedLoaded, "name">,
+) {
+    return CONCEPT_ROUTE_NAMES.has(String(route.name ?? ""));
 }

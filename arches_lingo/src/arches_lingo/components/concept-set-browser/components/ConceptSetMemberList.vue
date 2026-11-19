@@ -9,9 +9,14 @@ import Checkbox from "primevue/checkbox";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import { getConceptIcon } from "@/arches_lingo/utils.ts";
+import {
+    getConceptIcon,
+    getCurrentResourceId,
+    isConceptRoute,
+} from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
+import { NEW } from "@/arches_lingo/constants.ts";
 
 import type { ConceptSetDetail } from "@/arches_lingo/types.ts";
 
@@ -30,11 +35,19 @@ const route = useRoute();
 const router = useRouter();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
-const isOnConceptPage = computed(() => route.name === routeNames.concept);
+const currentConceptId = computed(() => {
+    const currentResourceId = getCurrentResourceId(route);
+    if (
+        !isConceptRoute(route) ||
+        !currentResourceId ||
+        currentResourceId === NEW
+    ) {
+        return null;
+    }
+    return currentResourceId;
+});
 
-const currentConceptId = computed(() =>
-    isOnConceptPage.value ? (route.params.id as string) : null,
-);
+const isOnConceptPage = computed(() => currentConceptId.value !== null);
 
 const currentConceptIsAlreadyMember = computed(
     () =>

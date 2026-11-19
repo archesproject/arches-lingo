@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, computed } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
@@ -24,7 +25,7 @@ const props = defineProps<{
 const { $gettext } = useGettext();
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 
 const resourceInstanceLifecycleState = inject<{
     value:

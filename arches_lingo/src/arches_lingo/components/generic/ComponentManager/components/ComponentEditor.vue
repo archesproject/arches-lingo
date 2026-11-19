@@ -12,12 +12,11 @@ import {
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
-import { useConfirm } from "primevue/useconfirm";
 
 import { CLOSE, MAXIMIZE, MINIMIZE } from "@/arches_lingo/constants.ts";
 import {
+    useConfirmDiscard,
     useEditorDirtyState,
-    unsavedChangesConfirmOptions,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 const props = defineProps<{
@@ -30,13 +29,14 @@ const props = defineProps<{
 const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 
 const { $gettext } = useGettext();
-const confirm = useConfirm();
 const { isEditorDirty } = useEditorDirtyState();
+const { confirmDiscard } = useConfirmDiscard();
 
 const toggleSizeButton = useTemplateRef("toggleSizeButton");
 const hasAutoFocused = ref(false);
 
 const formKey = ref(0);
+const isSaveInProgress = ref(false);
 const componentEditorFormRef = ref();
 provide("componentEditorFormRef", componentEditorFormRef);
 
@@ -45,6 +45,7 @@ provide("componentEditorFormRef", componentEditorFormRef);
  * to re-sync the global dirty flag with the form's actual dirty state.
  */
 async function onSaveSettled() {
+    isSaveInProgress.value = false;
     if (!isComponentMounted.value) return;
     isEditorDirty.value = isFormDirty.value;
 
@@ -139,15 +140,18 @@ function toggleSize() {
 
 function onCloseClicked() {
     if (isFormDirty.value) {
-        confirm.require(
-            unsavedChangesConfirmOptions($gettext, () => emit(CLOSE)),
-        );
+        confirmDiscard({ onDiscard: () => emit(CLOSE) });
     } else {
         emit(CLOSE);
     }
 }
 
-function onSave() {
+async function onSave() {
+    if (isSaveInProgress.value) {
+        return;
+    }
+    isSaveInProgress.value = true;
+
     // Clear the global dirty flag *before* the form's submit handler runs,
     // which may trigger a router.push (e.g. after creating a new concept) or
     // call openEditor() to reload the tile.  Without this, those actions
@@ -158,7 +162,17 @@ function onSave() {
     // true and stays true through the submit cycle.  If the editor is
     // destroyed and recreated (new concept), onUnmounted resets the flag.
     isEditorDirty.value = false;
-    componentEditorFormRef.value.submit();
+
+    // Section editors end their save by calling onSaveSettled.  Form facades
+    // (ResourceNameCard) return the save promise instead.
+    const submission = componentEditorFormRef.value.submit();
+    if (submission instanceof Promise) {
+        try {
+            await submission;
+        } finally {
+            isSaveInProgress.value = false;
+        }
+    }
 }
 
 function onCancel() {
@@ -221,7 +235,8 @@ function onCancel() {
             <Button
                 :label="$gettext('Save Changes')"
                 severity="success"
-                :disabled="!isFormDirty"
+                :disabled="!isFormDirty || isSaveInProgress"
+                :loading="isSaveInProgress"
                 @click="onSave"
             />
             <Button

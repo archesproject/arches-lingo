@@ -19,6 +19,11 @@ import { useToast } from "primevue/usetoast";
 import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
 import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
+    useConfirmDiscard,
+    useEditorDirtyState,
+} from "@/arches_lingo/composables/useEditorDirtyState.ts";
+import { useEscapeToCloseEditor } from "@/arches_lingo/composables/useEscapeToCloseEditor.ts";
+import {
     deleteLingoResource,
     fetchResourceReferenceCount,
 } from "@/arches_lingo/api.ts";
@@ -58,12 +63,17 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     "select-resource": [resource: ResourceSummary];
+    // Emitted once the user has confirmed discarding any unsaved changes, so
+    // the page resets its editor state only after that choice.
+    "create-resource": [];
 }>();
 
 const toast = useToast();
 const confirm = useConfirm();
 const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
 const { $gettext, interpolate, $ngettext } = useGettext();
+const { isEditorDirty } = useEditorDirtyState();
+const { confirmDiscard } = useConfirmDiscard();
 
 const isLoading = ref(true);
 const resources = ref<ResourceSummary[]>([]);
@@ -84,12 +94,64 @@ let editorTriggerElement: HTMLElement | null = null;
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Every row is a tab stop, like the delete button inside it, so Tab moves
+// row, its delete button, next row.  PrimeVue instead keeps a single tabbable
+// row (none at all once a row is selected) and moves tabindex="-1" onto rows
+// directly in the DOM on row clicks and row keydowns, so put the rows back in
+// the tab order after each of those.  The microtask runs after every handler
+// for the event, whichever order PrimeVue's and this one run in.
+function restoreRowTabStops(event: Event) {
+    if (!(event.currentTarget instanceof HTMLElement)) {
+        return;
+    }
+    const tableBody = event.currentTarget.closest("tbody");
+    queueMicrotask(() => {
+        tableBody
+            ?.querySelectorAll<HTMLElement>("tr[data-p-selectable-row='true']")
+            .forEach((row) => {
+                row.tabIndex = 0;
+            });
+    });
+}
+
+// A focused row is otherwise named by all of its cell text, which includes the
+// delete button's label.  Name it by the resource alone; the delete button is
+// the next tab stop and names itself.
+function getRowAccessibleName(resource: ResourceSummary | undefined) {
+    if (!resource) {
+        return undefined;
+    }
+    const resourceName = resource.display_name || $gettext("Untitled");
+    if (!props.showGraphType) {
+        return resourceName;
+    }
+    return $gettext(
+        "%{name}, %{type}",
+        { name: resourceName, type: resource.graph_name },
+        true,
+    );
+}
+
+// PrimeVue's DataTable gives the row index within the current page.
+function getRowPassThrough({ context }: { context: { index: number } }) {
+    return {
+        tabindex: 0,
+        "aria-label": getRowAccessibleName(resources.value[context.index]),
+        onClick: restoreRowTabStops,
+        onKeydown: restoreRowTabStops,
+    };
+}
+
 const editorTitle = computed(() => {
     if (isCreatingNew.value) return $gettext("New Resource");
     if (!selectedResource.value) return "";
     const displayName =
         selectedResource.value.display_name || $gettext("Untitled");
-    return $gettext(`Now Editing: ${displayName}`);
+    return interpolate(
+        $gettext("Now Editing: %{name}"),
+        { name: displayName },
+        true,
+    );
 });
 
 watch(
@@ -165,7 +227,8 @@ async function resetPanelSizes() {
 }
 
 function openEditor() {
-    if (!isEditorOpen.value) {
+    const wasEditorOpen = isEditorOpen.value;
+    if (!wasEditorOpen) {
         editorTriggerElement =
             document.activeElement instanceof HTMLElement
                 ? document.activeElement
@@ -173,23 +236,46 @@ function openEditor() {
     }
     isEditorOpen.value = true;
     editorInstanceKey.value++;
-    resetPanelSizes();
+    // Keep a width the user dragged while they move between rows.
+    if (!wasEditorOpen) {
+        resetPanelSizes();
+    }
+}
+
+// Switching rows or starting a new resource replaces the editor, so ask first
+// when it has unsaved changes.
+function runAfterConfirmingDiscard(replaceEditor: () => void) {
+    if (isEditorOpen.value && isEditorDirty.value) {
+        confirmDiscard({ onDiscard: replaceEditor });
+    } else {
+        replaceEditor();
+    }
 }
 
 function onRowSelect(event: { data: ResourceSummary }) {
-    isCreatingNew.value = false;
-    selectedResource.value = event.data;
-    if (props.editorEnabled !== false) {
-        openEditor();
-    }
-    emit("select-resource", event.data);
+    runAfterConfirmingDiscard(() => {
+        isCreatingNew.value = false;
+        selectedResource.value = event.data;
+        if (props.editorEnabled !== false) {
+            openEditor();
+        }
+        emit("select-resource", event.data);
+    });
 }
 
 function openBlankEditor() {
-    selectedResource.value = null;
-    isCreatingNew.value = true;
-    openEditor();
+    runAfterConfirmingDiscard(() => {
+        selectedResource.value = null;
+        isCreatingNew.value = true;
+        emit("create-resource");
+        openEditor();
+    });
 }
+
+useEscapeToCloseEditor({
+    isEditorOpen: () => isEditorOpen.value,
+    closeEditor,
+});
 
 function focusPageTitle() {
     if (pageTitleRef.value) {
@@ -365,6 +451,7 @@ defineExpose({
                         data-key="resourceinstanceid"
                         striped-rows
                         class="resource-table"
+                        :pt="{ bodyRow: getRowPassThrough }"
                         @page="onPage"
                         @row-select="onRowSelect"
                         @row-unselect.stop

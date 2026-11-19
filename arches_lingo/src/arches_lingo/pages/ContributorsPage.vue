@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -9,6 +10,10 @@ import Skeleton from "primevue/skeleton";
 import ResourceListEditor from "@/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue";
 import ResourceNameCard from "@/arches_lingo/components/generic/ResourceNameCard/ResourceNameCard.vue";
 import { useResourceNameEditor } from "@/arches_lingo/composables/useResourceNameEditor.ts";
+import {
+    useConfirmDiscard,
+    useEditorDirtyState,
+} from "@/arches_lingo/composables/useEditorDirtyState.ts";
 import { fetchContributors } from "@/arches_lingo/api.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
@@ -20,7 +25,9 @@ interface GraphTypeOption {
 }
 
 const { $gettext } = useGettext();
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
+const { isEditorDirty } = useEditorDirtyState();
+const { confirmDiscard } = useConfirmDiscard();
 
 const graphTypeOptions: GraphTypeOption[] = [
     { label: $gettext("Person"), value: "person_system" },
@@ -46,15 +53,34 @@ async function onSelectResource(resource: ResourceSummary) {
     await selectResource(resource);
 }
 
-function onCreateNew(openBlankEditor: () => void) {
+function onCreateResource() {
     selectedGraphSlug.value = newGraphSlug.value.value;
     clearSelection();
-    openBlankEditor();
 }
 
-function onNewGraphTypeChange() {
+function applyNewGraphType() {
     selectedGraphSlug.value = newGraphSlug.value.value;
     editorKey.value++;
+}
+
+function revertNewGraphType() {
+    newGraphSlug.value =
+        graphTypeOptions.find(
+            (option) => option.value === selectedGraphSlug.value,
+        ) ?? graphTypeOptions[0];
+}
+
+// Changing the type swaps in a different form, so ask before discarding
+// anything already entered.
+function onNewGraphTypeChange() {
+    if (isEditorDirty.value) {
+        confirmDiscard({
+            onDiscard: applyNewGraphType,
+            onKeepEditing: revertNewGraphType,
+        });
+    } else {
+        applyNewGraphType();
+    }
 }
 
 function onSave(savedTileData: {
@@ -78,6 +104,7 @@ function onSave(savedTileData: {
         :editor-enabled="isEditor"
         :is-editor-loading="isLoadingTile"
         @select-resource="onSelectResource"
+        @create-resource="onCreateResource"
     >
         <template #list-actions="{ openBlankEditor }">
             <Button
@@ -85,7 +112,7 @@ function onSave(savedTileData: {
                 :label="$gettext('Add Contributor')"
                 icon="pi pi-plus-circle"
                 class="add-button"
-                @click="() => onCreateNew(openBlankEditor)"
+                @click="openBlankEditor()"
             />
         </template>
 
