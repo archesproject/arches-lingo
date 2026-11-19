@@ -926,6 +926,12 @@ class PermissionTests(TestCase):
         result = json.loads(response.content)
         self.assertFalse(result["allow_anonymous_access"])
 
+    @override_settings(ACCESSIBILITY_MODE=True)
+    def test_app_settings_view_accessibility_mode(self):
+        response = self.client.get(reverse("api-lingo-settings"))
+        result = json.loads(response.content)
+        self.assertTrue(result["accessibility_mode"])
+
 
 class ConceptResourceViewTests(ViewTests):
     """Tests for ConceptResourceView — verifies the optimized SQL path via SearchResultSet."""

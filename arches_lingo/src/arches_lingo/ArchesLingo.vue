@@ -16,6 +16,10 @@ import {
     HIERARCHY_PANEL_ID,
     MAIN_CONTENT_ID,
 } from "@/arches_lingo/constants.ts";
+import {
+    TOAST_MESSAGE_PASS_THROUGH,
+    useAccessibleToasts,
+} from "@/arches_lingo/composables/useAccessibleToasts.ts";
 import { usePageTitle } from "@/arches_lingo/composables/usePageTitle.ts";
 import { useRouteChangeFocus } from "@/arches_lingo/composables/useRouteChangeFocus.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
@@ -36,6 +40,7 @@ const { $gettext } = useGettext();
 
 const { pageTitleDetail } = usePageTitle(route);
 useRouteChangeFocus(router, pageTitleDetail);
+const { onToastKeydown, onToastClose } = useAccessibleToasts();
 
 const isNavExpanded = ref(false);
 const schemeHierarchyKey = ref(0);
@@ -194,12 +199,15 @@ function focusMainContent() {
     <LiveAnnouncer />
     <Toast
         :pt="{
+            root: { onKeydown: onToastKeydown },
+            message: TOAST_MESSAGE_PASS_THROUGH,
             summary: { fontSize: 'medium' },
             detail: { fontSize: 'small' },
             messageIcon: {
                 style: { marginTop: 'var(--p-toast-messageicon-margintop)' },
             },
         }"
+        @close="onToastClose"
     />
     <ConfirmDialog group="unsaved-changes" />
     <ConfirmDialog group="logout" />
@@ -208,6 +216,7 @@ function focusMainContent() {
 <style scoped>
 .app-shell {
     height: 100vh;
+    height: 100dvh;
     width: 100vw;
     overflow: hidden;
     display: flex;
@@ -252,6 +261,7 @@ function focusMainContent() {
 
 .page-content {
     height: 100%;
+    overflow: auto;
 }
 
 /* <main> only takes focus programmatically (skip link, route changes) and

@@ -11,9 +11,10 @@ import NotificationRow from "@/arches_lingo/components/header/PageHeader/compone
 import { dismissNotifications } from "@/arches_lingo/api.ts";
 import type { Notification } from "@/arches_lingo/types.ts";
 import { SEARCH_RESULT_ITEM_SIZE } from "@/arches_lingo/constants.ts";
+import { scaleWithRootFontSize } from "@/arches_lingo/utils.ts";
 
 const { isLoading } = defineProps<{ isLoading: boolean }>();
-const emit = defineEmits(["load-additional-notifications"]);
+const emit = defineEmits(["load-additional-notifications", "after-hide"]);
 
 const shouldShowNotificationsPanel = defineModel(
     "shouldShowNotificationsPanel",
@@ -82,6 +83,7 @@ function dismissAllNotifications() {
                 },
             },
         }"
+        @after-hide="emit('after-hide')"
     >
         <template #default>
             <template v-if="notifications.length === 0 && !isLoading">
@@ -97,7 +99,7 @@ function dismissAllNotifications() {
             </template>
             <VirtualScroller
                 :items="notifications"
-                :item-size="SEARCH_RESULT_ITEM_SIZE"
+                :item-size="scaleWithRootFontSize(SEARCH_RESULT_ITEM_SIZE)"
                 style="height: 100%"
                 lazy
                 :num-tolerated-items="1"

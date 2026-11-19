@@ -2,12 +2,11 @@
 import { inject, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Tag from "primevue/tag";
-
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
+import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -89,32 +88,21 @@ const metaStringLabel = computed<MetaStringText>(() => ({
         <div class="section-header">
             <div class="section-title">
                 <h2>{{ props.sectionTitle }}</h2>
-                <Tag
+                <CountTag
                     v-if="props.tileData.length"
-                    :value="String(props.tileData.length)"
-                    severity="secondary"
+                    :count="props.tileData.length"
                 />
             </div>
 
-            <Button
+            <DisabledReasonButton
                 v-if="isEditor"
-                v-tooltip.top="{
-                    disabled: Boolean(!isCreateDisabled),
-                    value: createTooltipText,
-                    showDelay: 300,
-                    pt: {
-                        text: {
-                            style: { fontFamily: 'var(--p-lingo-font-family)' },
-                        },
-                        arrow: { style: { display: 'none' } },
-                    },
-                }"
-                :disabled="isCreateDisabled"
+                :is-disabled="isCreateDisabled"
+                :disabled-reason="createTooltipText"
                 :label="$gettext('Add Associated Concept')"
                 class="add-button wide"
                 icon="pi pi-plus-circle"
                 @click="openEditor!(props.componentName)"
-            ></Button>
+            />
         </div>
 
         <MetaStringViewer

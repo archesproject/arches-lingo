@@ -1,22 +1,32 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 import PageHelpPanel from "@/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue";
 
+import type { ComponentPublicInstance } from "vue";
+
 const { $gettext } = useGettext();
 
 const shouldShowPageHelpPanel = ref(false);
+const helpButton = useTemplateRef<ComponentPublicInstance>("helpButton");
 
 function activateHierarchyOverlay() {
     shouldShowPageHelpPanel.value = true;
+}
+
+// PrimeVue Drawer doesn't return focus to its trigger.
+async function onPageHelpPanelAfterHide() {
+    await nextTick();
+    (helpButton.value?.$el as HTMLElement | undefined)?.focus();
 }
 </script>
 
 <template>
     <div>
         <Button
+            ref="helpButton"
             icon="pi pi-question-circle"
             variant="text"
             class="page-help-button"
@@ -25,6 +35,7 @@ function activateHierarchyOverlay() {
         />
         <PageHelpPanel
             v-model:should-show-page-help-panel="shouldShowPageHelpPanel"
+            @after-hide="onPageHelpPanelAfterHide"
         />
     </div>
 </template>

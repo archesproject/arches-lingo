@@ -141,4 +141,11 @@ defineProps<{
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+@media (max-width: 30rem) {
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
 </style>
