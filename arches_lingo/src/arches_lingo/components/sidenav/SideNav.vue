@@ -107,21 +107,21 @@ const emit = defineEmits(["update:isNavExpanded"]);
 }
 
 .nav-button.expanded {
-    background: var(--p-menubar-background) !important;
+    background: var(--p-lingo-navigation-bar-background) !important;
     padding-inline-start: 0.6rem;
 }
 
 .nav-button:hover {
-    background: var(--p-button-primary-hover-background) !important;
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 
 :deep(.p-button) {
     background-color: var(--p-primary-950) !important;
     border-color: var(--p-primary-950) !important;
-    color: var(--p-menubar-color) !important;
+    color: var(--p-lingo-navigation-bar-color) !important;
 }
 :deep(.p-button):hover {
-    background: var(--p-button-primary-hover-background) !important;
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 
 :deep(.nav-button) {

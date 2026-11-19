@@ -147,7 +147,7 @@ watch(
     display: flex;
     gap: 0.375rem;
     padding-top: 0.75rem;
-    border-top: 0.0625rem solid var(--p-highlight-focus-background);
+    border-top: 0.0625rem solid var(--p-lingo-divider-color);
 }
 
 .search-actions :deep(.p-button) {

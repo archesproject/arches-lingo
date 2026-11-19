@@ -123,14 +123,10 @@ function onImport() {
 </template>
 
 <style scoped>
-ul:first-child li:first-child .p-card {
-    color: var(--p-button-contrast-color);
-    background: var(--p-arches-blue);
-    border: 0.0625rem solid var(--p-surface-900);
-}
-
-ul:first-child li:first-child .p-card .scheme-circle {
-    background: var(--p-blue-600);
+.p-card.new-scheme {
+    color: var(--p-lingo-new-scheme-card-color);
+    background: var(--p-lingo-new-scheme-card-background);
+    border: 0.0625rem solid var(--p-lingo-new-scheme-card-border-color);
 }
 
 .scheme-card-link {
@@ -150,7 +146,8 @@ ul:first-child li:first-child .p-card .scheme-circle {
 }
 
 .p-card:has(.scheme-card-link:focus-visible) {
-    outline: auto;
+    outline: var(--p-lingo-scheme-card-focus-outline);
+    outline-offset: var(--p-lingo-scheme-card-focus-outline-offset);
 }
 
 .import-button {
@@ -159,7 +156,8 @@ ul:first-child li:first-child .p-card .scheme-circle {
 }
 
 .import-button:focus-visible {
-    outline: 0.125rem solid var(--p-button-contrast-color);
+    outline: 0.125rem solid
+        var(--p-lingo-new-scheme-card-button-focus-ring-color);
     outline-offset: -0.25rem;
     box-shadow: none;
 }
@@ -204,12 +202,14 @@ ul:first-child li:first-child .p-card .scheme-circle {
     border-radius: 0;
     flex-grow: 1;
     font-size: var(--p-lingo-font-size-xsmall);
-    color: var(--p-button-contrast-color);
-    background: var(--p-button-primary-hover-background);
+    color: var(--p-lingo-new-scheme-card-button-color);
+    background: var(--p-lingo-new-scheme-card-button-background);
+    border-color: var(--p-lingo-new-scheme-card-button-border-color);
 }
 
 .new-scheme :deep(.p-button:hover) {
-    background: var(--p-primary-active-color);
+    color: var(--p-lingo-new-scheme-card-button-hover-color);
+    background: var(--p-lingo-new-scheme-card-button-hover-background);
 }
 
 :deep(.p-card-content) {
@@ -228,8 +228,8 @@ ul:first-child li:first-child .p-card .scheme-circle {
     padding: 1.25rem;
     margin: 0.75rem;
     border-radius: 50%;
-    background: var(--p-surface-400);
-    border: 0.0625rem solid var(--p-surface-900);
+    background: var(--p-lingo-new-scheme-card-circle-background);
+    border: 0.0625rem solid var(--p-lingo-new-scheme-card-circle-border-color);
 }
 
 .new-scheme-icon {

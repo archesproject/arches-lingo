@@ -72,11 +72,11 @@ const items = computed<SideNavMenuItem[]>(() => [
 :deep(.p-button) {
     background-color: var(--p-primary-950) !important;
     border-color: var(--p-primary-950) !important;
-    color: var(--p-menubar-color) !important;
+    color: var(--p-lingo-navigation-bar-color) !important;
 }
 
 :deep(.p-button):hover {
-    background: var(--p-button-primary-hover-background) !important;
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 
 :deep(.nav-button) {

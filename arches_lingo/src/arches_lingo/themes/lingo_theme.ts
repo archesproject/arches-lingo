@@ -48,6 +48,67 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 extrabold: "800",
             },
         },
+        lingoAccent: {
+            color: "{primary.500}",
+            strongColor: "{primary.600}",
+            strongerColor: "{primary.700}",
+            hoverBackground: "{primary.50}",
+            softColor: "{primary.400}",
+        },
+        lingoAccentBadge: {
+            color: "{primary.700}",
+            softColor: "{primary.600}",
+        },
+        lingoMuted: {
+            color: "{neutral.400}",
+            strongColor: "{neutral.500}",
+            strongerColor: "{neutral.600}",
+        },
+        lingoSelectionIndicator: {
+            color: "{primary.400}",
+        },
+        lingoFormSubtitle: {
+            color: "{form.field.hover.border.color}",
+        },
+        lingoLanguageChip: {
+            background: "{navigation.item.icon.color}",
+        },
+        lingoNavigationBar: {
+            background: "{primary.900}",
+            color: "{surface.0}",
+            hoverBackground: "{primary.hover.color}",
+        },
+        lingoDivider: {
+            color: "{highlight.focus.background}",
+        },
+        lingoQueryBuilder: {
+            groupOutlineColor: "transparent",
+            ruleColor: "transparent",
+        },
+        lingoDimmed: {
+            alreadyPresentOpacity: "0.6",
+            unavailableOpacity: "0.65",
+        },
+        lingoSchemeCard: {
+            focusOutline: "auto",
+            focusOutlineOffset: "0",
+        },
+        lingoNewSchemeCard: {
+            color: "{primary.contrast.color}",
+            background: "{arches.blue}",
+            borderColor: "{surface.900}",
+            circle: {
+                background: "{blue.600}",
+                borderColor: "{surface.900}",
+            },
+            button: {
+                color: "{primary.contrast.color}",
+                background: "{primary.hover.color}",
+                hoverColor: "{primary.contrast.color}",
+                hoverBackground: "{primary.active.color}",
+                focusRingColor: "{primary.contrast.color}",
+            },
+        },
         colorScheme: {
             light: {
                 primary: palette(archesPrimitives.arches.blue),
@@ -84,6 +145,14 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 searchResultHierarchy: {
                     color: "{zinc.400}",
                 },
+                helpPanel: {
+                    intro: {
+                        color: "{lingo.muted.strong.color}",
+                    },
+                    sectionTitle: {
+                        color: "{lingo.muted.stronger.color}",
+                    },
+                },
                 sortAndFilterControls: {
                     background: "{light-blue-gray}",
                     border: "{gray}",
@@ -94,6 +163,11 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 },
                 schemeCircle: {
                     background: "{steel-blue}",
+                },
+                lingoNewSchemeCard: {
+                    button: {
+                        borderColor: "{primary.200}",
+                    },
                 },
             },
             dark: {
@@ -116,7 +190,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 headerToolbar: {
                     background: "{surface.800}",
                     border: "{neutral.600}",
-                    itemLabel: "{surface.500}",
                 },
                 headerButton: {
                     background: "{pale-blue}",
@@ -135,6 +208,17 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 searchResultHierarchy: {
                     color: "{zinc.400}",
                 },
+                profileCard: {
+                    shadow: "0 0 0 0.0625rem {content.border.color}",
+                },
+                helpPanel: {
+                    intro: {
+                        color: "{surface.0}",
+                    },
+                    sectionTitle: {
+                        color: "{surface.0}",
+                    },
+                },
                 sortAndFilterControls: {
                     background: "{surface.700}",
                     border: "{surface.900}",
@@ -143,42 +227,18 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     background: "{near-black}",
                     color: "{light-neutral-gray}",
                 },
+                lingoNewSchemeCard: {
+                    button: {
+                        borderColor: "{primary.700}",
+                    },
+                },
             },
         },
     },
     components: {
         button: {
-            border: {
-                radius: "0.125rem",
-            },
-            colorScheme: {
-                light: {
-                    // @ts-expect-error: Ignoring type mismatch for button primary background
-                    primary: {
-                        background: "{button-secondary-background}",
-                        borderColor: "{button-primary-background}",
-                        color: "{button-secondary-color}",
-                        hover: {
-                            background: "{primary-700}",
-                            borderColor: "{primary-700}",
-                        },
-                    },
-                    danger: {
-                        background: "{orange-700}",
-                        borderColor: "{orange-700}",
-                        hover: {
-                            background: "{orange-500}",
-                            borderColor: "{orange-500}",
-                        },
-                    },
-                },
-                dark: {
-                    // @ts-expect-error: Ignoring type mismatch for button primary background
-                    primary: {
-                        background: "{primary-100}",
-                        borderColor: "{button-primary-background}",
-                    },
-                },
+            root: {
+                borderRadius: "0.125rem",
             },
         },
         dialog: {
@@ -194,8 +254,8 @@ export const LingoPreset = definePreset(ArchesPreset, {
         },
         menubar: {
             root: {
-                color: "{surface-0}",
-                background: "{primary-900}",
+                color: "{lingo-navigation-bar-color}",
+                background: "{lingo-navigation-bar-background}",
             },
         },
         splitter: {

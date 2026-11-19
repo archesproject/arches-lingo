@@ -49,6 +49,7 @@ function formatDate(dateString: string): string {
     </div>
     <Button
         v-if="notification.isread === false && showUnreadOnly"
+        class="dismiss-button"
         icon="pi pi-times"
         severity="danger"
         rounded
@@ -70,5 +71,8 @@ function formatDate(dateString: string): string {
 .notification-item {
     font-size: var(--p-lingo-font-size-small);
     padding-inline-end: 0.25rem;
+}
+.dismiss-button {
+    flex-shrink: 0;
 }
 </style>
