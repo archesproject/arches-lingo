@@ -107,22 +107,39 @@ def get_identifiers_for_concepts(concept_ids):
     return result
 
 
-def get_notes_for_concepts(concept_ids, limit_per_concept=3):
-    """Return ``{concept_id: [note, ...]}`` for a batch of concepts (1 query)."""
-    tiles = TileModel.objects.filter(
-        resourceinstance_id__in=concept_ids,
-        nodegroup_id=STATEMENT_NODEGROUP,
-    ).values("resourceinstance_id", "data")
+def get_notes_for_concepts(
+    concept_ids, limit_per_concept=3, label_language="en", note_type_uris=None
+):
+    """Return ``{concept_id: [note, ...]}`` for a batch of concepts (1 query).
+
+    ``note_type_uris`` keeps only notes of those types; None keeps every note.
+    """
+    tiles = (
+        TileModel.objects.filter(
+            resourceinstance_id__in=concept_ids,
+            nodegroup_id=STATEMENT_NODEGROUP,
+        )
+        .order_by("sortorder", "pk")
+        .values("resourceinstance_id", "data")
+    )
 
     result: dict = {}
     counts: dict = {}
     for tile in tiles:
         concept_id = str(tile["resourceinstance_id"])
+        note_types = tile["data"].get(STATEMENT_TYPE_NODE) or [{}]
+        if (
+            note_type_uris is not None
+            and note_types[0].get("uri") not in note_type_uris
+        ):
+            continue
         if counts.get(concept_id, 0) >= limit_per_concept:
             continue
         content = tile["data"].get(STATEMENT_CONTENT_NODE, "")
         language = tile["data"].get(STATEMENT_LANGUAGE_NODE, "")
-        note_type = extract_note_type_label(tile["data"].get(STATEMENT_TYPE_NODE, []))
+        note_type = extract_note_type_label(
+            tile["data"].get(STATEMENT_TYPE_NODE, []), label_language
+        )
         result.setdefault(concept_id, []).append(
             {"content": content or "", "language": language or "", "type": note_type}
         )
@@ -130,17 +147,20 @@ def get_notes_for_concepts(concept_ids, limit_per_concept=3):
     return result
 
 
-def extract_note_type_label(note_type_data):
+def extract_note_type_label(note_type_data, language="en"):
     """Extract a human-readable label from reference-data note type JSON.
 
-    Prefers English; falls back to the first available label.
+    Prefers ``language`` (or its base language), then English, then the first
+    available label.
     """
     if not note_type_data or not isinstance(note_type_data, list):
         return ""
     labels = note_type_data[0].get("labels", [])
-    for label in labels:
-        if label.get("language_id") == "en":
-            return label.get("value", "")
+    base_language = language.split("-")[0]
+    for preferred_language in (language, base_language, "en"):
+        for label in labels:
+            if label.get("language_id") == preferred_language:
+                return label.get("value", "")
     if labels:
         return labels[0].get("value", "")
     return ""
