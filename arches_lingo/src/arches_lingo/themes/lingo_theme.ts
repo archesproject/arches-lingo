@@ -18,7 +18,10 @@ const lingoColors = Object.freeze({
     nearBlack: "#18181B",
 });
 
-const archesPrimitives = ArchesPreset.primitive as archesPreset;
+// Arches 8.2's ArchesPreset carries no token types.
+const archesPrimitives = (
+    ArchesPreset as unknown as { primitive: archesPreset }
+).primitive;
 
 export const LingoPreset = definePreset(ArchesPreset, {
     primitive: {
