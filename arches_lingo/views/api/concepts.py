@@ -10,7 +10,7 @@ from django.views.generic import View
 from arches.app.models.models import ResourceInstance
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_querysets.models import ResourceTileTree
+from arches.extensions.querysets.models import ResourceTileTree
 from arches_lingo.mixins.permissions import AnonymousAccessMixin, LingoEditorMixin
 from arches_lingo.permissions import is_lingo_admin
 from arches_lingo.utils.concept_builder import ConceptBuilder

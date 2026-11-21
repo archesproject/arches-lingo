@@ -1,5 +1,9 @@
 import createVueApplication from 'arches/arches/app/media/js/utils/create-vue-application';
 
+import PrimeVue from 'primevue/config';
+import ConfirmationService from 'primevue/confirmationservice';
+import ToastService from 'primevue/toastservice';
+
 import { createPinia } from 'pinia';
 import { createRouter, createWebHistory } from 'vue-router';
 
@@ -41,6 +45,11 @@ router.beforeEach(async (to, _from, next) => {
 });
 
 createVueApplication(ArchesLingo, LingoTheme).then(async (vueApp) => {
+    // Arches 8.2 no longer installs PrimeVue, which Lingo's components use.
+    vueApp.use(PrimeVue, LingoTheme);
+    vueApp.use(ConfirmationService);
+    vueApp.use(ToastService);
+
     vueApp.use(pinia);
     vueApp.use(router);
 

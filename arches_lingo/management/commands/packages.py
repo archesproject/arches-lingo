@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management.base import CommandError
 
 from arches.app.models import models
-from arches_controlled_lists.management.commands.packages import (
+from arches.extensions.controlled_lists.management.commands.packages import (
     Command as PackagesCommand,
 )
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter

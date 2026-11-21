@@ -3,9 +3,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 
-from arches_controlled_lists.models import ListItem
-from arches_querysets.models import ResourceTileTree
-from arches_querysets.rest_framework.serializers import (
+from arches.extensions.controlled_lists.models import ListItem
+from arches.extensions.querysets.models import ResourceTileTree
+from arches.extensions.querysets.rest_framework.serializers import (
     ArchesResourceSerializer,
     ArchesTileSerializer,
 )

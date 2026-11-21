@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load template_tags %}
 
 {% block task_details %}
 <!-- ko ifnot: loading() -->
@@ -17,13 +18,17 @@
                 <label for="resource-model-select" data-bind="text: $root.translations.selectASchemeToExport"></label>
             </div>
             <select id="resource-model-select" data-bind="
+                attr: {'data-label': $root.translations.selectASchemeToExport},
                 value: selectedScheme,
+                valueAllowUnset: true,
                 options: schemes,
                 optionsText: 'name',
                 optionsValue: 'resourceinstanceid',
-                optionsCaption: $root.translations.select + '...',
-                valueAllowUnset: true,
-                chosen: {width: '500px'}"
+                select2Query: {select2Config: {
+                    value: selectedScheme,
+                    placeholder: $root.translations.select + '...',
+                    allowClear: true
+                }}"
             ></select>
         </div>
         <div class="etl-module-component-block">
@@ -31,8 +36,11 @@
                 <label for="format-select">{% trans "Export Format" %}</label>
             </div>
             <select id="format-select" data-bind="
+                attr: {'data-label': {% quoted_trans _('Export Format') %}},
                 value: format,
-                chosen: {width: '500px'}"
+                select2Query: {select2Config: {
+                    value: format
+                }}"
             >
                 <option value="xml">SKOS/RDF XML</option>
                 <option value="ttl">Turtle</option>

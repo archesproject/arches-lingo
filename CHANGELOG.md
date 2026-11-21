@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+-   Require Arches 8.2. arches-querysets, arches-vue-components and arches-controlled-lists are now bundled with Arches and are no longer separate dependencies
 -   Index concepts in a single pass after retiring or deleting a concept, rather than once per rehomed child [#801](https://github.com/archesproject/arches-lingo/pull/801)
 
 ## [1.1.2] - Unreleased
