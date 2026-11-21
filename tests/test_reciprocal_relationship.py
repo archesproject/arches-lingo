@@ -45,8 +45,8 @@ def _comparate(resource_id):
     return [
         {
             "resourceId": resource_id,
-            "ontologyProperty": "",
-            "inverseOntologyProperty": "",
+            "relationship": "",
+            "inverseRelationship": "",
         }
     ]
 
@@ -107,8 +107,8 @@ class BuildComparateValueTests(SimpleTestCase):
     def test_contains_required_keys(self):
         result = self.fn._build_comparate_value(RESOURCE_B)
         entry = result[0]
-        self.assertIn("ontologyProperty", entry)
-        self.assertIn("inverseOntologyProperty", entry)
+        self.assertIn("relationship", entry)
+        self.assertIn("inverseRelationship", entry)
         self.assertIn("resourceXresourceId", entry)
 
     def test_resource_x_resource_id_is_valid_uuid(self):
