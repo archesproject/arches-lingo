@@ -115,8 +115,8 @@ export async function addDigitalObjectToConceptImageCollection(
         ...(depictingNodeData.node_value ?? []),
         {
             resourceId: digitalObjectResource.resourceinstanceid,
-            ontologyProperty: "",
-            inverseOntologyProperty: "",
+            relationship: "",
+            inverseRelationship: "",
             resourceXresourceId: "",
         },
     ];
