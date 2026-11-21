@@ -44,9 +44,14 @@ export function getDigitalObjectImageUrl(
 
 export function getDigitalObjectImageAlt(
     resource: DigitalObjectInstance,
+    languageCode: string,
 ): string {
     const fileReference = getDigitalObjectFileReference(resource);
-    return fileReference?.altText || fileReference?.name || "";
+    return (
+        fileReference?.altText?.[languageCode]?.value ||
+        fileReference?.name ||
+        ""
+    );
 }
 
 export async function createDigitalObject(
