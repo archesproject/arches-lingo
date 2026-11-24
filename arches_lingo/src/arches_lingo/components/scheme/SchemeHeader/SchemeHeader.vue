@@ -3,6 +3,7 @@ import { computed, inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useDialogFocusReturn } from "@/arches_lingo/composables/useDialogFocusReturn.ts";
+import { useEditorDirtyState } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { setPageTitleDetail } from "@/arches_lingo/composables/usePageTitle.ts";
 
@@ -106,6 +107,7 @@ const toast = useToast();
 const { copyToClipboard } = useCopyToClipboard();
 const { $gettext, $ngettext, interpolate } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+const { isEditorDirty } = useEditorDirtyState();
 
 const scheme = ref<ResourceInstanceResult>();
 const schemeResource = ref<Labellable>();
@@ -466,17 +468,30 @@ function onConceptIdentifierCounterUpdate(updatedCounter: {
 
 const isDeletingScheme = ref(false);
 
+function getDeleteConfirmMessage(schemeName: string) {
+    if (isEditorDirty.value) {
+        return interpolate(
+            $gettext(
+                'Delete the scheme "%{name}" and discard your unsaved changes? Its concepts are not deleted, but they will no longer belong to a scheme. This cannot be undone.',
+            ),
+            { name: schemeName },
+            true,
+        );
+    }
+    return interpolate(
+        $gettext(
+            'Delete the scheme "%{name}"? Its concepts are not deleted, but they will no longer belong to a scheme. This cannot be undone.',
+        ),
+        { name: schemeName },
+        true,
+    );
+}
+
 function confirmDelete() {
     const schemeName = label.value?.value || $gettext("Untitled");
     confirm.require({
         header: $gettext("Delete Scheme"),
-        message: interpolate(
-            $gettext(
-                'Delete the scheme "%{name}"? Its concepts are not deleted, but they will no longer belong to a scheme. This cannot be undone.',
-            ),
-            { name: schemeName },
-            true,
-        ),
+        message: getDeleteConfirmMessage(schemeName),
         group: "delete-scheme",
         accept: () => deleteScheme(schemeName),
         rejectProps: {
@@ -502,6 +517,9 @@ async function deleteScheme(schemeName: string) {
             props.graphSlug,
             scheme.value.resourceinstanceid,
         );
+        // The scheme is gone, so its unsaved edits can't be saved, and the
+        // unsaved-changes guard mustn't keep the user on the deleted page.
+        isEditorDirty.value = false;
         await router.push({ name: routeNames.schemes });
         refreshSchemeHierarchy!();
         toast.add({
