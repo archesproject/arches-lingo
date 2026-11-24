@@ -55,3 +55,7 @@ Makefile
 .runtime/development/env_file.env
 .runtime/development/env_file.env.sample
 .runtime/restore-tables.sh
+.dockerignore
+celerybeat-schedule
+celerybeat-schedule-*
+celerybeat.pid
