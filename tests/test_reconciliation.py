@@ -918,6 +918,11 @@ class ReconciliationSuggestTests(ReconciliationQueryTestCase):
         scoped_elsewhere = self.suggest(
             "entity", prefix="concept", type=str(uuid.uuid4())
         ).json()
+        # One- and two-character prefixes take a separate query plan.
+        short_prefix_page = self.suggest("entity", prefix="co").json()["result"]
+        short_prefix_scoped_elsewhere = self.suggest(
+            "entity", prefix="co", type=str(uuid.uuid4())
+        ).json()
 
         self.assertEqual(
             [suggestion["name"] for suggestion in first_page],
@@ -930,6 +935,8 @@ class ReconciliationSuggestTests(ReconciliationQueryTestCase):
         )
         self.assertEqual(len(later_page["result"]), 2)
         self.assertEqual(scoped_elsewhere["result"], [])
+        self.assertEqual(short_prefix_page, first_page)
+        self.assertEqual(short_prefix_scoped_elsewhere["result"], [])
         self.assertEqual(self.suggest("entity", prefix=" ").json()["result"], [])
 
     def test_type_and_property_suggest_filter_by_prefix(self):
