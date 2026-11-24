@@ -96,7 +96,7 @@ export const routes = [
             const result = await resolveSchemeIdentifier(
                 to.params.schemeIdentifier as string,
             );
-            if (!result) return false;
+            if (!result) return getNotFoundLocation(to);
             to.meta.resolvedResourceId = result.resourceinstanceid;
         },
         meta: {
@@ -114,7 +114,7 @@ export const routes = [
                 to.params.schemeIdentifier as string,
                 to.params.conceptIdentifier as string,
             );
-            if (!result) return false;
+            if (!result) return getNotFoundLocation(to);
             to.meta.resolvedResourceId = result.resourceinstanceid;
         },
         meta: {
@@ -173,6 +173,16 @@ export const routes = [
             requiresAuthentication: true,
         },
     },
+    {
+        path: "/:pathMatch(.*)*",
+        name: "not-found",
+        component: () => import("@/arches_lingo/pages/NotFoundPage.vue"),
+        meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Not found"),
+            shouldShowNavigation: true,
+            requiresAuthentication: false,
+        },
+    },
 ];
 
 export const routeNames = {
@@ -193,4 +203,15 @@ export const routeNames = {
     contributors: "contributors",
     contributor: "contributor",
     profile: "profile",
+    notFound: "not-found",
 };
+
+export function getNotFoundLocation(to: RouteLocationNormalized) {
+    return {
+        name: routeNames.notFound,
+        params: { pathMatch: to.path.substring(1).split("/") },
+        query: to.query,
+        hash: to.hash,
+        replace: true,
+    };
+}

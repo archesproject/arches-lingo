@@ -10,7 +10,7 @@ import {
     watch,
 } from "vue";
 
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -43,6 +43,7 @@ import {
 import { useEscapeToCloseEditor } from "@/arches_lingo/composables/useEscapeToCloseEditor.ts";
 
 import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
+import { getNotFoundLocation } from "@/arches_lingo/routes.ts";
 import {
     focusWithoutScrolling,
     getCurrentResourceId,
@@ -64,6 +65,7 @@ const props = defineProps<{
 
 const toast = useToast();
 const route = useRoute();
+const router = useRouter();
 const { $gettext } = useGettext();
 const { isEditorDirty } = useEditorDirtyState();
 const { confirmDiscard } = useConfirmDiscard();
@@ -108,6 +110,12 @@ const resourceInstanceId = computed<string | undefined>(() => {
 const graphSlug = props.componentData[0]?.graphSlug;
 const resourceStore = createResourceStore(graphSlug, resourceInstanceId.value);
 provideResourceStore(resourceStore);
+
+watch(resourceStore.isNotFound, (isNotFound) => {
+    if (isNotFound) {
+        router.replace(getNotFoundLocation(route));
+    }
+});
 
 const firstComponentDatum = computed(() => {
     return processedComponentData.value[0];
@@ -293,6 +301,12 @@ async function loadResourceInstanceLifecycleState() {
             await fetchResourceInstanceLifecycleState(resourceInstanceId.value);
     } catch (error) {
         resourceInstanceLifecycleState.value = undefined;
+
+        // A missing resource gets the not-found page instead.
+        await resourceStore.initialLoad;
+        if (resourceStore.isNotFound.value) {
+            return;
+        }
 
         toast.add({
             severity: ERROR,
