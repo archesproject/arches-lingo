@@ -47,6 +47,7 @@ from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
 from arches_lingo.tasks import export_lingo_resources_task
 from arches_lingo.utils.display_label import get_display_label
+from arches_lingo.utils.skos import SKOSReader as LingoSKOSReader
 from tests.tests import ViewTests
 
 from .test_settings import PROJECT_TEST_ROOT
@@ -402,6 +403,58 @@ class ImportTests(TransactionTestCase):
         )
         self.assertFalse(response["success"])
         self.assertIn("not a text-based RDF serialization", str(response["message"]))
+
+
+class SKOSMatchImportTests(TestCase):
+    TURTLE = """
+        @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+        @prefix dcterms: <http://purl.org/dc/terms/> .
+        @prefix ex: <https://example.org/thesaurus/> .
+        @prefix aat: <http://vocab.getty.edu/aat/> .
+
+        ex:scheme a skos:ConceptScheme ;
+            skos:prefLabel "Scheme"@en .
+
+        ex:concept a skos:Concept ;
+            skos:inScheme ex:scheme ;
+            skos:prefLabel "Concept"@en ;
+            skos:exactMatch aat:300000001 ;
+            skos:closeMatch aat:300000002 ;
+            skos:broadMatch aat:300000003 ;
+            skos:narrowMatch aat:300000004 ;
+            skos:relatedMatch aat:300000005 ;
+            skos:relatedMatch ex:described-match ;
+            skos:relatedMatch [ skos:prefLabel "no URI"@en ] .
+
+        ex:described-match dcterms:identifier "https://example.org/identifier" .
+    """
+
+    def test_match_targets_resolve_to_their_uri_or_identifier(self):
+        graph = Graph().parse(data=self.TURTLE, format="turtle")
+
+        _, concepts = LingoSKOSReader().extract_concepts_from_skos_for_lingo_import(
+            graph
+        )
+
+        matches = {
+            (
+                tile["match_status"]["match_status_ascribed_relation"],
+                str(tile["match_status"]["match_status_ascribed_comparate"]),
+            )
+            for tile in concepts[0]["tile_data"]
+            if "match_status" in tile
+        }
+        self.assertEqual(
+            matches,
+            {
+                ("exactMatch", "http://vocab.getty.edu/aat/300000001"),
+                ("closeMatch", "http://vocab.getty.edu/aat/300000002"),
+                ("broadMatch", "http://vocab.getty.edu/aat/300000003"),
+                ("narrowMatch", "http://vocab.getty.edu/aat/300000004"),
+                ("relatedMatch", "http://vocab.getty.edu/aat/300000005"),
+                ("relatedMatch", "https://example.org/identifier"),
+            },
+        )
 
 
 class ExportTests(TestCase):
