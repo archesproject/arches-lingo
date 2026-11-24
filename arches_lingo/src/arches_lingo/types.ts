@@ -12,6 +12,7 @@ import type {
     ResourceInstanceReference,
 } from "@/arches_vue_components/datatypes/resource-instance-list/types.ts";
 import type { FileListAliasedNodeData } from "@/arches_vue_components/datatypes/file-list/types.ts";
+import type { LanguageAliasedNodeData } from "@/arches_vue_components/datatypes/language/types.ts";
 
 export interface User {
     first_name: string;
@@ -196,6 +197,7 @@ export type ConceptImages = TileData<ConceptImagesAliases>;
 
 export interface DigitalObjectNameAliases extends AliasedData {
     name_content: StringAliasedNodeData;
+    name_language?: LanguageAliasedNodeData;
 }
 
 export type DigitalObjectName = TileData<DigitalObjectNameAliases>;

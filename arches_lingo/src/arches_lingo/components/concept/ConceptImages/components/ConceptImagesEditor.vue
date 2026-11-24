@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
+import {
+    computed,
+    inject,
+    nextTick,
+    onMounted,
+    ref,
+    useTemplateRef,
+    watch,
+} from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -24,6 +32,9 @@ import {
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
 
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { setLocalizedValue } from "@/arches_vue_components/datatypes/file-list/utils.ts";
+import { buildLanguageAliasedNodeData } from "@/arches_vue_components/datatypes/language/utils.ts";
 import { storeToRefs } from "pinia";
 
 import {
@@ -34,8 +45,12 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
+import type { Language } from "@/arches_vue_components/types.ts";
+import type { LanguageAliasedNodeData } from "@/arches_vue_components/datatypes/language/types.ts";
+import type { NonLocalizedTextAliasedNodeData } from "@/arches_vue_components/datatypes/non-localized-text/types.ts";
 import type {
     FileListAliasedNodeData,
+    FileMetadataField,
     FileReference,
 } from "@/arches_vue_components/datatypes/file-list/types.ts";
 
@@ -61,9 +76,28 @@ const props = defineProps<{
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const languageStore = useLanguageStore();
 
 const digitalObjectResource = ref<DigitalObjectInstance>();
 const digitalObjectLoaded = ref(false);
+
+const HIDDEN_FILE_METADATA_FIELDS: FileMetadataField[] = [
+    "title",
+    "description",
+];
+
+const initialNameLanguage = computed(() =>
+    getLanguageAliasedNodeData(
+        digitalObjectResource.value?.aliased_data.name?.aliased_data
+            .name_language,
+    ),
+);
+const initialStatementLanguage = computed(() =>
+    getLanguageAliasedNodeData(
+        digitalObjectResource.value?.aliased_data.statement?.aliased_data
+            .statement_language,
+    ),
+);
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -108,35 +142,108 @@ async function getDigitalObjectInstance(resourceInstanceId?: string) {
     }
 }
 
+function getLanguageAliasedNodeData(
+    aliasedNodeData: object | undefined,
+): LanguageAliasedNodeData {
+    const languageCode =
+        (aliasedNodeData as LanguageAliasedNodeData | undefined)?.node_value ||
+        languageStore.selectedLanguage.code;
+    return buildLanguageAliasedNodeData(
+        languageCode,
+        languageStore.availableLanguages,
+    );
+}
+
+function findLanguage(
+    languageAliasedNodeData: LanguageAliasedNodeData,
+): Language {
+    return (
+        languageStore.availableLanguages.find(
+            (language) => language.code === languageAliasedNodeData.node_value,
+        ) ?? languageStore.selectedLanguage
+    );
+}
+
+function getNonLocalizedText(aliasedNodeData: object | undefined): string {
+    return (
+        (aliasedNodeData as NonLocalizedTextAliasedNodeData | undefined)
+            ?.node_value ?? ""
+    );
+}
+
+function withRecordTitleAndDescription(
+    file: PossiblyNewFile,
+    digitalObjectInstanceAliases: DigitalObjectInstanceAliases,
+    nameLanguage: Language,
+    statementLanguage: Language,
+): PossiblyNewFile {
+    const nameAliasedData = digitalObjectInstanceAliases.name?.aliased_data;
+    const statementAliasedData =
+        digitalObjectInstanceAliases.statement?.aliased_data;
+
+    return {
+        ...file,
+        title: setLocalizedValue(
+            file.title,
+            nameLanguage,
+            getNonLocalizedText(nameAliasedData?.name_content),
+        ),
+        description: setLocalizedValue(
+            file.description,
+            statementLanguage,
+            getNonLocalizedText(statementAliasedData?.statement_content),
+        ),
+    };
+}
+
 async function save(e: FormSubmitEvent) {
     isLoading.value = true;
 
     try {
         const submittedFormData = e.values;
-        const contentFiles =
-            (
-                submittedFormData.content as {
-                    node_value: PossiblyNewFile[] | null;
-                }
-            )?.node_value ?? null;
-
         const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
             digitalObjectResource.value?.aliased_data ?? {};
+        const nameLanguageAliasedNodeData = getLanguageAliasedNodeData(
+            submittedFormData.name_language,
+        );
+        const statementLanguageAliasedNodeData = getLanguageAliasedNodeData(
+            submittedFormData.statement_language,
+        );
 
         if (submittedFormData.name_content) {
             digitalObjectInstanceAliases.name = {
                 ...digitalObjectInstanceAliases.name,
-                aliased_data: { name_content: submittedFormData.name_content },
-            };
+                aliased_data: {
+                    name_content: submittedFormData.name_content,
+                    name_language: nameLanguageAliasedNodeData,
+                },
+            } as DigitalObjectInstanceAliases["name"];
         }
         if (submittedFormData.statement_content) {
             digitalObjectInstanceAliases.statement = {
                 ...digitalObjectInstanceAliases.statement,
                 aliased_data: {
                     statement_content: submittedFormData.statement_content,
+                    statement_language: statementLanguageAliasedNodeData,
                 },
-            };
+            } as unknown as DigitalObjectInstanceAliases["statement"];
         }
+
+        const submittedContentFiles =
+            (
+                submittedFormData.content as {
+                    node_value: PossiblyNewFile[] | null;
+                }
+            )?.node_value ?? null;
+        const contentFiles =
+            submittedContentFiles?.map((file) =>
+                withRecordTitleAndDescription(
+                    file,
+                    digitalObjectInstanceAliases,
+                    findLanguage(nameLanguageAliasedNodeData),
+                    findLanguage(statementLanguageAliasedNodeData),
+                ),
+            ) ?? null;
 
         // files do not respect json.stringify
         const fileJsonObjects = (contentFiles ?? []).map((file) => {
@@ -151,7 +258,10 @@ async function save(e: FormSubmitEvent) {
                 url: null,
                 file_id: null,
                 content: URL.createObjectURL(file.file),
-                altText: "Replaceable alt text",
+                altText: file.altText,
+                title: file.title,
+                description: file.description,
+                attribution: file.attribution,
             };
         });
 
@@ -291,6 +401,12 @@ function resetForm() {
                                 ?.aliased_data.name_content ?? null
                         "
                     />
+                    <GenericWidget
+                        node-alias="name_language"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="initialNameLanguage"
+                    />
                 </div>
                 <div class="widget-container column">
                     <GenericWidget
@@ -303,6 +419,12 @@ function resetForm() {
                         "
                         :render-context="MULTILINE_RENDER_CONTEXT"
                     />
+                    <GenericWidget
+                        node-alias="statement_language"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="initialStatementLanguage"
+                    />
                 </div>
                 <div class="widget-container column">
                     <GenericWidget
@@ -314,6 +436,7 @@ function resetForm() {
                         "
                         :mode="EDIT"
                         :should-show-label="false"
+                        :hidden-metadata-fields="HIDDEN_FILE_METADATA_FIELDS"
                     />
                 </div>
             </Form>
@@ -323,11 +446,6 @@ function resetForm() {
 <style scoped>
 :deep(.p-fileupload-advanced) {
     border: none;
-}
-
-:deep(.file-list) {
-    display: flex;
-    gap: 1rem;
 }
 
 :deep(.p-fileupload-header) {
