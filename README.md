@@ -21,14 +21,14 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 
 1. If you don't already have an Arches project, you'll need to create one by following the instructions in the Arches [documentation](http://archesproject.org/documentation/).
 
-2. When your project is ready, add "arches_querysets", "arches_vue_components", "arches_controlled_lists", "arches_lingo", and "pgtrigger" to INSTALLED_APPS **below** the name of your project:
+2. When your project is ready, add "arches.extensions.querysets", "arches.extensions.vue_components", "arches.extensions.controlled_lists", "arches_lingo", and "pgtrigger" to INSTALLED_APPS **below** the name of your project:
     ```
     INSTALLED_APPS = (
         ...
         "my_project_name",
-        "arches_querysets",
-        "arches_vue_components",
-        "arches_controlled_lists",
+        "arches.extensions.querysets",
+        "arches.extensions.vue_components",
+        "arches.extensions.controlled_lists",
         "arches_lingo",
     )
     ```
@@ -38,7 +38,7 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     REFERENCES_INDEX_NAME = "references"
     ELASTICSEARCH_CUSTOM_INDEXES = [
         {
-            "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+            "module": "arches.extensions.controlled_lists.search_indexes.reference_index.ReferenceIndex",
             "name": REFERENCES_INDEX_NAME,
             "should_update_asynchronously": True,
         }
@@ -60,12 +60,12 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
             "type": "reference",
             "label": _("References"),
             "key": REFERENCES_INDEX_NAME,
-            "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+            "module": "arches.extensions.controlled_lists.search_indexes.reference_index.ReferenceIndex",
         },
     ]
 
     ES_MAPPING_MODIFIER_CLASSES = [
-        "arches_controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
+        "arches.extensions.controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
     ]
     ```
 
@@ -97,11 +97,10 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     - **Rate limiting setup:** the setting is enforced with [django-ratelimit](https://django-ratelimit.readthedocs.io/), the library Arches uses for its own login limits. It counts requests per client address in `RATELIMIT_USE_CACHE` (the default cache), which must be shared by every server process (such as Redis or Memcached, not the per-process default). Behind a reverse proxy, set `RATELIMIT_IP_META_KEY` to the header carrying the client address; otherwise every caller shares one limit.
     - **Counting clients:** OpenRefine sends reconciliation and data extension batches from the OpenRefine server, so all users of a shared OpenRefine instance count as one client. Suggest and preview requests come from each user's browser, and OpenRefine loads a preview for each candidate a user hovers over, so leave room for those when choosing a rate.
 
-5. Next ensure arches, arches-vue-components, and arches_lingo are included as dependencies in package.json
+5. Next ensure arches and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {
-        "arches": "archesproject/arches#dev/8.1.x",
-        "arches-vue-components": "archesproject/arches-vue-components#dev/2.0.x",
+        "arches": "archesproject/arches#dev/8.2.x",
         "arches_lingo": "archesproject/arches-lingo#main"
     }
     ```

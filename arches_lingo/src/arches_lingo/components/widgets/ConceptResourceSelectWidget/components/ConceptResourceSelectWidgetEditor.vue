@@ -166,8 +166,8 @@ function onUpdateModelValue(updatedValue: string[]) {
     const formattedNodeValues: ResourceInstanceReference[] = updatedValue.map(
         (value) => {
             return {
-                inverseOntologyProperty: "",
-                ontologyProperty: "",
+                inverseRelationship: "",
+                relationship: "",
                 resourceId: value ?? "",
                 resourceXresourceId: "",
             } as ResourceInstanceReference;

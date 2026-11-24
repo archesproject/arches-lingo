@@ -29,7 +29,7 @@ from arches.app.models.models import (
     Value,
 )
 from arches.app.utils.skos import SKOSReader
-from arches_querysets.models import ResourceTileTree
+from arches.extensions.querysets.models import ResourceTileTree
 
 from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,

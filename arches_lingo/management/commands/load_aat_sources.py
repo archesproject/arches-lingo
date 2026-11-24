@@ -86,8 +86,8 @@ def _make_resource_instance_list_value(resource_ids):
     return [
         {
             "resourceId": str(resource_id),
-            "ontologyProperty": "",
-            "inverseOntologyProperty": "",
+            "relationship": "",
+            "inverseRelationship": "",
             "resourceXresourceId": "",
         }
         for resource_id in resource_ids

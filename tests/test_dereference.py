@@ -255,7 +255,7 @@ class SkosSerializerTests(_LingoResourceTestCase):
                     "http://purl.org/iso25964/skos-thes#broaderGeneric",
                     "broaderGeneric",
                 ),
-                SKOS.broaderGeneric,
+                URIRef("http://www.w3.org/2004/02/skos/core#broaderGeneric"),
             ),
             (
                 predicate("https://example.org/types/1", "has some type"),

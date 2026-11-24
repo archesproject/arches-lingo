@@ -21,7 +21,7 @@ import xml.etree.ElementTree as ET
 
 from django.db import connection
 
-from arches_controlled_lists.models import ListItem
+from arches.extensions.controlled_lists.models import ListItem
 
 from arches_lingo import const
 

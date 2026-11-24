@@ -261,15 +261,15 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django_hosts",
-    "arches_vue_components",
-    "arches_controlled_lists",
+    "arches.extensions.querysets",
+    "arches.extensions.vue_components",
+    "arches.extensions.controlled_lists",
     "arches",
     "arches.app.models",
     "arches.management",
     "guardian",
     "django_recaptcha",
     "revproxy",
-    "arches_querysets",
     "rest_framework",
     "corsheaders",
     "oauth2_provider",
@@ -412,6 +412,18 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": "user_permission_cache",
     },
+    "querysets_concepts": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "querysets_concepts_cache",
+        "TIMEOUT": 86400,  # one day in seconds
+        "OPTIONS": {"MAX_ENTRIES": 1000},
+    },
+    "querysets_resource_instances": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "querysets_resource_instances_cache",
+        "TIMEOUT": 86400,  # one day in seconds
+        "OPTIONS": {"MAX_ENTRIES": 1000},
+    },
 }
 
 # Hide nodes and cards in a report that have no data
@@ -451,14 +463,18 @@ if DEBUG is True:
     SILENCED_SYSTEM_CHECKS += ["captcha.recaptcha_test_key_error"]
 
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  #<-- Only need to uncomment this for testing without an actual email server
-# EMAIL_USE_TLS = True
-# EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = "xxxx@xxx.com"
-# EMAIL_HOST_PASSWORD = 'xxxxxxx'
-# EMAIL_PORT = 587
+MAILERS = {
+    "default": {
+        "OPTIONS": {
+            "use_tls": True,
+            # "host": "smtp.gmail.com",
+            "username": "xxxx@xxx.com",
+            # "password": "xxxxxxx",
+        },
+    },
+}
 
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = MAILERS["default"]["OPTIONS"]["username"]
 
 CELERY_BROKER_URL = get_optional_env_variable(
     "CELERY_BROKER_URL", ""
@@ -577,7 +593,7 @@ SHOW_LANGUAGE_SWITCH = len(LANGUAGES) > 1
 REFERENCES_INDEX_NAME = "references"
 ELASTICSEARCH_CUSTOM_INDEXES = [
     {
-        "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+        "module": "arches.extensions.controlled_lists.search_indexes.reference_index.ReferenceIndex",
         "name": REFERENCES_INDEX_NAME,
         "should_update_asynchronously": True,
     }
@@ -599,12 +615,12 @@ TERM_SEARCH_TYPES = [
         "type": "reference",
         "label": _("References"),
         "key": REFERENCES_INDEX_NAME,
-        "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+        "module": "arches.extensions.controlled_lists.search_indexes.reference_index.ReferenceIndex",
     },
 ]
 
 ES_MAPPING_MODIFIER_CLASSES = [
-    "arches_controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
+    "arches.extensions.controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
 ]
 
 LINGO_ALLOW_ANONYMOUS_ACCESS = False
