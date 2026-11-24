@@ -1,3 +1,8 @@
+from functools import partial
+
+from rest_framework.mixins import DestroyModelMixin
+
+from arches.app.utils.permission_backend import user_can_edit_resource
 from arches_querysets.rest_framework.generic_views import (
     ArchesResourceDetailView,
     ArchesResourceListCreateView,
@@ -31,3 +36,12 @@ class LingoTileListCreateView(ArchesTileListCreateView):
 class LingoTileDetailView(ArchesTileDetailView):
     permission_classes = [ReadOnlyOrLingoEditor]
     serializer_class = LingoTileSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        # Removing a tile edits its resource rather than deleting it, so the
+        # lifecycle state's can_edit (not can_delete) flag governs access.
+        # Bypasses ArchesModelAPIMixin.destroy, which checks resource deletion.
+        self.get_object = partial(
+            self.get_object, permission_callable=user_can_edit_resource
+        )
+        return DestroyModelMixin.destroy(self, request, *args, **kwargs)
