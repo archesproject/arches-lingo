@@ -25,7 +25,9 @@ from arches.extensions.querysets.models import ResourceTileTree
 
 from arches_lingo.const import (
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+    CONCEPT_TYPE_NODEID,
     CONCEPTS_GRAPH_ID,
+    DEFAULT_CONCEPT_TYPE_URI,
     RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
     SCHEMES_GRAPH_ID,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
@@ -227,8 +229,9 @@ def expand_object_references(triple, tile_tree, references_node_id):
 def build_triples_for_resource(resource):
     """Build the full list of SKOS triple dicts for one scheme or concept resource.
 
-    Only nodegroups that appear in ``TILE_TREE_TO_TRIPLE_MAPPING`` are considered;
-    unmapped nodegroups (images, namespace, status, etc.) contribute no triples.
+    Only nodegroups that appear in ``TILE_TREE_TO_TRIPLE_MAPPING`` are considered,
+    plus the concept type; other unmapped nodegroups (images, namespace, status,
+    etc.) contribute no triples.
     """
     triples = []
     for nodegroup_alias in TILE_TREE_TO_TRIPLE_MAPPING:
@@ -237,7 +240,32 @@ def build_triples_for_resource(resource):
             triples.extend(
                 extract_triples_from_aliased_tiles(nodegroup_alias, tile_trees)
             )
+    triples.extend(build_concept_type_triples(resource))
     return triples
+
+
+def build_concept_type_triples(resource):
+    """Write a concept type other than the default "concept" as dcterms:type.
+
+    The object is the term types list item's URI, which is also what the SKOS
+    import resolves a dcterms:type against.
+    """
+    type_tile_tree = getattr(resource.aliased_data, "type", None)
+    if not type_tile_tree:
+        return []
+    type_references = (getattr(type_tile_tree, "data", None) or {}).get(
+        CONCEPT_TYPE_NODEID
+    ) or []
+    return [
+        {
+            "predicate": DCTERMS.type,
+            "object": type_reference["uri"],
+            "object_is_uri": True,
+        }
+        for type_reference in type_references
+        if type_reference.get("uri")
+        and type_reference["uri"] != DEFAULT_CONCEPT_TYPE_URI
+    ]
 
 
 def collect_referenced_resource_ids(triples):

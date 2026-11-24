@@ -15,7 +15,8 @@ from django.http import HttpRequest
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 from django.utils import translation
-from rdflib import Graph
+from rdflib import Graph, URIRef
+from rdflib.namespace import DCTERMS
 
 from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.models.models import (
@@ -29,6 +30,7 @@ from arches.app.models.models import (
     Value,
 )
 from arches.app.utils.skos import SKOSReader
+from arches.extensions.controlled_lists.models import ListItem
 from arches.extensions.querysets.models import ResourceTileTree
 
 from arches_lingo.const import (
@@ -36,10 +38,14 @@ from arches_lingo.const import (
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
+    CONCEPT_TYPE_LIST_ID,
+    CONCEPT_TYPE_NODEGROUP,
+    CONCEPT_TYPE_NODEID,
     CONCEPTS_GRAPH_ID,
     DELEGATED_TO_CELERY,
     EXPORT_STATUS_COMPLETE,
     EXPORT_STATUS_QUEUED,
+    GUIDE_TERM_URI,
     LABEL_LIST_ID,
     LINGO_EDITOR_GROUP_NAME,
 )
@@ -47,6 +53,9 @@ from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
 from arches_lingo.tasks import export_lingo_resources_task
 from arches_lingo.utils.display_label import get_display_label
+from arches_lingo.utils.skos import SKOSReader as LingoSKOSReader
+from arches_lingo.utils.skos import SKOSWriter, subject_uri_for
+from arches_lingo.utils.skos_serializer import build_triples_for_resource
 from tests.tests import ViewTests
 
 from .test_settings import PROJECT_TEST_ROOT
@@ -402,6 +411,97 @@ class ImportTests(TransactionTestCase):
         )
         self.assertFalse(response["success"])
         self.assertIn("not a text-based RDF serialization", str(response["message"]))
+
+
+class SKOSConceptTypeTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        ViewTests.setUpTestData()
+        cls.type_item_ids_by_label = {
+            item.list_item_values.get(valuetype_id="prefLabel").value: str(item.id)
+            for item in ListItem.objects.filter(list_id=CONCEPT_TYPE_LIST_ID)
+        }
+
+    def test_dcterms_type_sets_the_concept_type_on_import(self):
+        graph = Graph().parse(
+            format="turtle",
+            data="""
+                @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+                @prefix dcterms: <http://purl.org/dc/terms/> .
+                @prefix ex: <https://example.org/thesaurus/> .
+
+                ex:scheme a skos:ConceptScheme .
+                ex:guide-term skos:inScheme ex:scheme ;
+                    dcterms:type <http://vocab.getty.edu/aat/300386700> .
+                ex:facet skos:inScheme ex:scheme ;
+                    dcterms:type <http://vocab.getty.edu/ontology#Facet> .
+                ex:unrecognized skos:inScheme ex:scheme ;
+                    dcterms:type <https://example.org/not-a-term-type> .
+                ex:untyped skos:inScheme ex:scheme .
+            """,
+        )
+
+        _, concepts = LingoSKOSReader().extract_concepts_from_skos_for_lingo_import(
+            graph
+        )
+
+        types_by_subject = {
+            concept["legacyid"]: tile["type"]["type"]
+            for concept in concepts
+            for tile in concept["tile_data"]
+            if "type" in tile
+        }
+        self.assertEqual(
+            types_by_subject,
+            {
+                "https://example.org/thesaurus/guide-term": (
+                    self.type_item_ids_by_label["guide term"]
+                ),
+                "https://example.org/thesaurus/facet": (
+                    self.type_item_ids_by_label["facet"]
+                ),
+                "https://example.org/thesaurus/unrecognized": "concept",
+                "https://example.org/thesaurus/untyped": "concept",
+            },
+        )
+
+    def test_only_non_default_concept_types_are_exported(self):
+        reference_datatype = DataTypeFactory().get_instance("reference")
+        concept_ids_by_type_label = {
+            "guide term": ResourceInstance.objects.get(name="Concept 1").pk,
+            "concept": ResourceInstance.objects.get(name="Concept 2").pk,
+        }
+        for type_label, concept_id in concept_ids_by_type_label.items():
+            TileModel.objects.create(
+                resourceinstance_id=concept_id,
+                nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+                data={
+                    CONCEPT_TYPE_NODEID: reference_datatype.transform_value_for_tile(
+                        type_label, controlledList=CONCEPT_TYPE_LIST_ID
+                    )
+                },
+            )
+
+        concepts = ResourceTileTree.get_tiles(
+            graph_slug="concept", resource_ids=concept_ids_by_type_label.values()
+        )
+        rdf_graph = SKOSWriter().write_skos_from_triples(
+            {},
+            {
+                concept.resourceinstanceid: build_triples_for_resource(concept)
+                for concept in concepts
+            },
+        )
+
+        self.assertEqual(
+            set(rdf_graph.subject_objects(DCTERMS.type)),
+            {
+                (
+                    subject_uri_for(concept_ids_by_type_label["guide term"]),
+                    URIRef(GUIDE_TERM_URI),
+                )
+            },
+        )
 
 
 class ExportTests(TestCase):
