@@ -39,6 +39,7 @@ function mountPanel(settingsOverrides: Partial<AppSettings>): VueWrapper {
         public_server_address: "https://lingo.example.org/",
         arches_version: "8.1",
         lingo_version: "1.2",
+        accessibility_mode: false,
         ...settingsOverrides,
     };
     return mount(ReconciliationEndpointPanel, {
