@@ -17,7 +17,7 @@ from rdflib import Literal
 from rdflib.namespace import DCTERMS, SKOS
 
 from arches.app.models.models import TileModel
-from arches_querysets.models import ResourceTileTree
+from arches.extensions.querysets.models import ResourceTileTree
 
 from arches_lingo.const import URI_CONTENT_NODE, URI_NODEGROUP
 from arches_lingo.utils.reconciliation.concept_summaries import (

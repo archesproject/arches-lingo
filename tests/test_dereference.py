@@ -29,7 +29,7 @@ from arches_lingo.utils.concept_lifecycle import (
     DRAFT_STATE_ID,
     PUBLISHED_STATE_ID,
 )
-from arches_lingo.utils.skos import ARCHES, SKOSWriter
+from arches_lingo.utils.skos import ARCHES, OPEN_SKOS_NAMESPACE, SKOSWriter
 from arches_lingo.utils.skos_serializer import (
     NOT_ACCEPTABLE,
     negotiate_rdf_format,
@@ -255,7 +255,7 @@ class SkosSerializerTests(_LingoResourceTestCase):
                     "http://purl.org/iso25964/skos-thes#broaderGeneric",
                     "broaderGeneric",
                 ),
-                SKOS.broaderGeneric,
+                OPEN_SKOS_NAMESPACE.broaderGeneric,
             ),
             (
                 predicate("https://example.org/types/1", "has some type"),
