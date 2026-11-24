@@ -32,16 +32,16 @@ const overwriteOptions = ref([
     {
         label: $gettext("Ignore"),
         value: "ignore",
-        tooltip: $gettext("Do nothing if the Scheme or Concept already exists"),
-        disabled: true,
+        tooltip: $gettext(
+            "Skip Schemes and Concepts that already exist and add only new ones",
+        ),
     },
     {
         label: $gettext("Overwrite"),
         value: "overwrite",
         tooltip: $gettext(
-            "If a Scheme or Concept already exists, replace it with the new one",
+            "Replace the labels, notes, matches and relationships of Schemes and Concepts that already exist",
         ),
-        disabled: false,
     },
 ]);
 
@@ -160,10 +160,21 @@ async function submit() {
                     <label id="overwrite-options-label">{{
                         $gettext("Overwrite Options")
                     }}</label>
+                    <p
+                        id="overwrite-options-help"
+                        class="help-text"
+                    >
+                        {{
+                            $gettext(
+                                "Existing Schemes and Concepts are matched by their URI (rdf:about) in the file.",
+                            )
+                        }}
+                    </p>
                     <div
                         class="radiogroup"
                         role="radiogroup"
                         aria-labelledby="overwrite-options-label"
+                        aria-describedby="overwrite-options-help"
                     >
                         <span
                             v-for="option in overwriteOptions"
@@ -182,7 +193,6 @@ async function submit() {
                                 :value="option.value"
                                 :initial-value="option.value"
                                 :invalid="!overwriteOption"
-                                :disabled="option.disabled"
                                 :pt="{
                                     input: {
                                         'aria-describedby': `${option.value}-description`,

@@ -133,6 +133,7 @@ class Command(PackagesCommand):
             loadid=self.loadid,
             userid=models.User.objects.get(username="admin").pk,
             mode="cli",
+            overwrite_option=overwrite_options,
             import_identifiers=import_identifiers,
             namespace_template=namespace_template,
             pinned_resource_ids=pinned_resource_ids,

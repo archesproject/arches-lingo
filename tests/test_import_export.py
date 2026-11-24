@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import uuid
 import zipfile
 from http import HTTPStatus
@@ -36,16 +37,19 @@ from arches_lingo.const import (
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
+    CONCEPT_TYPE_NODEGROUP,
     CONCEPTS_GRAPH_ID,
     DELEGATED_TO_CELERY,
     EXPORT_STATUS_COMPLETE,
     EXPORT_STATUS_QUEUED,
     LABEL_LIST_ID,
     LINGO_EDITOR_GROUP_NAME,
+    SCHEMES_GRAPH_ID,
 )
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
 from arches_lingo.tasks import export_lingo_resources_task
+from arches_lingo.utils.concept_lifecycle import PUBLISHED_STATE_ID
 from arches_lingo.utils.display_label import get_display_label
 from tests.tests import ViewTests
 
@@ -162,7 +166,7 @@ class ImportTests(TransactionTestCase):
             return serialized.encode("utf-8")
         return serialized
 
-    def _upload_thesaurus_file(self, content, file_name):
+    def _upload_thesaurus_file(self, content, file_name, overwrite_option="overwrite"):
         """Drive the uploaded-file import path, returning the importer and its response."""
         load_event = LoadEvent.objects.create(
             user_id=1, etl_module_id=self.moduleid, status="running"
@@ -172,7 +176,7 @@ class ImportTests(TransactionTestCase):
         request.user = User.objects.get(username="admin")
         request.POST["load_id"] = str(load_event.loadid)
         request.POST["module"] = str(self.moduleid)
-        request.POST["overwrite_option"] = "overwrite"
+        request.POST["overwrite_option"] = overwrite_option
         request.POST["action"] = "write"
         request.FILES = {
             "file": InMemoryUploadedFile(
@@ -233,6 +237,7 @@ class ImportTests(TransactionTestCase):
         4. Ensure that an import failure sends a notification to the user
         5. Importing the same thesaurus serialized as Turtle and as N-Triples
         6. Rejecting uploads that are not a supported RDF serialization
+        7. Re-importing a file: overwrite, ignore, and refusing uneditable resources
         """
 
         # 1. Test Import from SKOS via management command path
@@ -402,6 +407,72 @@ class ImportTests(TransactionTestCase):
         )
         self.assertFalse(response["success"])
         self.assertIn("not a text-based RDF serialization", str(response["message"]))
+
+        # 7. Re-importing the same file matches resources by subject URI.
+        # The fixture's URIs embed UUIDs, which would be matched on their own,
+        # so they are rewritten without one to exercise the URI lookup.
+        with open(self.fixture_path, "rb") as file:
+            file_data = re.sub(
+                rb"http://localhost:8000/([0-9a-f-]{36})",
+                lambda match: b"https://example.org/thesaurus/"
+                + match.group(1).replace(b"-", b""),
+                file.read(),
+            )
+        _, _, response = self._upload_thesaurus_file(file_data, self.file_name)
+        self.assertTrue(response["success"], response.get("message"))
+        resource_ids = set(ResourceInstance.objects.values_list("pk", flat=True))
+        tile_count = TileModel.objects.count()
+        type_tile_ids = set(
+            TileModel.objects.filter(nodegroup_id=CONCEPT_TYPE_NODEGROUP).values_list(
+                "pk", flat=True
+            )
+        )
+        label_tile_ids = set(
+            TileModel.objects.filter(nodegroup_id=CONCEPT_NAME_NODEGROUP).values_list(
+                "pk", flat=True
+            )
+        )
+
+        # 7a. Overwrite replaces SKOS-sourced tiles in place and keeps the rest
+        _, _, response = self._upload_thesaurus_file(file_data, self.file_name)
+        self.assertTrue(response["success"], response.get("message"))
+        self._assert_resources_loaded()
+        self.assertEqual(
+            set(ResourceInstance.objects.values_list("pk", flat=True)), resource_ids
+        )
+        self.assertEqual(TileModel.objects.count(), tile_count)
+        self.assertEqual(
+            set(
+                TileModel.objects.filter(
+                    nodegroup_id=CONCEPT_TYPE_NODEGROUP
+                ).values_list("pk", flat=True)
+            ),
+            type_tile_ids,
+        )
+        self.assertTrue(
+            label_tile_ids.isdisjoint(
+                TileModel.objects.filter(
+                    nodegroup_id=CONCEPT_NAME_NODEGROUP
+                ).values_list("pk", flat=True)
+            )
+        )
+
+        # 7b. Ignore leaves existing resources untouched
+        tile_ids = set(TileModel.objects.values_list("pk", flat=True))
+        _, _, response = self._upload_thesaurus_file(
+            file_data, self.file_name, overwrite_option="ignore"
+        )
+        self.assertTrue(response["success"], response.get("message"))
+        self.assertEqual(set(TileModel.objects.values_list("pk", flat=True)), tile_ids)
+
+        # 7c. Overwrite refuses resources whose lifecycle state forbids editing
+        scheme = ResourceInstance.objects.get(graph_id=SCHEMES_GRAPH_ID)
+        scheme.resource_instance_lifecycle_state_id = PUBLISHED_STATE_ID
+        scheme.save()
+        _, _, response = self._upload_thesaurus_file(file_data, self.file_name)
+        self.assertFalse(response["success"])
+        self.assertIn("cannot be overwritten", str(response["message"]))
+        self.assertEqual(set(TileModel.objects.values_list("pk", flat=True)), tile_ids)
 
 
 class ExportTests(TestCase):
