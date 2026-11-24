@@ -41,6 +41,11 @@ from arches_lingo.utils.aat.direct_tile_load import (
     tiledata_for_copy,
 )
 from arches_lingo.utils.aat.progress import report_elapsed
+from arches_lingo.utils.skos_reimport import (
+    delete_skos_sourced_tiles,
+    normalize_overwrite_option,
+    prepare_resources_for_reimport,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +135,13 @@ class LingoResourceImporter(BaseImportModule):
             if request
             else kwargs.get("namespace_template", "")
         )
+        self.overwrite_option = normalize_overwrite_option(
+            request.POST.get("overwrite_option")
+            if request
+            else kwargs.get("overwrite_option")
+        )
+        self.replaced_resource_ids = set()
+        self.imported_scheme_id = None
         # See utils.skos.load_pinned_resource_ids.
         self.pinned_resource_ids = (
             {} if request else kwargs.get("pinned_resource_ids", None) or {}
@@ -536,6 +548,7 @@ class LingoResourceImporter(BaseImportModule):
                             passes_validation=passes_validation,
                             operation=operation,
                             sortorder=sortorder,
+                            legacyid=concept_to_load.get("legacyid"),
                         )
                     )
             if tiles_to_load:
@@ -999,7 +1012,9 @@ class LingoResourceImporter(BaseImportModule):
         and materialising every concept with all of its tiles to read one value
         dominated the load.
         """
-        scheme_resourceid = str(self.schemes[0]["resourceinstanceid"])
+        scheme_resourceid = str(
+            self.imported_scheme_id or self.schemes[0]["resourceinstanceid"]
+        )
         scheme_resource = models.ResourceInstance.objects.get(pk=scheme_resourceid)
 
         if self.namespace_template:
@@ -1271,6 +1286,9 @@ class LingoResourceImporter(BaseImportModule):
                     )
                 )
 
+            if not self.scheme_conceptid:
+                self._prepare_skos_reimport()
+
             # Writing tiles directly skips the staging round trip, which for a
             # vocabulary-sized import is the overwhelming majority of the load.
             # Only offered for the SKOS path: the RDM migration below builds its
@@ -1281,6 +1299,7 @@ class LingoResourceImporter(BaseImportModule):
                 # behind with nothing in it.
                 with report_elapsed("write schemes + concepts", log=self.log):
                     with transaction.atomic():
+                        delete_skos_sourced_tiles(self.replaced_resource_ids)
                         self.load_directly(
                             cursor,
                             self.schemes,
@@ -1347,11 +1366,24 @@ class LingoResourceImporter(BaseImportModule):
                     """UPDATE load_event SET status = %s WHERE loadid = %s""",
                     ("validated", self.loadid),
                 )
+                # Replaced tiles are removed in the same transaction that writes
+                # their replacements, so a failed save leaves them in place.
                 with report_elapsed("staging -> tiles", log=self.log):
-                    if self.skip_indexing:
-                        save_to_tiles_without_indexing(self.userid, self.loadid)
-                    else:
-                        save_to_tiles(self.userid, self.loadid)
+                    with transaction.atomic():
+                        delete_skos_sourced_tiles(self.replaced_resource_ids)
+                        if self.skip_indexing:
+                            save_result = save_to_tiles_without_indexing(
+                                self.userid, self.loadid
+                            )
+                        else:
+                            save_result = save_to_tiles(self.userid, self.loadid)
+                        # A save that wrote the tiles but failed to index them
+                        # reports data "saved"; only an unwritten save rolls back.
+                        if (
+                            not save_result.get("success")
+                            and save_result.get("data") != "saved"
+                        ):
+                            raise Exception(save_result.get("message"))
                 with report_elapsed("resource_x_resource graphids", log=self.log):
                     cursor.execute(
                         """CALL __arches_update_resource_x_resource_with_graphids();"""
@@ -1379,6 +1411,21 @@ class LingoResourceImporter(BaseImportModule):
                     ("failed", datetime.now(), self.loadid),
                 )
         self._finalize_import()
+
+    def _prepare_skos_reimport(self):
+        # Recorded first: Ignore can drop the scheme itself from the load.
+        self.imported_scheme_id = (
+            self.schemes[0]["resourceinstanceid"] if self.schemes else None
+        )
+        resources_to_load, self.replaced_resource_ids = prepare_resources_for_reimport(
+            self.schemes + self.concepts, self.overwrite_option
+        )
+        self.schemes = [
+            resource for resource in resources_to_load if resource["type"] == "Scheme"
+        ]
+        self.concepts = [
+            resource for resource in resources_to_load if resource["type"] == "Concept"
+        ]
 
     def _graphs_have_geometry_nodes(self, cursor):
         cursor.execute(
@@ -1426,6 +1473,7 @@ class LingoResourceImporter(BaseImportModule):
                     "mode": self.mode,
                     "import_identifiers": self.import_identifiers,
                     "namespace_template": self.namespace_template,
+                    "overwrite_option": self.overwrite_option,
                 },
             ]
         )

@@ -15,6 +15,7 @@ from arches.extensions.controlled_lists.utils.skos import SKOSReader
 from arches.extensions.controlled_lists.models import List, ListItem
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
+from arches_lingo.utils.skos_reimport import find_resource_ids_by_subject_uri
 import arches_lingo.const as const
 
 logger = logging.getLogger(__name__)
@@ -97,14 +98,20 @@ class SKOSReader(SKOSReader):
     def generate_uuidv5_from_subject(self, baseuuid, subject):
         """Reuse a previously assigned resource id when one is known.
 
-        Falls back to the inherited derivation (which extracts an embedded
-        UUID if the subject URI contains one, else derives a uuid5) for
-        subjects that have no pinned id -- new concepts, and every subject when
-        no map was supplied.
+        A pinned id wins, then the id of a resource an earlier import loaded
+        from the same subject URI, so re-importing a file updates what it
+        loaded before rather than duplicating it. Otherwise falls back to the
+        inherited derivation, which extracts an embedded UUID if the subject
+        URI contains one, else derives a uuid5.
         """
         pinned_id = getattr(self, "pinned_resource_ids", {}).get(str(subject))
         if pinned_id is not None:
             return pinned_id
+        existing_id = getattr(self, "existing_resource_ids_by_subject", {}).get(
+            str(subject)
+        )
+        if existing_id is not None:
+            return existing_id
         return super().generate_uuidv5_from_subject(baseuuid, subject)
 
     def _get_gvp_relation_type_lookup(self):
@@ -140,6 +147,19 @@ class SKOSReader(SKOSReader):
         baseuuid = uuid.uuid4()
         self.import_identifiers = import_identifiers
         self.pinned_resource_ids = pinned_resource_ids or {}
+        self.existing_resource_ids_by_subject = (
+            find_resource_ids_by_subject_uri(
+                {
+                    str(subject)
+                    for subject in (
+                        *graph.subjects(RDF.type, SKOS.ConceptScheme),
+                        *graph.subjects(SKOS.inScheme, None),
+                    )
+                }
+            )
+            if isinstance(graph, Graph)
+            else {}
+        )
         self.allowed_languages = {}
         for lang in models.Language.objects.all():
             self.allowed_languages[lang.code] = lang
