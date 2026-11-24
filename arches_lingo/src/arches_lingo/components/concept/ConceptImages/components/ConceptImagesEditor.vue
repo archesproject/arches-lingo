@@ -33,7 +33,6 @@ import {
 
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { useWidgetConfigStore } from "@/arches_vue_components/stores/useWidgetConfigStore.ts";
 import { setLocalizedValue } from "@/arches_vue_components/datatypes/file-list/utils.ts";
 import { buildLanguageAliasedNodeData } from "@/arches_vue_components/datatypes/language/utils.ts";
 import { storeToRefs } from "pinia";
@@ -47,10 +46,11 @@ import {
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { Language } from "@/arches_vue_components/types.ts";
+import type { LanguageAliasedNodeData } from "@/arches_vue_components/datatypes/language/types.ts";
 import type { NonLocalizedTextAliasedNodeData } from "@/arches_vue_components/datatypes/non-localized-text/types.ts";
 import type {
     FileListAliasedNodeData,
-    FileListCardXNodeXWidgetData,
+    FileMetadataField,
     FileReference,
 } from "@/arches_vue_components/datatypes/file-list/types.ts";
 
@@ -80,14 +80,23 @@ const languageStore = useLanguageStore();
 
 const digitalObjectResource = ref<DigitalObjectInstance>();
 const digitalObjectLoaded = ref(false);
-const contentCardXNodeXWidgetData = ref<FileListCardXNodeXWidgetData>();
-const recordLanguageCode = ref<string>();
 
-const recordLanguage = computed<Language>(
-    () =>
-        languageStore.availableLanguages.find(
-            (language) => language.code === recordLanguageCode.value,
-        ) ?? languageStore.selectedLanguage,
+const HIDDEN_FILE_METADATA_FIELDS: FileMetadataField[] = [
+    "title",
+    "description",
+];
+
+const initialNameLanguage = computed(() =>
+    getLanguageAliasedNodeData(
+        digitalObjectResource.value?.aliased_data.name?.aliased_data
+            .name_language,
+    ),
+);
+const initialStatementLanguage = computed(() =>
+    getLanguageAliasedNodeData(
+        digitalObjectResource.value?.aliased_data.statement?.aliased_data
+            .statement_language,
+    ),
 );
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
@@ -109,36 +118,7 @@ const { targetDigitalObjectResourceInstanceId } = storeToRefs(
 
 onMounted(() => {
     getDigitalObjectInstance(targetDigitalObjectResourceInstanceId.value);
-    getContentCardXNodeXWidgetData();
 });
-
-// Lingo collects title and description in its own Title and Description
-// fields and copies them into the file record on save, so hide them in the
-// file widget the way a card hides a node: flip the field's visible bit.
-async function getContentCardXNodeXWidgetData() {
-    try {
-        const cardXNodeXWidgetData =
-            (await useWidgetConfigStore().fetchWidgetConfig(
-                DIGITAL_OBJECT_GRAPH_SLUG,
-                "content",
-            )) as FileListCardXNodeXWidgetData;
-        // The store shares one cached object, so copy rather than mutate it.
-        contentCardXNodeXWidgetData.value = {
-            ...cardXNodeXWidgetData,
-            config: {
-                ...cardXNodeXWidgetData.config,
-                metadataFields: {
-                    ...cardXNodeXWidgetData.config.metadataFields,
-                    title: { visible: false },
-                    description: { visible: false },
-                },
-                metadataLanguageSelect: { visible: true },
-            },
-        };
-    } catch (error) {
-        console.error(error);
-    }
-}
 
 watch(
     () => formRef.value,
@@ -155,9 +135,6 @@ async function getDigitalObjectInstance(resourceInstanceId?: string) {
                 resourceInstanceId,
             );
         }
-        recordLanguageCode.value = getInitialRecordLanguageCode(
-            digitalObjectResource.value?.aliased_data,
-        );
         digitalObjectLoaded.value = true;
         isLoading.value = false;
     } catch (error) {
@@ -165,34 +142,25 @@ async function getDigitalObjectInstance(resourceInstanceId?: string) {
     }
 }
 
-function getTileLanguageCode(
-    tileAliasedData: object | undefined,
-    languageNodeAlias: string,
-): string | undefined {
-    const languageNode = (
-        tileAliasedData as
-            | Record<string, { node_value?: unknown } | undefined>
-            | undefined
-    )?.[languageNodeAlias];
-    const languageCode = languageNode?.node_value;
-    return typeof languageCode === "string" && languageCode
-        ? languageCode
-        : undefined;
+function getLanguageAliasedNodeData(
+    aliasedNodeData: object | undefined,
+): LanguageAliasedNodeData {
+    const languageCode =
+        (aliasedNodeData as LanguageAliasedNodeData | undefined)?.node_value ||
+        languageStore.selectedLanguage.code;
+    return buildLanguageAliasedNodeData(
+        languageCode,
+        languageStore.availableLanguages,
+    );
 }
 
-function getInitialRecordLanguageCode(
-    digitalObjectInstanceAliases: DigitalObjectInstanceAliases | undefined,
-): string {
+function findLanguage(
+    languageAliasedNodeData: LanguageAliasedNodeData,
+): Language {
     return (
-        getTileLanguageCode(
-            digitalObjectInstanceAliases?.name?.aliased_data,
-            "name_language",
-        ) ??
-        getTileLanguageCode(
-            digitalObjectInstanceAliases?.statement?.aliased_data,
-            "statement_language",
-        ) ??
-        languageStore.selectedLanguage.code
+        languageStore.availableLanguages.find(
+            (language) => language.code === languageAliasedNodeData.node_value,
+        ) ?? languageStore.selectedLanguage
     );
 }
 
@@ -206,6 +174,8 @@ function getNonLocalizedText(aliasedNodeData: object | undefined): string {
 function withRecordTitleAndDescription(
     file: PossiblyNewFile,
     digitalObjectInstanceAliases: DigitalObjectInstanceAliases,
+    nameLanguage: Language,
+    statementLanguage: Language,
 ): PossiblyNewFile {
     const nameAliasedData = digitalObjectInstanceAliases.name?.aliased_data;
     const statementAliasedData =
@@ -215,12 +185,12 @@ function withRecordTitleAndDescription(
         ...file,
         title: setLocalizedValue(
             file.title,
-            recordLanguage.value,
+            nameLanguage,
             getNonLocalizedText(nameAliasedData?.name_content),
         ),
         description: setLocalizedValue(
             file.description,
-            recordLanguage.value,
+            statementLanguage,
             getNonLocalizedText(statementAliasedData?.statement_content),
         ),
     };
@@ -233,9 +203,11 @@ async function save(e: FormSubmitEvent) {
         const submittedFormData = e.values;
         const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
             digitalObjectResource.value?.aliased_data ?? {};
-        const recordLanguageAliasedNodeData = buildLanguageAliasedNodeData(
-            recordLanguage.value.code,
-            languageStore.availableLanguages,
+        const nameLanguageAliasedNodeData = getLanguageAliasedNodeData(
+            submittedFormData.name_language,
+        );
+        const statementLanguageAliasedNodeData = getLanguageAliasedNodeData(
+            submittedFormData.statement_language,
         );
 
         if (submittedFormData.name_content) {
@@ -243,7 +215,7 @@ async function save(e: FormSubmitEvent) {
                 ...digitalObjectInstanceAliases.name,
                 aliased_data: {
                     name_content: submittedFormData.name_content,
-                    name_language: recordLanguageAliasedNodeData,
+                    name_language: nameLanguageAliasedNodeData,
                 },
             } as DigitalObjectInstanceAliases["name"];
         }
@@ -252,7 +224,7 @@ async function save(e: FormSubmitEvent) {
                 ...digitalObjectInstanceAliases.statement,
                 aliased_data: {
                     statement_content: submittedFormData.statement_content,
-                    statement_language: recordLanguageAliasedNodeData,
+                    statement_language: statementLanguageAliasedNodeData,
                 },
             } as unknown as DigitalObjectInstanceAliases["statement"];
         }
@@ -268,6 +240,8 @@ async function save(e: FormSubmitEvent) {
                 withRecordTitleAndDescription(
                     file,
                     digitalObjectInstanceAliases,
+                    findLanguage(nameLanguageAliasedNodeData),
+                    findLanguage(statementLanguageAliasedNodeData),
                 ),
             ) ?? null;
 
@@ -427,6 +401,12 @@ function resetForm() {
                                 ?.aliased_data.name_content ?? null
                         "
                     />
+                    <GenericWidget
+                        node-alias="name_language"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="initialNameLanguage"
+                    />
                 </div>
                 <div class="widget-container column">
                     <GenericWidget
@@ -439,26 +419,24 @@ function resetForm() {
                         "
                         :render-context="MULTILINE_RENDER_CONTEXT"
                     />
+                    <GenericWidget
+                        node-alias="statement_language"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="initialStatementLanguage"
+                    />
                 </div>
-                <div
-                    v-if="contentCardXNodeXWidgetData"
-                    class="widget-container column"
-                >
+                <div class="widget-container column">
                     <GenericWidget
                         node-alias="content"
                         graph-slug="digital_object_system"
-                        :card-x-node-x-widget-data="contentCardXNodeXWidgetData"
                         :aliased-node-data="
                             digitalObjectResource?.aliased_data?.content
                                 ?.aliased_data.content ?? null
                         "
                         :mode="EDIT"
                         :should-show-label="false"
-                        :metadata-language-code="recordLanguageCode"
-                        @update:metadata-language-code="
-                            (languageCode: string) =>
-                                (recordLanguageCode = languageCode)
-                        "
+                        :hidden-metadata-fields="HIDDEN_FILE_METADATA_FIELDS"
                     />
                 </div>
             </Form>
