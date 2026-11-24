@@ -147,7 +147,8 @@
                         "defaultValue": [],
                         "label": "content",
                         "maxFilesize": "200",
-                        "rerender": true
+                        "rerender": true,
+                        "uneditable": false
                     },
                     "id": "1480df75-ef49-4666-9735-94b9ee37ecc5",
                     "label": {
@@ -268,16 +269,16 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Name Language",
+                        "label": "Image Title Language",
                         "placeholder": {
                             "en": "Select a language"
                         },
-                        "width": "100%",
-                        "uneditable": false
+                        "uneditable": false,
+                        "width": "100%"
                     },
                     "id": "78fc26ec-11e8-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Name Language"
+                        "en": "Image Title Language"
                     },
                     "node_id": "78fc24da-11e8-11ef-9493-0a58a9feac02",
                     "sortorder": 2,
@@ -446,16 +447,16 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Language",
+                        "label": "Image Description Language",
                         "placeholder": {
                             "en": "Select a language"
                         },
-                        "width": "100%",
-                        "uneditable": false
+                        "uneditable": false,
+                        "width": "100%"
                     },
                     "id": "8278f3d0-11e8-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Statement Language"
+                        "en": "Image Description Language"
                     },
                     "node_id": "8278eaac-11e8-11ef-9493-0a58a9feac02",
                     "sortorder": 1,
@@ -864,7 +865,7 @@
                 },
                 {
                     "alias": "name_language",
-                    "config": null,
+                    "config": {},
                     "datatype": "language",
                     "description": null,
                     "exportable": false,
@@ -1035,7 +1036,7 @@
                 },
                 {
                     "alias": "statement_language",
-                    "config": null,
+                    "config": {},
                     "datatype": "language",
                     "description": null,
                     "exportable": false,
@@ -1360,11 +1361,5 @@
             "user_permissions": {},
             "version": ""
         }
-    ],
-    "metadata": {
-        "db": "PostgreSQL 17.4 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
-        "git hash": "5a3811e3b3 2025-06-16 14:06:45 -0400",
-        "os": "Darwin",
-        "os version": "24.5.0"
-    }
+    ]
 }
