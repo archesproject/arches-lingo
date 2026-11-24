@@ -1399,7 +1399,7 @@ class LingoResourceImporter(BaseImportModule):
         if thesaurus_name is None and type(self.load_event.load_details) is list:
             thesaurus_name = self.load_event.load_details[1].get("thesaurus_name")
         user = models.User.objects.get(id=self.userid)
-        if self.load_event.status == "indexed":
+        if self.load_event.status in ("indexed", "completed"):
             message = (
                 _("{} import completed").format(thesaurus_name)
                 if thesaurus_name

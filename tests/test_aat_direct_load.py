@@ -647,6 +647,26 @@ class LoadDirectlyTests(DirectWriteTestCase):
         )
         mock_index_resources.assert_not_called()
 
+    @patch("arches_lingo.etl_modules.migrate_to_lingo.notify_completion")
+    def test_a_load_saved_without_indexing_is_reported_as_completed(
+        self, mock_notify_completion
+    ):
+        """Arches marks a load saved with index=False as "completed" rather
+        than "indexed", which is still a successful import."""
+        load_event = LoadEvent.objects.create(
+            user_id=1,
+            etl_module=ETLModule.objects.get(slug="migrate-to-lingo"),
+            status="completed",
+        )
+        importer = LingoResourceImporter(loadid=str(load_event.loadid), userid=1)
+        importer.thesaurus_name = "trumpets"
+
+        importer._finalize_import()
+
+        self.assertEqual(
+            mock_notify_completion.call_args.args[0], "trumpets import completed"
+        )
+
     @patch("arches_lingo.etl_modules.migrate_to_lingo.index_resources")
     @patch("arches_lingo.etl_modules.migrate_to_lingo.notify_completion")
     def test_a_bypassed_load_indexes_what_it_wrote_unless_told_not_to(
