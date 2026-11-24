@@ -363,14 +363,7 @@ class SKOSReader(SKOSReader):
                             SKOS.narrowMatch,
                             SKOS.relatedMatch,
                         ]:
-                            matched_URI = None
-                            for (
-                                matched_predicate,
-                                matched_object,
-                            ) in graph.predicate_objects(object):
-                                if matched_predicate == DCTERMS.identifier:
-                                    matched_URI = matched_object
-                                    break
+                            matched_URI = self.resolve_match_comparate(graph, object)
                             if matched_URI:
                                 mock_tile = self.map_predicate_object_to_mock_tile(
                                     matched_URI, predicate_str, isScheme
@@ -403,6 +396,22 @@ class SKOSReader(SKOSReader):
                     )
 
             return self.schemes, self.concepts
+
+    @staticmethod
+    def resolve_match_comparate(graph, matched_resource):
+        """Return the URI a match predicate points to, or None to skip it.
+
+        Arches RDM exports describe the matched concept and give its URI as a
+        dcterms:identifier, so that wins when present. Otherwise a plain
+        reference such as <skos:closeMatch rdf:resource="..."/> is its own URI.
+        """
+        identifier = graph.value(matched_resource, DCTERMS.identifier)
+        if identifier is not None:
+            return identifier
+        if isinstance(matched_resource, URIRef):
+            return str(matched_resource)
+        logger.warning("Skipping match whose target is not a URI: %s", matched_resource)
+        return None
 
     def language_exists(self, rdf_tag, allowed_languages):
         """
