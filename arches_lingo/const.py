@@ -126,6 +126,7 @@ CONCEPT_TYPE_LIST_ID = "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"
 
 ### URIs ###
 GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700"
+DEFAULT_CONCEPT_TYPE_URI = "http://vocab.getty.edu/page/aat/300387329"
 HIERARCHY_NAME_URI = "http://vocab.getty.edu/ontology#HierarchyNode"
 FACET_URI = "http://vocab.getty.edu/ontology#Facet"
 

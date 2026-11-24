@@ -31,6 +31,17 @@ OPEN_SKOS_NAMESPACE = Namespace(str(SKOS))
 # identifiers, so a predicate resolves to the relation type to record.
 GVP_TYPED_RELATION_PREFIX = "http://vocab.getty.edu/ontology#aat"
 VALID_LOCAL_NAME_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*")
+DEFAULT_CONCEPT_TYPE_LABEL = "concept"
+
+
+def normalize_concept_type_uri(uri):
+    """Getty publishes a concept at .../aat/<id> and its web page at
+    .../page/aat/<id>. The term types list stores the page form, so a file may
+    use either one.
+    """
+    return (
+        str(uri).rstrip("/").replace("://vocab.getty.edu/page/", "://vocab.getty.edu/")
+    )
 
 
 def subject_uri_for(resource_id, resource_uri_map=None):
@@ -93,6 +104,7 @@ class SKOSReader(SKOSReader):
         self.relations = defaultdict(list)
         self.prefLabel_valuetype = models.DValueType.objects.get(valuetype="prefLabel")
         self._gvp_relation_type_lookup = None
+        self._concept_type_lookup = None
 
     def generate_uuidv5_from_subject(self, baseuuid, subject):
         """Reuse a previously assigned resource id when one is known.
@@ -129,6 +141,17 @@ class SKOSReader(SKOSReader):
             )
             self._gvp_relation_type_lookup = {}
         return self._gvp_relation_type_lookup
+
+    def _get_concept_type_lookup(self):
+        """Return {normalized term type URI: list_item_id_str}, built on first use."""
+        if self._concept_type_lookup is None:
+            self._concept_type_lookup = {
+                normalize_concept_type_uri(item.uri): str(item.id)
+                for item in ListItem.objects.filter(
+                    list_id=const.CONCEPT_TYPE_LIST_ID
+                ).exclude(uri="")
+            }
+        return self._concept_type_lookup
 
     def extract_concepts_from_skos_for_lingo_import(
         self,
@@ -235,6 +258,7 @@ class SKOSReader(SKOSReader):
                         "type": "Concept",
                         "tile_data": [],
                     }
+                    concept_type = None
 
                     if top_concept_mock_tiles.get(concept_pk):
                         new_concept["tile_data"].append(
@@ -379,6 +403,14 @@ class SKOSReader(SKOSReader):
                                     new_concept["tile_data"].extend(mock_tile)
                                 elif mock_tile:
                                     new_concept["tile_data"].append(mock_tile)
+                        elif predicate == DCTERMS.type:
+                            # The type node holds one term type, so the first
+                            # one the term types list recognizes wins.
+                            concept_type = concept_type or (
+                                self._get_concept_type_lookup().get(
+                                    normalize_concept_type_uri(object)
+                                )
+                            )
                         else:
                             mock_tile = self.map_predicate_object_to_mock_tile(
                                 object, predicate_str, isScheme
@@ -389,7 +421,10 @@ class SKOSReader(SKOSReader):
                                 new_concept["tile_data"].append(mock_tile)
 
                     type_tile = {
-                        "type": {"type": "concept", "type_metatype": "classification"}
+                        "type": {
+                            "type": concept_type or DEFAULT_CONCEPT_TYPE_LABEL,
+                            "type_metatype": "classification",
+                        }
                     }
                     new_concept["tile_data"].append(type_tile)
 
@@ -584,6 +619,10 @@ class SKOSWriter:
         return URIRef(object_string)
 
     def transform_predicate_values(self, predicate_references):
+        # Checked before str, which URIRef subclasses: a full predicate URI is
+        # written as given, not read as a local name in the skos namespace.
+        if isinstance(predicate_references, URIRef):
+            return [predicate_references]
         if isinstance(predicate_references, str):
             return [OPEN_SKOS_NAMESPACE[predicate_references]]
         elif isinstance(predicate_references, list):
