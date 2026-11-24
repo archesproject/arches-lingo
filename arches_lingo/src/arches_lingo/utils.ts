@@ -719,6 +719,10 @@ function hasUrlUnsafeCharacter(text: string) {
     });
 }
 
+function isProtocolRelative(path: string) {
+    return /^\/[/\\]/.test(path);
+}
+
 /**
  * Return `value` if it is a same-origin path that is safe to redirect to
  * after sign-in (for example "/concept/123?scheme=1"), otherwise undefined.
@@ -733,7 +737,7 @@ export function getSafeNextPath(value: unknown): string | undefined {
     }
     if (
         !candidate.startsWith("/") ||
-        /^\/[/\\]/.test(candidate) ||
+        isProtocolRelative(candidate) ||
         hasUrlUnsafeCharacter(candidate)
     ) {
         return undefined;
@@ -745,7 +749,10 @@ export function getSafeNextPath(value: unknown): string | undefined {
     } catch {
         return undefined;
     }
-    if (parsedUrl.origin !== window.location.origin) {
+    if (
+        parsedUrl.origin !== window.location.origin ||
+        isProtocolRelative(parsedUrl.pathname)
+    ) {
         return undefined;
     }
     return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
