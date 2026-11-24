@@ -49,6 +49,52 @@ STRATEGY_REPARENT_TO_SURVIVOR = "reparent_to_survivor"
 VALID_STRATEGIES = {STRATEGY_REPARENT, STRATEGY_DELETE_CHILDREN, STRATEGY_ORPHAN}
 
 
+CANNOT_RECEIVE_NOT_EDITABLE = "not_editable"
+CANNOT_RECEIVE_SCHEME_LOCKED = "scheme_locked"
+
+
+def reasons_concepts_cannot_receive_data(
+    concept_ids, scheme_ids_by_concept_id, user_is_lingo_admin
+):
+    """Return ``{concept_id: reason}`` for concepts that may not take new tiles.
+
+    Absent means writable. The concept matching "link" action, the reconciliation
+    worksheet's ``editable`` column and the match-link import all apply this rule.
+    """
+    editable_ids = {
+        str(concept_id)
+        for concept_id in ResourceInstance.objects.filter(
+            pk__in=concept_ids,
+            resource_instance_lifecycle_state__can_edit_resource_instances=True,
+        ).values_list("pk", flat=True)
+    }
+    reasons = {
+        concept_id: CANNOT_RECEIVE_NOT_EDITABLE
+        for concept_id in concept_ids
+        if concept_id not in editable_ids
+    }
+    if user_is_lingo_admin:
+        return reasons
+
+    locked_scheme_ids = {
+        str(scheme_id)
+        for scheme_id in ResourceInstance.objects.filter(
+            pk__in={
+                scheme_id
+                for scheme_id in scheme_ids_by_concept_id.values()
+                if scheme_id
+            },
+            resource_instance_lifecycle_state_id=LOCKED_STATE_ID,
+        ).values_list("pk", flat=True)
+    }
+    for concept_id in concept_ids:
+        if concept_id not in reasons and (
+            scheme_ids_by_concept_id.get(concept_id) in locked_scheme_ids
+        ):
+            reasons[concept_id] = CANNOT_RECEIVE_SCHEME_LOCKED
+    return reasons
+
+
 def get_narrower_ids(concept_id: str) -> set[str]:
     return {
         str(pk)
