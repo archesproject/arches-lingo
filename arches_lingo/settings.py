@@ -635,6 +635,13 @@ LINGO_RECONCILIATION_SERVICE_NAME = "Arches Lingo"
 # which every server process must share.
 LINGO_RECONCILIATION_RATE_LIMIT = None
 
+# Imports and exports larger than these are handed to a Celery worker, and are
+# refused when no worker is running. Smaller ones run inside the web request, so
+# keep these within the time the web server allows a request to take. An import
+# runs at roughly 60 KB of SKOS (about 80 concepts) a second.
+LINGO_IMPORT_CELERY_BYTE_SIZE_LIMIT = 1_000_000  # bytes of uploaded SKOS file
+LINGO_CELERY_CONCEPT_COUNT_THRESHOLD = 1000  # concepts migrated or exported
+
 RESOURCE_LIST_PAGE_SIZE = 25
 
 try:

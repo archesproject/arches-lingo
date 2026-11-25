@@ -28,6 +28,11 @@ from arches.extensions.querysets.models import ResourceTileTree
 from arches.app.tasks import notify_completion
 
 from arches_lingo import const
+from arches_lingo.utils.celery_thresholds import (
+    CONCEPT_COUNT_THRESHOLD_SETTING,
+    celery_unavailable_message,
+    get_celery_concept_count_threshold,
+)
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.display_label import get_display_label
 from arches_lingo.utils.skos import SKOSWriter
@@ -101,12 +106,11 @@ class LingoResourceExporter:
             )
             return self._handle_error(error)
 
-        if concept_count > const.CELERY_CONCEPT_COUNT_THRESHOLD:
+        if concept_count > get_celery_concept_count_threshold():
             if not task_management.check_if_celery_available():
-                error = _(
-                    "The thesaurus exceeds the threshold for synchronous export, but Celery is not available. Please contact your system administrator."
+                return self._handle_error(
+                    celery_unavailable_message(CONCEPT_COUNT_THRESHOLD_SETTING)
                 )
-                return self._handle_error(error)
             from arches_lingo import tasks as lingo_tasks
 
             task = lingo_tasks.export_lingo_resources_task.apply_async(

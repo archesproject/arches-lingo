@@ -12,7 +12,7 @@ from django.contrib.auth.models import Group, User
 from django.core import management
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpRequest
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 from rdflib import Graph
@@ -404,6 +404,49 @@ class ImportTests(TransactionTestCase):
         self.assertIn("not a text-based RDF serialization", str(response["message"]))
 
 
+class ImportCeleryThresholdTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        ImportTests.register_etl_module()
+        cls.moduleid = ETLModule.objects.get(slug="migrate-to-lingo").pk
+
+    @override_settings(LINGO_IMPORT_CELERY_BYTE_SIZE_LIMIT=10)
+    @patch(
+        "arches_lingo.etl_modules.migrate_to_lingo.task_management.check_if_celery_available",
+        return_value=False,
+    )
+    def test_import_over_the_limit_without_celery_names_the_setting(
+        self, mock_celery_available
+    ):
+        content = b'<?xml version="1.0"?><rdf:RDF/>'
+        load_event = LoadEvent.objects.create(
+            user_id=1, etl_module_id=self.moduleid, status="running"
+        )
+        request = HttpRequest()
+        request.method = "POST"
+        request.user = User.objects.get(username="admin")
+        request.POST["load_id"] = str(load_event.loadid)
+        request.POST["module"] = str(self.moduleid)
+        request.FILES = {
+            "file": InMemoryUploadedFile(
+                file=BytesIO(content),
+                field_name="file",
+                name="thesaurus.xml",
+                content_type="application/xml",
+                size=len(content),
+                charset=None,
+            )
+        }
+
+        with self.assertLogs(
+            "arches_lingo.etl_modules.migrate_to_lingo", level="ERROR"
+        ):
+            response = LingoResourceImporter(request=request).write(request=request)
+
+        self.assertFalse(response["success"])
+        self.assertIn("LINGO_IMPORT_CELERY_BYTE_SIZE_LIMIT", response["message"])
+
+
 class ExportTests(TestCase):
 
     @classmethod
@@ -675,7 +718,23 @@ class ExportTests(TestCase):
 
         self.assertEqual(get_display_label(unlabelled_concept.pk), "")
 
-    @patch("arches_lingo.const.CELERY_CONCEPT_COUNT_THRESHOLD", 0)
+    @override_settings(LINGO_CELERY_CONCEPT_COUNT_THRESHOLD=0)
+    @patch(
+        "arches_lingo.etl_modules.lingo_resource_exporter.task_management.check_if_celery_available",
+        return_value=False,
+    )
+    def test_export_over_the_threshold_without_celery_names_the_setting(
+        self, mock_celery_available
+    ):
+        with self.assertLogs(
+            "arches_lingo.etl_modules.lingo_resource_exporter", level="ERROR"
+        ):
+            response = self._run_export(self.test_scheme.pk, "ttl")
+
+        self.assertFalse(response["success"])
+        self.assertIn("LINGO_CELERY_CONCEPT_COUNT_THRESHOLD", response["message"])
+
+    @override_settings(LINGO_CELERY_CONCEPT_COUNT_THRESHOLD=0)
     @patch("arches_lingo.tasks.export_lingo_resources_task.apply_async")
     @patch(
         "arches_lingo.etl_modules.lingo_resource_exporter.task_management.check_if_celery_available",

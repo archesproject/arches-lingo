@@ -41,6 +41,13 @@ from arches_lingo.utils.aat.direct_tile_load import (
     tiledata_for_copy,
 )
 from arches_lingo.utils.aat.progress import report_elapsed
+from arches_lingo.utils.celery_thresholds import (
+    CONCEPT_COUNT_THRESHOLD_SETTING,
+    IMPORT_BYTE_SIZE_LIMIT_SETTING,
+    celery_unavailable_message,
+    get_celery_concept_count_threshold,
+    get_import_celery_byte_size_limit,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1149,12 +1156,13 @@ class LingoResourceImporter(BaseImportModule):
                 .flatten()
             )
             try:
-                if num_concepts_to_import <= const.CELERY_CONCEPT_COUNT_THRESHOLD:
+                if num_concepts_to_import <= get_celery_concept_count_threshold():
                     self.run_load_task()
-                elif num_concepts_to_import > const.CELERY_CONCEPT_COUNT_THRESHOLD:
+                else:
                     if not task_management.check_if_celery_available():
                         return self.return_with_error(
-                            task_management.CeleryNotAvailableError()
+                            task_management.CeleryNotAvailableError(),
+                            threshold_setting=CONCEPT_COUNT_THRESHOLD_SETTING,
                         )
                     self.run_load_task_async(request, self.loadid)
                 message = "Schemes and Concept Migration to Lingo Models Complete"
@@ -1190,8 +1198,10 @@ class LingoResourceImporter(BaseImportModule):
             )
             self.load_event.save()
 
+            # A limit in the ETL module's config (as the packages command sets)
+            # takes precedence over the setting.
             use_celery_file_size_threshold = self.config.get(
-                "celeryByteSizeLimit", 100000
+                "celeryByteSizeLimit", get_import_celery_byte_size_limit()
             )
             try:
                 if self.file.size <= use_celery_file_size_threshold:
@@ -1212,7 +1222,8 @@ class LingoResourceImporter(BaseImportModule):
                 elif self.file.size > use_celery_file_size_threshold:
                     if not task_management.check_if_celery_available():
                         return self.return_with_error(
-                            task_management.CeleryNotAvailableError()
+                            task_management.CeleryNotAvailableError(),
+                            threshold_setting=IMPORT_BYTE_SIZE_LIMIT_SETTING,
                         )
                     # Save file to temp storage so it can be accessed by celery worker
                     temp_dir = os.path.join(
@@ -1435,7 +1446,7 @@ class LingoResourceImporter(BaseImportModule):
                 (task.task_id, self.loadid),
             )
 
-    def return_with_error(self, error):
+    def return_with_error(self, error, threshold_setting=None):
         logger.error(error)
         if not self.load_event:
             self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
@@ -1446,9 +1457,7 @@ class LingoResourceImporter(BaseImportModule):
         if thesaurus_name is None and type(self.load_event.load_details) is list:
             thesaurus_name = self.load_event.load_details[1].get("thesaurus_name")
         if isinstance(error, task_management.CeleryNotAvailableError):
-            message = _(
-                "The thesaurus exceeds threshold for synchronous processing, but Celery is not available. Please contact your system administrator."
-            )
+            message = celery_unavailable_message(threshold_setting)
             error = message
         else:
             message = (

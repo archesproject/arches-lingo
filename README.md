@@ -77,6 +77,13 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
     and start a worker for that queue alongside your usual one, e.g. `celery -A <project> worker -Q lingo_matching`. Left unset, match searches use the default queue. Without a worker, a search can still be run from the command line with `python manage.py detect_concept_matches`.
 
+    Large thesaurus imports and exports also run on a worker, and are refused when none is running. Smaller ones run inside the web request. Where the line falls is set by:
+    ```
+    LINGO_IMPORT_CELERY_BYTE_SIZE_LIMIT = 1_000_000  # bytes of uploaded SKOS file; the default
+    LINGO_CELERY_CONCEPT_COUNT_THRESHOLD = 1000  # concepts migrated from the RDM or exported; the default
+    ```
+    An import runs at roughly 60 KB of SKOS (about 80 concepts) a second, so keep these within the time your web server allows a request to take.
+
 4. Optionally, enable anonymous (read-only) access by adding the following setting to your project's `settings.py` or `settings_local.py`:
     ```
     LINGO_ALLOW_ANONYMOUS_ACCESS = True
