@@ -745,8 +745,15 @@ class CandidateReviewTests(ConceptMatchingTestCase):
 
     def test_the_queue_can_be_filtered_by_either_concepts_labels(self):
         run = self.label_three_concepts_one_also_brass()
+        self.add_label(self.first_concept, "instruments à vent", language="fr")
 
-        for search, expected_count in (("BRASS", 2), ("trumpet", 3), ("%", 0)):
+        for search, expected_count in (
+            ("BRASS", 2),
+            ("trumpet", 3),
+            ("%", 0),
+            ("a vent", 2),
+            ("À VENT", 2),
+        ):
             with self.subTest(search=search):
                 page = serialize_candidate_page(run, search=search)
                 self.assertEqual(page["total_results"], expected_count)

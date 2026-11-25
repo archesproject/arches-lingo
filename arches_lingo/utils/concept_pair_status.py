@@ -24,6 +24,7 @@ from arches_lingo.models import (
     ConceptMerge,
     ConceptPairDismissal,
 )
+from arches_lingo.utils.concepts import UNACCENT_FUNCTION
 
 STATUS_PENDING = ConceptMatchCandidate.STATUS_PENDING
 STATUS_DISMISSED = ConceptMatchCandidate.STATUS_DISMISSED
@@ -86,7 +87,7 @@ def _review_status_sql():
 
 def _label_search_sql(search):
     """Return (sql, params) true when either concept has a label containing
-    `search`, ignoring case."""
+    `search`, ignoring case and diacritics."""
     escaped_search = (
         search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
     )
@@ -98,7 +99,9 @@ def _label_search_sql(search):
                AND label_tile.resourceinstanceid IN (
                        {CANDIDATE_TABLE}.concept_a_id, {CANDIDATE_TABLE}.concept_b_id
                    )
-               AND label_tile.tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}' ILIKE %s
+               AND {UNACCENT_FUNCTION}(
+                       label_tile.tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}'
+                   ) ILIKE {UNACCENT_FUNCTION}(%s)
         )
     """
     return sql, [f"%{escaped_search}%"]
