@@ -3,6 +3,7 @@ import { computed, inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useDialogFocusReturn } from "@/arches_lingo/composables/useDialogFocusReturn.ts";
+import { useEditorDirtyState } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { setPageTitleDetail } from "@/arches_lingo/composables/usePageTitle.ts";
 
@@ -106,6 +107,7 @@ const toast = useToast();
 const { copyToClipboard } = useCopyToClipboard();
 const { $gettext, $ngettext, interpolate } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+const { isEditorDirty } = useEditorDirtyState();
 
 const scheme = ref<ResourceInstanceResult>();
 const schemeResource = ref<Labellable>();
@@ -196,7 +198,7 @@ const hasPersistedResourceInstance = computed(() => {
 });
 
 const store = useResourceStore();
-const { isEditor, isLingoAdmin } = useUserStore();
+const { isEditor, isLingoAdmin } = storeToRefs(useUserStore());
 const { publicServerAddress, reconciliationEnabled } = storeToRefs(
     useAppSettingsStore(),
 );
@@ -267,7 +269,7 @@ watch(
 
 const canEditResourceInstances = computed(() => {
     return (
-        isEditor &&
+        isEditor.value &&
         !isLocked.value &&
         hasPersistedResourceInstance.value &&
         Boolean(currentLifecycleState.value?.can_edit_resource_instances)
@@ -276,7 +278,7 @@ const canEditResourceInstances = computed(() => {
 
 const canDeleteResourceInstances = computed(() => {
     return (
-        isEditor &&
+        isEditor.value &&
         !isLocked.value &&
         hasPersistedResourceInstance.value &&
         Boolean(currentLifecycleState.value?.can_delete_resource_instances)
@@ -294,7 +296,7 @@ const defaultSchemeURITemplate = computed(() => {
     }
 
     const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
-    return `${normalizedBaseUrl}/scheme/<scheme_identifier>/concept/<concept_identifier>`;
+    return `${normalizedBaseUrl}/schemes/<scheme_identifier>/concepts/<concept_identifier>`;
 });
 
 const schemeUri = computed(() => {
@@ -464,36 +466,34 @@ function onConceptIdentifierCounterUpdate(updatedCounter: {
     conceptIdentifierCounter.value = updatedCounter.conceptIdentifierCounter;
 }
 
+const isDeletingScheme = ref(false);
+
+function getDeleteConfirmMessage(schemeName: string) {
+    if (isEditorDirty.value) {
+        return interpolate(
+            $gettext(
+                'Delete the scheme "%{name}" and discard your unsaved changes? Its concepts are not deleted, but they will no longer belong to a scheme. This cannot be undone.',
+            ),
+            { name: schemeName },
+            true,
+        );
+    }
+    return interpolate(
+        $gettext(
+            'Delete the scheme "%{name}"? Its concepts are not deleted, but they will no longer belong to a scheme. This cannot be undone.',
+        ),
+        { name: schemeName },
+        true,
+    );
+}
+
 function confirmDelete() {
+    const schemeName = label.value?.value || $gettext("Untitled");
     confirm.require({
-        header: $gettext("Confirmation"),
-        message: $gettext("Are you sure you want to delete this scheme?"),
+        header: $gettext("Delete Scheme"),
+        message: getDeleteConfirmMessage(schemeName),
         group: "delete-scheme",
-        accept: () => {
-            if (!scheme.value) {
-                return;
-            }
-
-            try {
-                deleteLingoResource(
-                    props.graphSlug,
-                    scheme.value.resourceinstanceid,
-                ).then(() => {
-                    router.push({
-                        name: routeNames.schemes,
-                    });
-
-                    refreshSchemeHierarchy!();
-                });
-            } catch (error) {
-                toast.add({
-                    severity: ERROR,
-                    life: DEFAULT_ERROR_TOAST_LIFE,
-                    summary: $gettext("Error deleting scheme"),
-                    detail: error instanceof Error ? error.message : undefined,
-                });
-            }
-        },
+        accept: () => deleteScheme(schemeName),
         rejectProps: {
             label: $gettext("Cancel"),
             severity: SECONDARY,
@@ -504,6 +504,43 @@ function confirmDelete() {
             severity: DANGER,
         },
     });
+}
+
+async function deleteScheme(schemeName: string) {
+    if (!scheme.value || isDeletingScheme.value) {
+        return;
+    }
+
+    isDeletingScheme.value = true;
+    try {
+        await deleteLingoResource(
+            props.graphSlug,
+            scheme.value.resourceinstanceid,
+        );
+        // The scheme is gone, so its unsaved edits can't be saved, and the
+        // unsaved-changes guard mustn't keep the user on the deleted page.
+        isEditorDirty.value = false;
+        await router.push({ name: routeNames.schemes });
+        refreshSchemeHierarchy!();
+        toast.add({
+            severity: SUCCESS,
+            life: DEFAULT_TOAST_LIFE,
+            summary: interpolate(
+                $gettext('Scheme "%{name}" deleted'),
+                { name: schemeName },
+                true,
+            ),
+        });
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Error deleting scheme"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isDeletingScheme.value = false;
+    }
 }
 
 function onLifecycleStateChange(
@@ -714,6 +751,8 @@ async function onReinstateConfirmed(cascade: boolean) {
                         class="delete-button"
                         :label="$gettext('Delete')"
                         :aria-label="$gettext('Delete Scheme')"
+                        :loading="isDeletingScheme"
+                        :disabled="isDeletingScheme"
                         @click="confirmDelete"
                     />
 

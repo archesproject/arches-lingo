@@ -14,6 +14,7 @@ import { applyHighContrast, isHighContrastPreferred } from '@/arches_lingo/theme
 import { useUserStore } from '@/arches_lingo/stores/useUserStore.ts';
 import { useAppSettingsStore } from '@/arches_lingo/stores/useAppSettingsStore.ts';
 import { routeNames } from '@/arches_lingo/routes.ts';
+import { getSafeNextPath } from '@/arches_lingo/utils.ts';
 
 applyHighContrast(isHighContrastPreferred());
 
@@ -24,14 +25,24 @@ const router = createRouter({
     routes,
 });
 
-router.beforeEach(async (to, _from, next) => {
+router.beforeEach(async (to, from, next) => {
     const userStore = useUserStore(pinia);
     const appSettingsStore = useAppSettingsStore(pinia);
 
+    // Query-only navigations (tree clicks, filter keystrokes, match-review
+    // paging) stay on the same page, so they reuse the user fetched for it.
+    // The first navigation has no matched records and always refreshes.
+    const isSamePageNavigation =
+        from.matched.length > 0 && to.path === from.path;
+
     await Promise.allSettled([
-        userStore.refresh(),
+        isSamePageNavigation ? Promise.resolve() : userStore.refresh(),
         appSettingsStore.initialize(),
     ]);
+
+    if (to.name === routeNames.login && !userStore.isAnonymous) {
+        return next(getSafeNextPath(to.query.next) ?? { name: routeNames.dashboard });
+    }
 
     const isAlwaysPublic = to.matched.some((record) => record.meta.alwaysPublic);
     if (isAlwaysPublic) return next();

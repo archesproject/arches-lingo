@@ -4,6 +4,7 @@ import {
     EDITING_LIFECYCLE_STATE_ID,
     GUIDE_TERM_ICON,
     LOCKED_LIFECYCLE_STATE_ID,
+    NEW,
     PUBLISHED_LIFECYCLE_STATE_ID,
     RETIRED_LIFECYCLE_STATE_ID,
     SCHEME_ICON,
@@ -14,10 +15,14 @@ import {
     dataIsConcept,
     focusNeighborAfterRemoval,
     focusWithoutScrolling,
+    getCurrentResourceId,
+    getSafeNextPath,
     getSplitterGutterPassThrough,
     scaleWithRootFontSize,
+    splitLabelForFilterHighlight,
     treeFromSchemes,
 } from "@/arches_lingo/utils.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
 
 import type { Language } from "@/arches_vue_components/types.ts";
@@ -329,4 +334,116 @@ describe("Focus and sizing helpers", () => {
         expect(document.activeElement).toBe(button);
         expect(button.hasAttribute("tabindex")).toBe(false);
     });
+});
+
+describe("splitLabelForFilterHighlight", () => {
+    it("highlights matches case-insensitively", () => {
+        expect(splitLabelForFilterHighlight("Oak and oak", "OAK")).toEqual([
+            { text: "Oak", highlight: true },
+            { text: " and ", highlight: false },
+            { text: "oak", highlight: true },
+        ]);
+    });
+
+    it.each(["(", "+", "?", "[", "a.c", "\\"])(
+        "treats %s as literal text",
+        (filter) => {
+            const parts = splitLabelForFilterHighlight("abc (a.c) + ?", filter);
+            expect(parts.map((part) => part.text).join("")).toBe(
+                "abc (a.c) + ?",
+            );
+        },
+    );
+
+    it("matches regex characters literally", () => {
+        expect(splitLabelForFilterHighlight("abc (a.c)", "a.c")).toEqual([
+            { text: "abc (", highlight: false },
+            { text: "a.c", highlight: true },
+            { text: ")", highlight: false },
+        ]);
+    });
+});
+
+describe("getSafeNextPath", () => {
+    it.each(["/", "/concept/123?scheme=1", "/schemes#top"])(
+        "accepts the same-origin path %s",
+        (path) => {
+            expect(getSafeNextPath(path)).toBe(path);
+        },
+    );
+
+    it.each([
+        "https://example.com/",
+        "//example.com/",
+        "/\\example.com/",
+        "/\t/example.com/",
+        "/\n/example.com/",
+        "/\r/example.com/",
+        "/\t\\example.com/",
+        "/.//example.com/",
+        "/..//example.com/",
+        "/%2e//example.com/",
+        "/./\\example.com/",
+        "/a/..//example.com/",
+        " /dashboard",
+        "/dash board",
+        "/\u0000/example.com/",
+        "javascript:alert(1)",
+        "concept/123",
+        "",
+        undefined,
+        null,
+    ])("rejects %s", (value) => {
+        expect(getSafeNextPath(value)).toBeUndefined();
+    });
+
+    it("uses the first value of a repeated query param", () => {
+        expect(getSafeNextPath(["/dashboard", "//evil"])).toBe("/dashboard");
+    });
+});
+
+function makeRoute(
+    name: string,
+    params: Record<string, string> = {},
+    meta: Record<string, unknown> = {},
+) {
+    return { name, params, meta };
+}
+
+describe("getCurrentResourceId", () => {
+    it("reads params.id on concept and scheme routes", () => {
+        expect(
+            getCurrentResourceId(makeRoute(routeNames.concept, { id: "c1" })),
+        ).toBe("c1");
+        expect(
+            getCurrentResourceId(makeRoute(routeNames.scheme, { id: "s1" })),
+        ).toBe("s1");
+    });
+
+    it("prefers the resolved id on identifier routes", () => {
+        expect(
+            getCurrentResourceId(
+                makeRoute(
+                    routeNames.conceptByIdentifier,
+                    { scheme: "abc", concept: "12" },
+                    { resolvedResourceId: "c2" },
+                ),
+            ),
+        ).toBe("c2");
+    });
+
+    it("returns NEW on /concept/new", () => {
+        expect(
+            getCurrentResourceId(makeRoute(routeNames.concept, { id: NEW })),
+        ).toBe(NEW);
+    });
+
+    it.each([routeNames.source, routeNames.contributor])(
+        "ignores the id on %s routes",
+        (name) => {
+            expect(
+                getCurrentResourceId(makeRoute(name, { id: "r1" })),
+            ).toBeUndefined();
+        },
+    );
 });

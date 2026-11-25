@@ -47,6 +47,8 @@ function getToken() {
     return token;
 }
 
+export class ResourceNotFoundError extends Error {}
+
 export const login = async (username: string, password: string) => {
     const response = await fetch(arches.urls.api_login, {
         method: "POST",
@@ -155,6 +157,9 @@ export const fetchLingoResource = async (
     const response = await fetch(
         arches.urls.api_lingo_resource(graphSlug, resourceInstanceId),
     );
+    if (response.status === 404) {
+        throw new ResourceNotFoundError(response.statusText);
+    }
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
@@ -1063,6 +1068,7 @@ export const resolveSchemeIdentifier = async (
     });
 
     const response = await fetch(url);
+    if (response.status === 404) return null;
     const parsedResponseBody = await response.json();
     if (!response.ok) {
         throw new Error(parsedResponseBody.message || response.statusText);
@@ -1080,6 +1086,7 @@ export const resolveConceptIdentifier = async (
     });
 
     const response = await fetch(url);
+    if (response.status === 404) return null;
     const parsedResponseBody = await response.json();
     if (!response.ok) {
         throw new Error(parsedResponseBody.message || response.statusText);

@@ -10,8 +10,7 @@ import {
     watch,
 } from "vue";
 
-import { useRoute } from "vue-router";
-import { useConfirm } from "primevue/useconfirm";
+import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -38,12 +37,17 @@ import {
 import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
+    useConfirmDiscard,
     useEditorDirtyState,
-    unsavedChangesConfirmOptions,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
+import { useEscapeToCloseEditor } from "@/arches_lingo/composables/useEscapeToCloseEditor.ts";
 
 import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
-import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
+import { getNotFoundLocation } from "@/arches_lingo/routes.ts";
+import {
+    focusWithoutScrolling,
+    getCurrentResourceId,
+} from "@/arches_lingo/utils.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { getSplitterGutterPassThrough } from "@/arches_lingo/utils.ts";
 
@@ -61,9 +65,10 @@ const props = defineProps<{
 
 const toast = useToast();
 const route = useRoute();
-const confirm = useConfirm();
+const router = useRouter();
 const { $gettext } = useGettext();
 const { isEditorDirty } = useEditorDirtyState();
+const { confirmDiscard } = useConfirmDiscard();
 const { announce } = useAnnouncer();
 const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
 
@@ -98,18 +103,19 @@ const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
 
 const resourceInstanceId = computed<string | undefined>(() => {
-    if (route.meta.resolvedResourceId) {
-        return route.meta.resolvedResourceId as string;
-    }
-    if (route.params.id && route.params.id !== NEW) {
-        return route.params.id as string;
-    }
-    return undefined;
+    const currentResourceId = getCurrentResourceId(route);
+    return currentResourceId === NEW ? undefined : currentResourceId;
 });
 
 const graphSlug = props.componentData[0]?.graphSlug;
 const resourceStore = createResourceStore(graphSlug, resourceInstanceId.value);
 provideResourceStore(resourceStore);
+
+watch(resourceStore.isNotFound, (isNotFound) => {
+    if (isNotFound) {
+        router.replace(getNotFoundLocation(route));
+    }
+});
 
 const firstComponentDatum = computed(() => {
     return processedComponentData.value[0];
@@ -126,50 +132,16 @@ watch(resourceInstanceId, async () => {
     await loadResourceInstanceLifecycleState();
 });
 
-const isConfirmDialogOpen = ref(false);
-
 onMounted(() => {
     if (route.params.id === NEW) {
         initNewLabel();
     }
 });
 
-window.addEventListener(
-    "keydown",
-    (event) => {
-        if (event.key === "Escape" && editorState.value !== CLOSED) {
-            if (isConfirmDialogOpen.value) {
-                return;
-            }
-            if (isEditorDirty.value) {
-                // Stop propagation so PrimeVue's document-level keydown handler
-                // doesn't immediately close the dialog we're about to open.
-                event.stopPropagation();
-                confirmDiscard(closeEditor);
-            } else {
-                closeEditor();
-            }
-        }
-    },
-    true,
-);
-
-function confirmDiscard(callback: () => void) {
-    isConfirmDialogOpen.value = true;
-
-    confirm.require({
-        ...unsavedChangesConfirmOptions($gettext, () => {
-            isConfirmDialogOpen.value = false;
-            callback();
-        }),
-        reject: () => {
-            isConfirmDialogOpen.value = false;
-        },
-        onHide: () => {
-            isConfirmDialogOpen.value = false;
-        },
-    });
-}
+useEscapeToCloseEditor({
+    isEditorOpen: () => editorState.value !== CLOSED,
+    closeEditor,
+});
 
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditorAfterSave);
@@ -255,7 +227,9 @@ function doOpenEditor(componentName: string, tileId?: string) {
 
 function openEditor(componentName: string, tileId?: string) {
     if (editorState.value !== CLOSED && isEditorDirty.value) {
-        confirmDiscard(() => doOpenEditor(componentName, tileId));
+        confirmDiscard({
+            onDiscard: () => doOpenEditor(componentName, tileId),
+        });
     } else {
         doOpenEditor(componentName, tileId);
     }
@@ -327,6 +301,12 @@ async function loadResourceInstanceLifecycleState() {
             await fetchResourceInstanceLifecycleState(resourceInstanceId.value);
     } catch (error) {
         resourceInstanceLifecycleState.value = undefined;
+
+        // A missing resource gets the not-found page instead.
+        await resourceStore.initialLoad;
+        if (resourceStore.isNotFound.value) {
+            return;
+        }
 
         toast.add({
             severity: ERROR,

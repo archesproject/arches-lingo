@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, computed, ref, onMounted, watch } from "vue";
+import { storeToRefs } from "pinia";
 import { RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
@@ -30,7 +31,7 @@ const props = defineProps<{
 }>();
 
 const { $gettext } = useGettext();
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");

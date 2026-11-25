@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, useId } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
@@ -61,7 +62,7 @@ const createTooltipText = computed(() => {
         "This scheme is not editable in its current lifecycle state",
     );
 });
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 
 const buttonLabel = computed(() => {
     if (props.tileData) {

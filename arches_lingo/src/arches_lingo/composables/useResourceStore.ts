@@ -1,6 +1,7 @@
-import { provide, inject, ref, readonly } from "vue";
+import { computed, provide, inject, ref, readonly } from "vue";
 
 import {
+    ResourceNotFoundError,
     fetchLingoResource,
     fetchLingoResourcePartial,
 } from "@/arches_lingo/api.ts";
@@ -12,6 +13,8 @@ export interface ResourceStore {
     resource: Readonly<Ref<ResourceInstanceResult | null>>;
     isLoading: Readonly<Ref<boolean>>;
     error: Readonly<Ref<Error | null>>;
+    isNotFound: Readonly<Ref<boolean>>;
+    initialLoad: Promise<void>;
     refreshNodegroup: (nodegroupAlias: string) => Promise<void>;
     refreshResource: () => Promise<void>;
 }
@@ -27,6 +30,9 @@ export function createResourceStore(
     const resource = ref<ResourceInstanceResult | null>(null);
     const isLoading = ref(!!resourceInstanceId);
     const error = ref<Error | null>(null);
+    const isNotFound = computed(
+        () => error.value instanceof ResourceNotFoundError,
+    );
 
     async function fetchFullResource() {
         if (!resourceInstanceId) {
@@ -73,7 +79,7 @@ export function createResourceStore(
     }
 
     // Start initial fetch immediately
-    fetchFullResource();
+    const initialLoad = fetchFullResource();
 
     return {
         resource: readonly(resource) as Readonly<
@@ -81,6 +87,8 @@ export function createResourceStore(
         >,
         isLoading: readonly(isLoading),
         error: readonly(error),
+        isNotFound,
+        initialLoad,
         refreshNodegroup,
         refreshResource,
     };

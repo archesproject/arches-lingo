@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, onUnmounted, ref, useId } from "vue";
+import { storeToRefs } from "pinia";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -40,7 +41,7 @@ const focusSectionHeading = inject<(componentName: string) => void>(
     "focusSectionHeading",
 );
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
-const { isEditor } = useUserStore();
+const { isEditor } = storeToRefs(useUserStore());
 
 const resourceInstanceLifecycleState = inject<{
     value:

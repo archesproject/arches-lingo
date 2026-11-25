@@ -76,7 +76,7 @@ async function save(e: FormSubmitEvent) {
 
         delete (updatedTileData as Record<string, unknown>)["uri"];
 
-        const schemeId = route.query.schemeId as string;
+        const schemeId = route.query.scheme as string;
         const parent = route.query.parent as string;
 
         await createOrUpdateConcept(
