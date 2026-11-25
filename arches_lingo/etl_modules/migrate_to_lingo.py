@@ -147,6 +147,8 @@ class LingoResourceImporter(BaseImportModule):
             lang.code: lang.name for lang in models.Language.objects.all()
         }
         self.blank_tile_lookup = {}
+        # Set by a SKOS import; see utils.skos_import_report.
+        self.import_report = None
         self._prepared_value_cache = {}
         # Progress and timing messages. A management command replaces this with
         # its own stdout; the ETL user interface and celery paths have nowhere
@@ -1207,6 +1209,7 @@ class LingoResourceImporter(BaseImportModule):
                             pinned_resource_ids=self.pinned_resource_ids,
                         )
                     )
+                    self.import_report = skos_reader.import_report
                     self.run_load_task()
 
                 elif self.file.size > use_celery_file_size_threshold:
@@ -1270,6 +1273,7 @@ class LingoResourceImporter(BaseImportModule):
                         pinned_resource_ids=self.pinned_resource_ids,
                     )
                 )
+                self.import_report = skos_reader.import_report
 
             # Writing tiles directly skips the staging round trip, which for a
             # vocabulary-sized import is the overwhelming majority of the load.
@@ -1405,6 +1409,9 @@ class LingoResourceImporter(BaseImportModule):
                 if thesaurus_name
                 else _("Import completed")
             )
+            if self.import_report and not self.import_report.is_empty():
+                message = f"{message}. {self.import_report.summary()}"
+                self._record_import_report()
         else:
             message = (
                 _("{} import failed").format(thesaurus_name)
@@ -1412,6 +1419,14 @@ class LingoResourceImporter(BaseImportModule):
                 else _("Import failed")
             )
         notify_completion(message, user)
+
+    def _record_import_report(self):
+        models.LoadEvent.objects.filter(loadid=self.loadid).update(
+            load_details=RawSQL(
+                "load_details || %s::jsonb",
+                [json.dumps({"not_imported": self.import_report.as_dict()})],
+            )
+        )
 
     @load_data_async
     def run_load_task_async(self, request):
