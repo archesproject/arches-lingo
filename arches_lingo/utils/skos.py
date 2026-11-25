@@ -16,6 +16,7 @@ from arches.extensions.controlled_lists.models import List, ListItem
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 import arches_lingo.const as const
+from arches_lingo.utils.skos_import_report import SkosImportReport
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,12 @@ OPEN_SKOS_NAMESPACE = Namespace(str(SKOS))
 # identifiers, so a predicate resolves to the relation type to record.
 GVP_TYPED_RELATION_PREFIX = "http://vocab.getty.edu/ontology#aat"
 VALID_LOCAL_NAME_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*")
+# Statements the reader acts on without turning them into a tile of their own,
+# so they are not reported as skipped. owl:sameAs comes from Lingo's own export,
+# linking a public URI to the resource id the import already uses.
+IMPLICITLY_IMPORTED_PREDICATES = frozenset(
+    {RDF.type, SKOS.inScheme, SKOS.topConceptOf, OWL.sameAs}
+)
 
 
 def subject_uri_for(resource_id, resource_uri_map=None):
@@ -93,6 +100,7 @@ class SKOSReader(SKOSReader):
         self.relations = defaultdict(list)
         self.prefLabel_valuetype = models.DValueType.objects.get(valuetype="prefLabel")
         self._gvp_relation_type_lookup = None
+        self.import_report = SkosImportReport()
 
     def generate_uuidv5_from_subject(self, baseuuid, subject):
         """Reuse a previously assigned resource id when one is known.
@@ -166,6 +174,8 @@ class SKOSReader(SKOSReader):
                 category="Mapping Properties"
             ).values_list("relationtype", flat=True)
 
+            imported_concept_subjects = set()
+
             ### Schemes ###
             top_concept_mock_tiles = {}
             isScheme = True
@@ -197,6 +207,8 @@ class SKOSReader(SKOSReader):
                             new_scheme["tile_data"].extend(mock_tile)
                         elif mock_tile:
                             new_scheme["tile_data"].append(mock_tile)
+                        else:
+                            self._record_skipped_statement(graph, predicate)
 
                     elif predicate == SKOS.hasTopConcept:
                         top_concept_id = self.generate_uuidv5_from_subject(
@@ -213,6 +225,8 @@ class SKOSReader(SKOSReader):
                             )
                         )
                         top_concept_mock_tiles[top_concept_id] = top_concept_mock_tile
+                    else:
+                        self._record_skipped_statement(graph, predicate)
 
                 if "appellative_status" not in [
                     key for val in new_scheme["tile_data"] for key in val.keys()
@@ -228,6 +242,7 @@ class SKOSReader(SKOSReader):
                 ### Concepts ###
                 isScheme = False
                 for concept, v, o in graph.triples((None, SKOS.inScheme, scheme)):
+                    imported_concept_subjects.add(concept)
                     concept_pk = self.generate_uuidv5_from_subject(baseuuid, concept)
                     new_concept = {
                         "resourceinstanceid": concept_pk,
@@ -379,6 +394,8 @@ class SKOSReader(SKOSReader):
                                     new_concept["tile_data"].extend(mock_tile)
                                 elif mock_tile:
                                     new_concept["tile_data"].append(mock_tile)
+                            else:
+                                self.import_report.unresolved_match_count += 1
                         else:
                             mock_tile = self.map_predicate_object_to_mock_tile(
                                 object, predicate_str, isScheme
@@ -387,6 +404,8 @@ class SKOSReader(SKOSReader):
                                 new_concept["tile_data"].extend(mock_tile)
                             elif mock_tile:
                                 new_concept["tile_data"].append(mock_tile)
+                            else:
+                                self._record_skipped_statement(graph, predicate)
 
                     type_tile = {
                         "type": {"type": "concept", "type_metatype": "classification"}
@@ -402,7 +421,30 @@ class SKOSReader(SKOSReader):
                         self.relations.get(concept["resourceinstanceid"])
                     )
 
+            self.import_report.collection_count = len(
+                set(graph.subjects(RDF.type, SKOS.Collection))
+            )
+            self.import_report.collection_member_count = len(
+                list(graph.triples((None, SKOS.member, None)))
+            )
+            self.import_report.concepts_outside_schemes_count = len(
+                set(graph.subjects(RDF.type, SKOS.Concept)) - imported_concept_subjects
+            )
+
             return self.schemes, self.concepts
+
+    def _record_skipped_statement(self, graph, predicate):
+        if predicate in IMPLICITLY_IMPORTED_PREDICATES:
+            return
+        try:
+            prefix, _namespace, local_name = graph.namespace_manager.compute_qname(
+                predicate, generate=False
+            )
+            predicate_name = f"{prefix}:{local_name}"
+        except (KeyError, ValueError):
+            # No prefix is bound for the namespace, so name it in full.
+            predicate_name = str(predicate)
+        self.import_report.skipped_predicate_counts[predicate_name] += 1
 
     def language_exists(self, rdf_tag, allowed_languages):
         """

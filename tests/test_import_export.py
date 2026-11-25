@@ -2,6 +2,7 @@ import json
 import os
 import uuid
 import zipfile
+from collections import Counter
 from http import HTTPStatus
 from io import BytesIO, StringIO
 from pathlib import Path
@@ -47,6 +48,8 @@ from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
 from arches_lingo.tasks import export_lingo_resources_task
 from arches_lingo.utils.display_label import get_display_label
+from arches_lingo.utils.skos import SKOSReader as LingoSKOSReader
+from arches_lingo.utils.skos_import_report import SkosImportReport
 from tests.tests import ViewTests
 
 from .test_settings import PROJECT_TEST_ROOT
@@ -402,6 +405,98 @@ class ImportTests(TransactionTestCase):
         )
         self.assertFalse(response["success"])
         self.assertIn("not a text-based RDF serialization", str(response["message"]))
+
+
+class SKOSImportReportTests(TestCase):
+    TURTLE = """
+        @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+        @prefix dcterms: <http://purl.org/dc/terms/> .
+        @prefix owl: <http://www.w3.org/2002/07/owl#> .
+        @prefix ex: <https://example.org/thesaurus/> .
+
+        ex:scheme a skos:ConceptScheme ;
+            skos:prefLabel "Scheme"@en ;
+            dcterms:creator "An editor" .
+
+        ex:concept a skos:Concept ;
+            skos:inScheme ex:scheme ;
+            skos:prefLabel "Concept"@en ;
+            dcterms:source "A book", "Another book" ;
+            <https://other.example/vocabulary#rank> "1" ;
+            owl:sameAs <https://example.org/elsewhere> ;
+            skos:closeMatch <http://vocab.getty.edu/aat/300000001> .
+
+        ex:stray a skos:Concept ;
+            skos:prefLabel "Stray"@en .
+
+        ex:collection a skos:Collection ;
+            skos:member ex:concept, ex:stray .
+    """
+
+    def test_reader_reports_what_it_could_not_import(self):
+        reader = LingoSKOSReader()
+        reader.extract_concepts_from_skos_for_lingo_import(
+            Graph().parse(data=self.TURTLE, format="turtle")
+        )
+
+        self.assertEqual(
+            reader.import_report.as_dict(),
+            {
+                "collection_count": 1,
+                "collection_member_count": 2,
+                "concepts_outside_schemes_count": 1,
+                "unresolved_match_count": 1,
+                "skipped_predicate_counts": {
+                    "dcterms:creator": 1,
+                    "dcterms:source": 2,
+                    "https://other.example/vocabulary#rank": 1,
+                },
+            },
+        )
+
+    def test_summary_names_the_most_common_properties_and_counts_the_rest(self):
+        report = SkosImportReport(
+            skipped_predicate_counts=Counter(
+                {f"ex:property{number}": number for number in range(1, 8)}
+            )
+        )
+
+        summary = report.summary()
+
+        self.assertTrue(summary.startswith("Not imported: 7 ex:property7 statements"))
+        self.assertNotIn("ex:property2", summary)
+        self.assertIn("3 statements with other unsupported properties", summary)
+        self.assertIsNone(SkosImportReport().summary())
+
+    def test_completed_import_notification_lists_what_was_not_imported(self):
+        ImportTests.register_etl_module()
+        load_event = LoadEvent.objects.create(
+            user_id=1,
+            etl_module=ETLModule.objects.get(slug="migrate-to-lingo"),
+            status="completed",
+            load_details={"operation": "Lingo Thesaurus Import"},
+        )
+        importer = LingoResourceImporter(loadid=load_event.loadid, userid=1)
+        importer.thesaurus_name = "Heritage"
+        importer.import_report = SkosImportReport(collection_count=115)
+
+        importer._finalize_import()
+
+        latest_notification = (
+            UserXNotification.objects.filter(recipient_id=1)
+            .order_by("-notif__created")
+            .first()
+            .notif
+        )
+        self.assertEqual(
+            latest_notification.message,
+            "Heritage import completed. Not imported: "
+            "115 skos:Collection resources.",
+        )
+        load_event.refresh_from_db()
+        self.assertEqual(
+            load_event.load_details["not_imported"]["collection_count"], 115
+        )
 
 
 class ExportTests(TestCase):
