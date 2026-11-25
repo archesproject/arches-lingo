@@ -18,9 +18,12 @@ that the rest of the AND/OR composition machinery can continue to use lazy
 QuerySets.
 """
 
+from django.contrib.postgres.lookups import Unaccent
 from django.db import connection
-from django.db.models import BooleanField, Q
+from django.db.models import BooleanField, Q, Value
 from django.db.models.expressions import RawSQL
+from django.db.models.fields.json import KeyTextTransform
+from django.db.models.lookups import IContains, IEndsWith, IExact, IStartsWith
 
 from arches.app.models.models import ResourceInstance, TileModel
 
@@ -172,11 +175,29 @@ class AdvancedSearchEvaluator:
         "ends_with": "iendswith",
     }
 
+    UNACCENTED_MATCH_MODE_LOOKUPS = {
+        "contains": IContains,
+        "exact": IExact,
+        "starts_with": IStartsWith,
+        "ends_with": IEndsWith,
+    }
+
     def _text_filter(self, field, value, match_mode="contains"):
         if match_mode == "exists":
             return ~Q(**{field: ""}) & ~Q(**{field: None})
         lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
         return Q(**{f"{field}__{lookup}": value})
+
+    def _unaccented_text_filter(self, node_id, value, match_mode="contains"):
+        """Match human-readable text ignoring diacritics, so "apa" finds "apă"."""
+        if match_mode == "exists":
+            return self._text_filter(f"data__{node_id}", value, match_mode)
+        lookup_class = self.UNACCENTED_MATCH_MODE_LOOKUPS.get(match_mode, IContains)
+        return Q(
+            lookup_class(
+                Unaccent(KeyTextTransform(node_id, "data")), Unaccent(Value(value))
+            )
+        )
 
     @staticmethod
     def _escape_like_wildcards(value):
@@ -195,8 +216,8 @@ class AdvancedSearchEvaluator:
         value = condition.get("value", "").strip()
         match_mode = condition.get("match_mode", "contains")
         if match_mode == "exists" or value:
-            filters &= self._text_filter(
-                f"data__{CONCEPT_NAME_CONTENT_NODE}", value, match_mode
+            filters &= self._unaccented_text_filter(
+                CONCEPT_NAME_CONTENT_NODE, value, match_mode
             )
 
         label_type = condition.get("label_type")
@@ -226,8 +247,8 @@ class AdvancedSearchEvaluator:
         value = condition.get("value", "").strip()
         match_mode = condition.get("match_mode", "contains")
         if match_mode == "exists" or value:
-            filters &= self._text_filter(
-                f"data__{STATEMENT_CONTENT_NODE}", value, match_mode
+            filters &= self._unaccented_text_filter(
+                STATEMENT_CONTENT_NODE, value, match_mode
             )
 
         note_type = condition.get("note_type")

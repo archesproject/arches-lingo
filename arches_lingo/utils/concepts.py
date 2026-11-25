@@ -1,4 +1,5 @@
 import json
+from functools import cached_property
 
 from django.db import connection
 from django.utils.translation import gettext as _
@@ -21,6 +22,8 @@ ORDER_MODE_UNSORTED = "unsorted"
 # pg_trgm cannot index a "contains" pattern shorter than this, but a prefix
 # pattern of any length can still use the trigram index.
 MIN_INDEXED_CONTAINS_LENGTH = 3
+# Defined by migration 0022, which indexes label content through it.
+UNACCENT_FUNCTION = "__arches_lingo_immutable_unaccent"
 
 
 def escape_like_pattern(term):
@@ -130,6 +133,8 @@ class SearchResultSet:
     """
 
     CONTENT_COL = f"(tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}')"
+    # Label content without diacritics, written exactly as the index on it.
+    SEARCH_COL = f"{UNACCENT_FUNCTION}({CONTENT_COL})"
     TYPE_COL = f"(tiledata -> '{CONCEPT_NAME_TYPE_NODE}' -> 0 ->> 'uri')"
     LANG_COL = f"(tiledata ->> '{CONCEPT_NAME_LANGUAGE_NODE}')"
     NODEGROUP_FILTER = f"nodegroupid = '{CONCEPT_NAME_NODEGROUP}'"
@@ -163,6 +168,20 @@ class SearchResultSet:
         self.prefix_only = prefix_only
         self._count_cache = None
 
+    @cached_property
+    def folded_terms(self):
+        """Return (term, like_term) without diacritics, so "apa" matches "apă".
+
+        Folded here rather than in each pattern's SQL so the patterns reach
+        PostgreSQL as constants the trigram index can be planned against.
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"SELECT {UNACCENT_FUNCTION}(%s), {UNACCENT_FUNCTION}(%s)",
+                [self.term, self.like_term],
+            )
+            return cursor.fetchone()
+
     def _filtered_labels_cte(self):
         """Return (sql, params) for a WITH clause defining ``filtered_labels``.
 
@@ -192,6 +211,7 @@ class SearchResultSet:
                 SELECT
                     resourceinstanceid,
                     {self.CONTENT_COL} AS label_content,
+                    {self.SEARCH_COL} AS search_content,
                     {self.TYPE_COL} AS label_type,
                     {self.LANG_COL} AS label_language
                 FROM tiles
@@ -214,20 +234,22 @@ class SearchResultSet:
             if self.exact_match:
                 where_sql += f" AND {self.CONTENT_COL} = %s"
                 params.append(self.term)
-            elif self.prefix_only:
-                where_sql += f" AND {self.CONTENT_COL} ILIKE %s"
-                params.append(f"{self.like_term}%")
-            elif self.use_fuzzy:
-                # ILIKE uses the GIN trigram index; %% is the pg_trgm similarity
-                # operator (escaped for cursor.execute parameter substitution).
-                where_sql += (
-                    f" AND ({self.CONTENT_COL} ILIKE %s"
-                    f" OR {self.CONTENT_COL} %% %s)"
-                )
-                params.extend([f"%{self.like_term}%", self.term])
             else:
-                where_sql += f" AND {self.CONTENT_COL} ILIKE %s"
-                params.append(f"%{self.like_term}%")
+                folded_term, folded_like_term = self.folded_terms
+                if self.prefix_only:
+                    where_sql += f" AND {self.SEARCH_COL} ILIKE %s"
+                    params.append(f"{folded_like_term}%")
+                elif self.use_fuzzy:
+                    # ILIKE uses the GIN trigram index; %% is the pg_trgm
+                    # similarity operator (escaped for cursor.execute).
+                    where_sql += (
+                        f" AND ({self.SEARCH_COL} ILIKE %s"
+                        f" OR {self.SEARCH_COL} %% %s)"
+                    )
+                    params.extend([f"%{folded_like_term}%", folded_term])
+                else:
+                    where_sql += f" AND {self.SEARCH_COL} ILIKE %s"
+                    params.append(f"%{folded_like_term}%")
 
         return where_sql, params
 
@@ -306,10 +328,10 @@ class SearchResultSet:
         if include_scores:
             selected_columns = "resourceinstanceid, best_rank, best_similarity"
             similarity_column = (
-                "MAX(similarity(LOWER(label_content), LOWER(%s)))"
+                "MAX(similarity(LOWER(search_content), LOWER(%s)))"
                 " AS best_similarity,"
             )
-            similarity_params = [self.term]
+            similarity_params = [self.folded_terms[0]]
         else:
             selected_columns = "resourceinstanceid"
             similarity_column = ""
@@ -332,28 +354,28 @@ class SearchResultSet:
                     MIN(
                         (CASE
                             WHEN label_type = %s
-                                 AND label_content ILIKE %s
+                                 AND search_content ILIKE %s
                             THEN 0
                             WHEN label_type = %s
-                                 AND label_content ILIKE %s
+                                 AND search_content ILIKE %s
                             THEN 1
                             WHEN label_type = %s
-                                 AND label_content ILIKE %s
+                                 AND search_content ILIKE %s
                             THEN 2
                             WHEN label_type = %s
-                                 AND label_content ILIKE %s
+                                 AND search_content ILIKE %s
                             THEN 3
                             WHEN label_type = %s
-                                 AND label_content ILIKE %s
+                                 AND search_content ILIKE %s
                             THEN 4
-                            WHEN label_content ILIKE %s
+                            WHEN search_content ILIKE %s
                             THEN 4
                             WHEN label_type = %s
-                                 AND label_content ILIKE %s
+                                 AND search_content ILIKE %s
                             THEN 5
-                            WHEN label_content ILIKE %s
+                            WHEN search_content ILIKE %s
                             THEN 5
-                            WHEN label_content ILIKE %s
+                            WHEN search_content ILIKE %s
                             THEN 6
                             ELSE 7
                         END) * 1000
@@ -371,22 +393,23 @@ class SearchResultSet:
             {order_clause}
         """
 
+        like_term = self.folded_terms[1]
         rank_params = [
             PREF_LABEL_URI,
-            self.like_term,  # prefLabel exact
+            like_term,  # prefLabel exact
             ALT_LABEL_URI,
-            self.like_term,  # altLabel exact
+            like_term,  # altLabel exact
             PREF_LABEL_URI,
-            f"{self.like_term}%",  # prefLabel prefix
+            f"{like_term}%",  # prefLabel prefix
             PREF_LABEL_URI,
-            f"%{self.like_term}%",  # prefLabel contains
+            f"%{like_term}%",  # prefLabel contains
             ALT_LABEL_URI,
-            f"{self.like_term}%",  # altLabel prefix
-            self.like_term,  # any exact
+            f"{like_term}%",  # altLabel prefix
+            like_term,  # any exact
             ALT_LABEL_URI,
-            f"%{self.like_term}%",  # altLabel contains
-            f"{self.like_term}%",  # any prefix
-            f"%{self.like_term}%",  # any contains
+            f"%{like_term}%",  # altLabel contains
+            f"{like_term}%",  # any prefix
+            f"%{like_term}%",  # any contains
             self.active_language,
             self.system_language,
         ]
