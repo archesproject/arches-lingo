@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import Divider from "primevue/divider";
+import Divider from "openvue/divider";
 
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import ThemeSelector from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/ThemeSelector.vue";

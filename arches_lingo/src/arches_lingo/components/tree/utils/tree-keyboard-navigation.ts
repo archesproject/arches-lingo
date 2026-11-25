@@ -1,7 +1,7 @@
 const TREE_ITEM_SELECTOR = '[role="treeitem"]';
 
 /**
- * Adds keys PrimeVue's Tree lacks: Home and End (APG tree view), and
+ * Adds keys OpenVue's Tree lacks: Home and End (APG tree view), and
  * type-to-filter, which hands printable characters to `onTypeahead` so the
  * tree's filter input can take over. Bind the handler to the Tree root's
  * keydown.
@@ -19,7 +19,7 @@ export function useTreeKeyboardNavigation(
     }
 
     function isTypeaheadKey(event: KeyboardEvent) {
-        // Space belongs to PrimeVue (it selects the node).
+        // Space belongs to OpenVue (it selects the node).
         return event.key.length === 1 && event.key !== " ";
     }
 

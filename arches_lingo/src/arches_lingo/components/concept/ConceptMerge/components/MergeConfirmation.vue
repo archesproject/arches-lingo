@@ -2,8 +2,8 @@
 import { computed } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import Checkbox from "primevue/checkbox";
-import Message from "primevue/message";
+import Checkbox from "openvue/checkbox";
+import Message from "openvue/message";
 
 import MergeRetirementOptions from "@/arches_lingo/components/concept/ConceptMerge/components/MergeRetirementOptions.vue";
 

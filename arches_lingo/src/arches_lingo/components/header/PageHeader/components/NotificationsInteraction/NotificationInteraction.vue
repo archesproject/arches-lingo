@@ -10,8 +10,8 @@ import {
 } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
+import Button from "openvue/button";
+import type { VirtualScrollerLazyEvent } from "openvue/virtualscroller";
 
 import NotificationsPanel from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue";
 import { fetchUserNotifications } from "@/arches_lingo/api.ts";
@@ -44,7 +44,7 @@ function activateHierarchyOverlay() {
     shouldShowNotificationsPanel.value = true;
 }
 
-// PrimeVue Drawer doesn't return focus to its trigger.
+// OpenVue Drawer doesn't return focus to its trigger.
 async function onNotificationsPanelAfterHide() {
     await nextTick();
     (notificationsButton.value?.$el as HTMLElement | undefined)?.focus();

@@ -4,9 +4,9 @@ import { computed } from "vue";
 import { useGettext } from "vue3-gettext";
 import { RouterLink } from "vue-router";
 
-import Button from "primevue/button";
-import Checkbox from "primevue/checkbox";
-import Tag from "primevue/tag";
+import Button from "openvue/button";
+import Checkbox from "openvue/checkbox";
+import Tag from "openvue/tag";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useLocalizedLabel } from "@/arches_lingo/components/ConceptMatching/composables/useLocalizedLabel.ts";

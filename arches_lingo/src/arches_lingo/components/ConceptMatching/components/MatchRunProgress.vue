@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
-import ProgressBar from "primevue/progressbar";
+import ProgressBar from "openvue/progressbar";
 
 import {
     ELAPSED_CLOCK_TICK_MS,

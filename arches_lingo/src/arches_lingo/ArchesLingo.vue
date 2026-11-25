@@ -4,10 +4,10 @@ import { useRouter, useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import type { RouteLocationNormalized } from "vue-router";
 
-import Splitter from "primevue/splitter";
-import SplitterPanel from "primevue/splitterpanel";
-import ConfirmDialog from "primevue/confirmdialog";
-import Toast from "primevue/toast";
+import Splitter from "openvue/splitter";
+import SplitterPanel from "openvue/splitterpanel";
+import ConfirmDialog from "openvue/confirmdialog";
+import Toast from "openvue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 import LiveAnnouncer from "@/arches_lingo/components/generic/LiveAnnouncer.vue";

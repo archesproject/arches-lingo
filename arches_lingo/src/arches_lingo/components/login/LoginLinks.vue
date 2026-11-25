@@ -2,7 +2,7 @@
 import arches from "arches";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import { SECONDARY } from "@/arches_lingo/constants.ts";
 

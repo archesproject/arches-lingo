@@ -3,14 +3,14 @@ import { computed, ref, useId, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
 
-import Button from "primevue/button";
-import Popover from "primevue/popover";
-import RadioButton from "primevue/radiobutton";
+import Button from "openvue/button";
+import Popover from "openvue/popover";
+import RadioButton from "openvue/radiobutton";
 
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { ARROW_KEYS } from "@/arches_lingo/constants.ts";
 
-import type { PopoverMethods } from "primevue/popover";
+import type { PopoverMethods } from "openvue/popover";
 
 const { $gettext } = useGettext();
 

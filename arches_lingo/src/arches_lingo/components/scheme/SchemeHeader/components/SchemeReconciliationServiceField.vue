@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useId, useTemplateRef } from "vue";
 
-import Button from "primevue/button";
-import Popover from "primevue/popover";
+import Button from "openvue/button";
+import Popover from "openvue/popover";
 
 import { useReconciliationService } from "@/arches_lingo/composables/useReconciliationService.ts";
 
-import type { PopoverMethods } from "primevue/popover";
+import type { PopoverMethods } from "openvue/popover";
 
 const { schemeIdentifier, schemeName } = defineProps<{
     schemeIdentifier: string | undefined;

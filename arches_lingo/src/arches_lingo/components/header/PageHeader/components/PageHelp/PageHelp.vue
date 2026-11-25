@@ -2,7 +2,7 @@
 import { nextTick, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 import PageHelpPanel from "@/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue";
 
 import type { ComponentPublicInstance } from "vue";
@@ -16,7 +16,7 @@ function activateHierarchyOverlay() {
     shouldShowPageHelpPanel.value = true;
 }
 
-// PrimeVue Drawer doesn't return focus to its trigger.
+// OpenVue Drawer doesn't return focus to its trigger.
 async function onPageHelpPanelAfterHide() {
     await nextTick();
     (helpButton.value?.$el as HTMLElement | undefined)?.focus();

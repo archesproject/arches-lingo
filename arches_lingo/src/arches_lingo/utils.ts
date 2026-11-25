@@ -19,7 +19,7 @@ import {
 import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
-import type { TreeNode } from "primevue/treenode";
+import type { TreeNode } from "openvue/treenode";
 import type { Language } from "@/arches_vue_components/types.ts";
 import type {
     Concept,
@@ -163,9 +163,9 @@ export function treeFromSchemes(
                 : buildOccurrenceKey(schemeId, pathIds);
 
         const concept = item as Concept;
-        // leaf=false tells PrimeVue Tree the node has children that haven't
+        // leaf=false tells OpenVue Tree the node has children that haven't
         // been loaded yet. For schemes and fully-loaded concepts use undefined
-        // (PrimeVue defaults to checking children array length).
+        // (OpenVue defaults to checking children array length).
         let leaf: boolean | undefined;
         if (!("top_concepts" in item)) {
             if (concept.has_narrower && !hasLoadedChildren(concept.id)) {
@@ -571,7 +571,7 @@ const FOCUSABLE_SELECTOR = [
     '[tabindex]:not([tabindex="-1"])',
 ].join(", ");
 
-// PrimeVue Popover focuses only an [autofocus] element on show, so content
+// OpenVue Popover focuses only an [autofocus] element on show, so content
 // that can't carry one is otherwise unreachable from the keyboard (2.4.3).
 export function focusFirstFocusableElement(container: HTMLElement | null) {
     container?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
@@ -608,12 +608,12 @@ export async function focusNeighborAfterRemoval<Item>({
 type SplitterLayout = "horizontal" | "vertical";
 
 /**
- * PrimeVue puts role="separator" on the Splitter gutter, which isn't
+ * OpenVue puts role="separator" on the Splitter gutter, which isn't
  * focusable, and leaves the handle inside it, which is, with no role or name
  * (4.1.2). This moves the separator semantics onto the handle. Pass-through
- * attributes bind after PrimeVue's own, so these win.
+ * attributes bind after OpenVue's own, so these win.
  *
- * PrimeVue's aria-valuenow is always the size of the first panel, so
+ * OpenVue's aria-valuenow is always the size of the first panel, so
  * `primaryPanelId` (aria-controls) must be the first panel too. `isVisible`
  * hides the gutter while one of the two panels is hidden.
  */
@@ -639,7 +639,7 @@ export function getSplitterGutterPassThrough({
             "aria-controls": primaryPanelId,
             "aria-valuemin": 0,
             "aria-valuemax": 100,
-            // PrimeVue passes `layout` through, but the line between
+            // OpenVue passes `layout` through, but the line between
             // side-by-side (horizontal layout) panels is vertical.
             "aria-orientation":
                 layout === "horizontal" ? "vertical" : "horizontal",

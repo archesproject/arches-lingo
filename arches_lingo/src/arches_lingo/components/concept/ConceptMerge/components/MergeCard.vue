@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useGettext } from "vue3-gettext";
-import Tag from "primevue/tag";
+import Tag from "openvue/tag";
 
 const { alreadyOnSurvivor } = defineProps<{
     alreadyOnSurvivor?: boolean;

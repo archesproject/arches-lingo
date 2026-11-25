@@ -3,8 +3,8 @@
 
 import("@/arches/declarations.d.ts");
 
-declare module "primevue/toasteventbus" {
-    import type { ToastMessageOptions } from "primevue/toast";
+declare module "openvue/toasteventbus" {
+    import type { ToastMessageOptions } from "openvue/toast";
 
     const ToastEventBus: {
         on(event: "add", handler: (message: ToastMessageOptions) => void): void;

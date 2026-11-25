@@ -7,7 +7,7 @@ import { useCopyToClipboard } from "@/arches_lingo/composables/useCopyToClipboar
 
 const toastAdd = vi.fn();
 
-vi.mock("primevue/usetoast", () => ({
+vi.mock("openvue/usetoast", () => ({
     useToast: () => ({ add: toastAdd }),
 }));
 

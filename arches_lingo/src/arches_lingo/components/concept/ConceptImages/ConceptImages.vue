@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
 
 import ConceptImagesEditor from "@/arches_lingo/components/concept/ConceptImages/components/ConceptImagesEditor.vue";
 import ConceptImagesViewer from "@/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue";

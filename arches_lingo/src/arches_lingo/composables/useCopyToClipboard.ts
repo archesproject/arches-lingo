@@ -1,5 +1,5 @@
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import Button from "primevue/button";
-import Drawer from "primevue/drawer";
-import ProgressBar from "primevue/progressbar";
-import ToggleSwitch from "primevue/toggleswitch";
+import Button from "openvue/button";
+import Drawer from "openvue/drawer";
+import ProgressBar from "openvue/progressbar";
+import ToggleSwitch from "openvue/toggleswitch";
 import VirtualScroller, {
     type VirtualScrollerLazyEvent,
-} from "primevue/virtualscroller";
+} from "openvue/virtualscroller";
 
 import NotificationRow from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationRow.vue";
 import { dismissNotifications } from "@/arches_lingo/api.ts";

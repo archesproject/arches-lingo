@@ -2,13 +2,13 @@
 import { inject, nextTick, ref, computed, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import ConfirmDialog from "primevue/confirmdialog";
-import Image from "primevue/image";
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
-import { useConfirm } from "primevue/useconfirm";
-import { useToast } from "primevue/usetoast";
+import Button from "openvue/button";
+import ConfirmDialog from "openvue/confirmdialog";
+import Image from "openvue/image";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
+import { useConfirm } from "openvue/useconfirm";
+import { useToast } from "openvue/usetoast";
 
 import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
 import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";

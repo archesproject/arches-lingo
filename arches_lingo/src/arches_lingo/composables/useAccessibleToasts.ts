@@ -1,7 +1,7 @@
 import { nextTick, onBeforeUnmount, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 
-import ToastEventBus from "primevue/toasteventbus";
+import ToastEventBus from "openvue/toasteventbus";
 
 import { ERROR } from "@/arches_lingo/constants.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
@@ -9,14 +9,12 @@ import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.t
 import type {
     ToastMessageOptions,
     ToastPassThroughMethodOptions,
-} from "primevue/toast";
+} from "openvue/toast";
 
 const TOAST_MESSAGE_SELECTOR = ".p-toast-message";
 const OPEN_TOAST_CLOSE_BUTTON_SELECTOR =
     ".p-toast-message:not(.p-toast-message-leave-active) .p-toast-close-button";
 const TOAST_ID_ATTRIBUTE = "data-toast-id";
-
-type ToastMessageWithId = ToastMessageOptions & { id?: number };
 
 export const TOAST_MESSAGE_PASS_THROUGH = ({
     instance,
@@ -41,7 +39,7 @@ export function useAccessibleToasts() {
         return closeButtons.length > 0;
     }
 
-    function focusToast(toastId: ToastMessageWithId["id"]) {
+    function focusToast(toastId: ToastMessageOptions["id"]) {
         document
             .querySelector<HTMLElement>(
                 `[${TOAST_ID_ATTRIBUTE}="${String(toastId)}"] .p-toast-close-button`,
@@ -49,7 +47,7 @@ export function useAccessibleToasts() {
             ?.focus();
     }
 
-    async function makeToastSticky(message: ToastMessageWithId) {
+    async function makeToastSticky(message: ToastMessageOptions) {
         const isStickyToast = message.severity === ERROR || message.detail;
         if (!isAccessibilityMode.value || !isStickyToast) {
             return;

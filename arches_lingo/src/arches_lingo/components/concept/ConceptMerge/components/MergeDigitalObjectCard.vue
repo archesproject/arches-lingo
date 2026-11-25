@@ -3,7 +3,7 @@ import { computed } from "vue";
 
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
-import Image from "primevue/image";
+import Image from "openvue/image";
 
 import MergeCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeCard.vue";
 

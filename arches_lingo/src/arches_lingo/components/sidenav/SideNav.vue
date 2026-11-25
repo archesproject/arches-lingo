@@ -2,7 +2,7 @@
 import { computed, nextTick, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
 import SideNavLinks from "@/arches_lingo/components/sidenav/components/SideNavLinks.vue";

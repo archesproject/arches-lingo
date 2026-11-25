@@ -2,11 +2,11 @@
 import { inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import { Form } from "@primevue/forms";
+import { Form } from "@openvue/forms";
 
-import Skeleton from "primevue/skeleton";
+import Skeleton from "openvue/skeleton";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
@@ -33,7 +33,7 @@ import {
 } from "@/arches_lingo/api.ts";
 
 import type { Component, Ref } from "vue";
-import type { FormSubmitEvent } from "@primevue/forms";
+import type { FormSubmitEvent } from "@openvue/forms";
 import type {
     FileListAliasedNodeData,
     FileReference,

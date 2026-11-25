@@ -2,8 +2,8 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import SelectButton from "primevue/selectbutton";
+import Button from "openvue/button";
+import SelectButton from "openvue/selectbutton";
 
 import FacetRow from "@/arches_lingo/components/advanced-search/FacetRow.vue";
 
@@ -85,7 +85,7 @@ watch(
                 ) ?? null,
             );
         } else {
-            // @ts-expect-error This is an error in PrimeVue types
+            // @ts-expect-error This is an error in OpenVue types
             addConditionButtonRef.value?.$el.focus();
         }
         conditionIdToFocus = null;

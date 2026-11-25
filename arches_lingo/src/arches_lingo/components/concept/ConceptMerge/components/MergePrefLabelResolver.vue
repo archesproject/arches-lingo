@@ -2,8 +2,8 @@
 import { useId } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import Message from "primevue/message";
-import RadioButton from "primevue/radiobutton";
+import Message from "openvue/message";
+import RadioButton from "openvue/radiobutton";
 
 import { WARN } from "@/arches_lingo/constants.ts";
 

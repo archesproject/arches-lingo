@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
-import Button from "primevue/button";
+import { useToast } from "openvue/usetoast";
+import Button from "openvue/button";
 import { getSearchExportFile } from "@/arches_lingo/api.ts";
 
 const toast = useToast();

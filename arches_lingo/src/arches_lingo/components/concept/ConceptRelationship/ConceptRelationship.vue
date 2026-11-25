@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { watchEffect, ref } from "vue";
 
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
 
 import ConceptRelationshipEditor from "@/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue";
 import ConceptRelationshipViewer from "@/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue";

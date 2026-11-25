@@ -4,9 +4,9 @@ import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 
-import Button from "primevue/button";
-import Checkbox from "primevue/checkbox";
-import Paginator from "primevue/paginator";
+import Button from "openvue/button";
+import Checkbox from "openvue/checkbox";
+import Paginator from "openvue/paginator";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 

@@ -2,15 +2,15 @@ import { defineComponent, h, nextTick, ref } from "vue";
 
 import { mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import PrimeVue from "primevue/config";
-import Toast from "primevue/toast";
+import OpenVue from "openvue/config";
+import Toast from "openvue/toast";
 
 import {
     TOAST_MESSAGE_PASS_THROUGH,
     useAccessibleToasts,
 } from "@/arches_lingo/composables/useAccessibleToasts.ts";
 
-import type { ToastMessageOptions } from "primevue/toast";
+import type { ToastMessageOptions } from "openvue/toast";
 
 const isAccessibilityMode = ref(true);
 
@@ -19,7 +19,7 @@ vi.mock("@/arches_lingo/stores/useAppSettingsStore.ts", () => ({
 }));
 
 async function addToast(message: ToastMessageOptions) {
-    const { default: ToastEventBus } = await import("primevue/toasteventbus");
+    const { default: ToastEventBus } = await import("openvue/toasteventbus");
     (
         ToastEventBus as unknown as {
             emit: (event: string, payload: ToastMessageOptions) => void;
@@ -41,7 +41,7 @@ function mountWithAccessibleToasts() {
         {
             attachTo: document.body,
             global: {
-                plugins: [PrimeVue],
+                plugins: [OpenVue],
                 stubs: { transition: false, "transition-group": false },
             },
         },

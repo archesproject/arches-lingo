@@ -44,7 +44,7 @@ export const SEARCH_RESULT_ITEM_SIZE = 50;
 export const MAIN_CONTENT_ID = "main-content";
 export const HIERARCHY_PANEL_ID = "hierarchy-panel";
 
-// PrimeVue Message hard-codes role="alert"; pt binds after it, so these win.
+// OpenVue Message hard-codes role="alert"; pt binds after it, so these win.
 export const STATIC_NOTE_PASS_THROUGH = {
     root: { role: "note", "aria-live": "off" },
 };

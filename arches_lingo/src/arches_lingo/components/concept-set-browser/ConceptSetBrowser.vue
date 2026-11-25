@@ -2,10 +2,10 @@
 import { nextTick, ref, useTemplateRef, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "openvue/usetoast";
+import { useConfirm } from "openvue/useconfirm";
 
-import ConfirmDialog from "primevue/confirmdialog";
+import ConfirmDialog from "openvue/confirmdialog";
 
 import ConceptSetList from "@/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue";
 import ConceptSetMemberList from "@/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue";

@@ -8,7 +8,7 @@ import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStat
 
 import { getDisplayedLifecycleStateName } from "@/arches_lingo/utils.ts";
 
-import type { TreeNode } from "primevue/treenode";
+import type { TreeNode } from "openvue/treenode";
 
 const { node, filterValue } = defineProps<{
     node: TreeNode;

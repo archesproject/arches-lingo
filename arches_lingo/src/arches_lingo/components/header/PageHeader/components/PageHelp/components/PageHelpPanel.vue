@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Drawer from "primevue/drawer";
-import Tag from "primevue/tag";
+import Drawer from "openvue/drawer";
+import Tag from "openvue/tag";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 import {

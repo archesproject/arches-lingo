@@ -3,7 +3,7 @@ import { inject, computed, ref, onMounted, watch } from "vue";
 import { RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import CountTag from "@/arches_lingo/components/generic/CountTag.vue";

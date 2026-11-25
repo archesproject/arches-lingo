@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from "pinia";
-import PrimeVue from "primevue/config";
+import OpenVue from "openvue/config";
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,7 +14,7 @@ const GLOBAL_SERVICE_URL = "https://lingo.example.org/api/lingo/reconcile";
 
 const toastAdd = vi.fn();
 
-vi.mock("primevue/usetoast", () => ({
+vi.mock("openvue/usetoast", () => ({
     useToast: () => ({ add: toastAdd }),
 }));
 
@@ -44,7 +44,7 @@ function mountPanel(settingsOverrides: Partial<AppSettings>): VueWrapper {
     };
     return mount(ReconciliationEndpointPanel, {
         global: {
-            plugins: [PrimeVue],
+            plugins: [OpenVue],
             mocks: { $gettext: (text: string) => text },
         },
     });

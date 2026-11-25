@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useId } from "vue";
 
-import Button from "primevue/button";
-import InputText from "primevue/inputtext";
+import Button from "openvue/button";
+import InputText from "openvue/inputtext";
 
 import { SECONDARY } from "@/arches_lingo/constants.ts";
 import { useReconciliationService } from "@/arches_lingo/composables/useReconciliationService.ts";

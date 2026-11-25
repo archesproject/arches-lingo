@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, useId } from "vue";
 
-import type { MenuItem } from "primevue/menuitem";
+import type { MenuItem } from "openvue/menuitem";
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useId } from "vue";
 import { useGettext } from "vue3-gettext";
-import RadioButton from "primevue/radiobutton";
+import RadioButton from "openvue/radiobutton";
 
 const { $gettext } = useGettext();
 

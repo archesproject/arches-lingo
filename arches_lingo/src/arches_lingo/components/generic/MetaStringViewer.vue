@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, onUnmounted, ref, useId } from "vue";
 
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirm } from "openvue/useconfirm";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import DataTable from "primevue/datatable";
-import Column from "primevue/column";
-import Button from "primevue/button";
-import ConfirmDialog from "primevue/confirmdialog";
+import DataTable from "openvue/datatable";
+import Column from "openvue/column";
+import Button from "openvue/button";
+import ConfirmDialog from "openvue/confirmdialog";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
@@ -70,7 +70,7 @@ function getRowElementId(tileId: string, part: string): string {
     return `${rowIdPrefix}-${tileId}-${part}`;
 }
 
-// PrimeVue's default toggle name is untranslated and reads as the opposite state.
+// OpenVue's default toggle name is untranslated and reads as the opposite state.
 function getRowTogglePassThrough({
     parent,
 }: {

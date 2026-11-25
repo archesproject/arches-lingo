@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 const {
     title,
@@ -80,7 +80,7 @@ function togglePanel(): void {
     font-size: var(--p-lingo-font-size-medium);
 }
 
-/* The toolbar's own button look, which PrimeVue's button theme would otherwise
+/* The toolbar's own button look, which OpenVue's button theme would otherwise
    override. */
 .panel-toggle-header .panel-toggle {
     font-size: var(--p-lingo-font-size-small) !important;

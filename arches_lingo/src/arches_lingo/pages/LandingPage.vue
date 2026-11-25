@@ -3,7 +3,7 @@ import { computed } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import BasicSearch from "@/arches_lingo/components/basic-search/BasicSearch.vue";

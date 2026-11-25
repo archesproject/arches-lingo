@@ -1,4 +1,4 @@
-import { definePreset, palette } from "@primeuix/themes";
+import { definePreset, palette } from "@openvue/themes";
 import { ArchesPreset, DEFAULT_THEME } from "@/arches/themes/default.ts";
 import type { archesPreset } from "@/arches_lingo/types.ts";
 
@@ -250,7 +250,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
             },
         },
         inputtext: {
-            // @ts-expect-error: primevue does have border on inputtext
             border: {
                 radius: "0.25rem",
             },
@@ -264,7 +263,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
         splitter: {
             colorScheme: {
                 dark: {
-                    // @ts-expect-error: Ignoring type mismatch for button primary background
                     background: "{surface-900}",
                 },
             },

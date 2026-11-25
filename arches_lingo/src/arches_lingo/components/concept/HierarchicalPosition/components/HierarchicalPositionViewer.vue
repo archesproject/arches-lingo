@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { inject, computed, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
-import { useConfirm } from "primevue/useconfirm";
-import { useToast } from "primevue/usetoast";
+import { useConfirm } from "openvue/useconfirm";
+import { useToast } from "openvue/usetoast";
 import { storeToRefs } from "pinia";
 
-import Button from "primevue/button";
-import ConfirmDialog from "primevue/confirmdialog";
-import Tag from "primevue/tag";
+import Button from "openvue/button";
+import ConfirmDialog from "openvue/confirmdialog";
+import Tag from "openvue/tag";
 
 import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
 import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";

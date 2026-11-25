@@ -3,13 +3,13 @@ import { computed, onBeforeUnmount, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
-import InputText from "primevue/inputtext";
-import Paginator from "primevue/paginator";
-import ProgressSpinner from "primevue/progressspinner";
-import SelectButton from "primevue/selectbutton";
+import Button from "openvue/button";
+import IconField from "openvue/iconfield";
+import InputIcon from "openvue/inputicon";
+import InputText from "openvue/inputtext";
+import Paginator from "openvue/paginator";
+import ProgressSpinner from "openvue/progressspinner";
+import SelectButton from "openvue/selectbutton";
 import MatchCandidateRow from "@/arches_lingo/components/ConceptMatching/components/MatchCandidateList/components/MatchCandidateRow.vue";
 
 import {
@@ -22,7 +22,7 @@ import {
 } from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import { SECONDARY } from "@/arches_lingo/constants.ts";
 
-import type { PageState } from "primevue/paginator";
+import type { PageState } from "openvue/paginator";
 import type {
     ConceptMatchCandidate,
     ConceptMatchCandidateStatus,

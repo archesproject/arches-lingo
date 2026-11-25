@@ -1,7 +1,7 @@
 import { onMounted, onUnmounted } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirm } from "openvue/useconfirm";
 
 import {
     useEditorDirtyState,
@@ -13,7 +13,7 @@ import type { Router, RouteLocationNormalized } from "vue-router";
 /**
  * Composable that installs:
  *
- * 1. A global `router.beforeEach` guard that prompts the user with a PrimeVue
+ * 1. A global `router.beforeEach` guard that prompts the user with an OpenVue
  *    ConfirmDialog whenever a route change is attempted while the editor form
  *    has unsaved changes.
  * 2. A `beforeunload` listener that triggers the browser's native "Leave

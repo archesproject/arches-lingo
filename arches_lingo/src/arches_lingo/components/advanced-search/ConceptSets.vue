@@ -2,15 +2,15 @@
 import { ref, useId, useTemplateRef, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "openvue/usetoast";
+import { useConfirm } from "openvue/useconfirm";
 
-import Button from "primevue/button";
-import ConfirmDialog from "primevue/confirmdialog";
-import Dialog from "primevue/dialog";
-import InputText from "primevue/inputtext";
-import Select from "primevue/select";
-import Textarea from "primevue/textarea";
+import Button from "openvue/button";
+import ConfirmDialog from "openvue/confirmdialog";
+import Dialog from "openvue/dialog";
+import InputText from "openvue/inputtext";
+import Select from "openvue/select";
+import Textarea from "openvue/textarea";
 
 import {
     createConceptSet,

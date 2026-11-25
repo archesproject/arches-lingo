@@ -4,7 +4,7 @@ import { computed } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
-import Select from "primevue/select";
+import Select from "openvue/select";
 
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 

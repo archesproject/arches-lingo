@@ -3,11 +3,11 @@ import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
-import Checkbox from "primevue/checkbox";
-import InputText from "primevue/inputtext";
-import Message from "primevue/message";
-import MultiSelect from "primevue/multiselect";
-import Slider from "primevue/slider";
+import Checkbox from "openvue/checkbox";
+import InputText from "openvue/inputtext";
+import Message from "openvue/message";
+import MultiSelect from "openvue/multiselect";
+import Slider from "openvue/slider";
 
 import { useLocalizedLabel } from "@/arches_lingo/components/ConceptMatching/composables/useLocalizedLabel.ts";
 import {
@@ -281,7 +281,7 @@ function requestRun(): void {
     gap: 0.5rem;
 }
 
-/* PrimeVue keeps chips on one clipped line, which hides every scheme after the
+/* OpenVue keeps chips on one clipped line, which hides every scheme after the
    first; wrapping shows them all. */
 .run-form .field .scheme-select :deep(.p-multiselect-label) {
     flex-wrap: wrap;

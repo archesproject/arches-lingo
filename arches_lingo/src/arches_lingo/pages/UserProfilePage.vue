@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import Button from "primevue/button";
-import Card from "primevue/card";
-import Divider from "primevue/divider";
-import InputText from "primevue/inputtext";
-import Message from "primevue/message";
-import Password from "primevue/password";
-import Skeleton from "primevue/skeleton";
+import Button from "openvue/button";
+import Card from "openvue/card";
+import Divider from "openvue/divider";
+import InputText from "openvue/inputtext";
+import Message from "openvue/message";
+import Password from "openvue/password";
+import Skeleton from "openvue/skeleton";
 
 import {
     fetchUserProfile,

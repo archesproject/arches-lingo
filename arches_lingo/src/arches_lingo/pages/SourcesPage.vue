@@ -2,8 +2,8 @@
 import { ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Skeleton from "primevue/skeleton";
+import Button from "openvue/button";
+import Skeleton from "openvue/skeleton";
 
 import ResourceListEditor from "@/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue";
 import ResourceNameCard from "@/arches_lingo/components/generic/ResourceNameCard/ResourceNameCard.vue";

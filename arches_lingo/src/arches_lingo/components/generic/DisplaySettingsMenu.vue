@@ -2,13 +2,13 @@
 import { ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Popover from "primevue/popover";
+import Button from "openvue/button";
+import Popover from "openvue/popover";
 
 import ThemeSelector from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/ThemeSelector.vue";
 import { focusFirstFocusableElement } from "@/arches_lingo/utils.ts";
 
-import type { PopoverMethods } from "primevue/popover";
+import type { PopoverMethods } from "openvue/popover";
 
 const { $gettext } = useGettext();
 

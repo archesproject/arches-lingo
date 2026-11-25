@@ -3,10 +3,10 @@ import { computed, ref, useTemplateRef } from "vue";
 import { storeToRefs } from "pinia";
 
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import Button from "primevue/button";
-import Popover from "primevue/popover";
+import Button from "openvue/button";
+import Popover from "openvue/popover";
 
 import { fetchDereferencedResource } from "@/arches_lingo/api.ts";
 import {
@@ -22,7 +22,7 @@ import {
 } from "@/arches_lingo/utils.ts";
 import { sanitizeFilename } from "@/arches_controlled_lists/utils.ts";
 
-import type { PopoverMethods } from "primevue/popover";
+import type { PopoverMethods } from "openvue/popover";
 import type { RdfExportFormat } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{

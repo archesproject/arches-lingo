@@ -2,7 +2,7 @@ import { ref } from "vue";
 
 import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 
-// PrimeVue Dialog restores focus only when its leave transition runs, which a
+// OpenVue Dialog restores focus only when its leave transition runs, which a
 // v-if unmount skips, so the dialog stays mounted until `after-hide`.
 export function useDialogFocusReturn(
     getFallbackFocusTarget?: () => HTMLElement | null | undefined,

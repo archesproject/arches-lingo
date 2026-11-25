@@ -12,10 +12,10 @@ import {
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 
-import Button from "primevue/button";
-import InputText from "primevue/inputtext";
-import ProgressBar from "primevue/progressbar";
-import { useToast } from "primevue/usetoast";
+import Button from "openvue/button";
+import InputText from "openvue/inputtext";
+import ProgressBar from "openvue/progressbar";
+import { useToast } from "openvue/usetoast";
 
 import SortAndFilterControls from "@/arches_lingo/components/basic-search/SortAndFilterControls.vue";
 import SearchResult from "@/arches_lingo/components/basic-search/SearchResult.vue";

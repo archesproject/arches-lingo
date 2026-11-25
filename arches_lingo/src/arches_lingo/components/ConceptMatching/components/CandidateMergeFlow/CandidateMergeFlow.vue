@@ -2,7 +2,7 @@
 import { ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
 import ConceptMergeDialog from "@/arches_lingo/components/concept/ConceptMerge/ConceptMergeDialog.vue";
 import MergeDirectionDialog from "@/arches_lingo/components/ConceptMatching/components/CandidateMergeFlow/components/MergeDirectionDialog.vue";

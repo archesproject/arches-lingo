@@ -3,8 +3,8 @@ import { onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { RouterLink } from "vue-router";
 
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
 
 import { SCHEME_ICON, VIEW } from "@/arches_lingo/constants.ts";
 import { fetchSchemeResource } from "@/arches_lingo/api.ts";
