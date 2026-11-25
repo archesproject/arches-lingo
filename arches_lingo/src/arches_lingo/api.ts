@@ -674,6 +674,32 @@ export const fetchSchemeLabelCounts = async (schemeId: string) => {
     return parsed;
 };
 
+export const fetchSchemeDeletionConceptCount = async (
+    schemeId: string,
+): Promise<number> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-scheme-delete", {
+        pk: schemeId,
+    });
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed.concept_count;
+};
+
+export const deleteScheme = async (schemeId: string): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-scheme-delete", {
+        pk: schemeId,
+    });
+    const response = await fetch(url, {
+        method: "DELETE",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
 export const fetchConceptRelationships = async (conceptId: string) => {
     const params = new URLSearchParams({
         concept: conceptId,

@@ -18,7 +18,11 @@ from arches_lingo.views.api.lifecycle import LifecycleStatesView
 from arches_lingo.views.api.dashboard import DashboardStatsView
 from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
 from arches_lingo.views.api.export import ThesaurusExportView
-from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView
+from arches_lingo.views.api.schemes import (
+    SchemeDeleteView,
+    SchemeLabelCountView,
+    SchemeResourceView,
+)
 from arches_lingo.views.api.advanced_search import (
     AdvancedSearchView,
     AdvancedSearchOptionsView,
@@ -294,6 +298,11 @@ urlpatterns = [
         "api/lingo/schemes/<uuid:pk>/label-counts",
         SchemeLabelCountView.as_view(),
         name="api-lingo-scheme-label-counts",
+    ),
+    path(
+        "api/lingo/schemes/<uuid:pk>/delete",
+        SchemeDeleteView.as_view(),
+        name="api-lingo-scheme-delete",
     ),
     path(
         "api/lingo/sources",

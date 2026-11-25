@@ -39,7 +39,8 @@ import {
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
-    deleteLingoResource,
+    deleteScheme,
+    fetchSchemeDeletionConceptCount,
     fetchSchemeResource,
     fetchResourceIdentifiers,
     fetchConceptIdentifierCounter,
@@ -464,35 +465,54 @@ function onConceptIdentifierCounterUpdate(updatedCounter: {
     conceptIdentifierCounter.value = updatedCounter.conceptIdentifierCounter;
 }
 
-function confirmDelete() {
+function showDeleteError(error: unknown) {
+    toast.add({
+        severity: ERROR,
+        life: DEFAULT_ERROR_TOAST_LIFE,
+        summary: $gettext("Error deleting scheme"),
+        detail: error instanceof Error ? error.message : undefined,
+    });
+}
+
+async function confirmDelete() {
+    if (!scheme.value) {
+        return;
+    }
+    const schemeId = scheme.value.resourceinstanceid;
+
+    let conceptCount: number;
+    try {
+        conceptCount = await fetchSchemeDeletionConceptCount(schemeId);
+    } catch (error) {
+        showDeleteError(error);
+        return;
+    }
+
     confirm.require({
         header: $gettext("Confirmation"),
-        message: $gettext("Are you sure you want to delete this scheme?"),
+        message:
+            conceptCount === 0
+                ? $gettext("Are you sure you want to delete this scheme?")
+                : interpolate(
+                      $ngettext(
+                          "Are you sure you want to delete this scheme and its %{count} concept? This cannot be undone.",
+                          "Are you sure you want to delete this scheme and its %{count} concepts? This cannot be undone.",
+                          conceptCount,
+                      ),
+                      { count: String(conceptCount) },
+                  ),
         group: "delete-scheme",
-        accept: () => {
-            if (!scheme.value) {
+        accept: async () => {
+            try {
+                await deleteScheme(schemeId);
+            } catch (error) {
+                showDeleteError(error);
                 return;
             }
-
-            try {
-                deleteLingoResource(
-                    props.graphSlug,
-                    scheme.value.resourceinstanceid,
-                ).then(() => {
-                    router.push({
-                        name: routeNames.schemes,
-                    });
-
-                    refreshSchemeHierarchy!();
-                });
-            } catch (error) {
-                toast.add({
-                    severity: ERROR,
-                    life: DEFAULT_ERROR_TOAST_LIFE,
-                    summary: $gettext("Error deleting scheme"),
-                    detail: error instanceof Error ? error.message : undefined,
-                });
-            }
+            router.push({
+                name: routeNames.schemes,
+            });
+            refreshSchemeHierarchy!();
         },
         rejectProps: {
             label: $gettext("Cancel"),

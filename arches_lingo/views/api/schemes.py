@@ -5,14 +5,23 @@ from django.db.models import Count
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
-from arches.app.models.models import Language, TileModel
+from arches.app.models.models import Language, ResourceInstance, TileModel
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches.extensions.querysets.models import ResourceTileTree
 
-from arches_lingo.const import CONCEPT_NAME_NODEGROUP, CONCEPT_NAME_LANGUAGE_NODE
-from arches_lingo.mixins.permissions import AnonymousAccessMixin
+from arches_lingo.const import (
+    CONCEPT_NAME_LANGUAGE_NODE,
+    CONCEPT_NAME_NODEGROUP,
+    SCHEMES_GRAPH_ID,
+)
+from arches_lingo.mixins.permissions import AnonymousAccessMixin, LingoEditorMixin
 from arches_lingo.utils.concept_builder import ConceptBuilder
+from arches_lingo.utils.scheme_deletion import (
+    SchemeDeletionError,
+    delete_scheme,
+    get_concept_ids_in_scheme,
+)
 
 
 class SchemeResourceView(AnonymousAccessMixin, View):
@@ -79,3 +88,28 @@ class SchemeLabelCountView(AnonymousAccessMixin, View):
         ]
 
         return JSONResponse(labels_by_language)
+
+
+class SchemeDeleteView(LingoEditorMixin, View):
+    def get(self, request, pk):
+        """Report how many concepts deleting the scheme would also delete."""
+        return JSONResponse({"concept_count": len(get_concept_ids_in_scheme(pk))})
+
+    def delete(self, request, pk):
+        try:
+            scheme = ResourceInstance.objects.get(pk=pk, graph_id=SCHEMES_GRAPH_ID)
+        except ResourceInstance.DoesNotExist:
+            return JSONErrorResponse(
+                title=_("Not found"),
+                message=_("Scheme not found."),
+                status=HTTPStatus.NOT_FOUND,
+            )
+        try:
+            deleted_concept_count = delete_scheme(scheme, request.user)
+        except SchemeDeletionError as error:
+            return JSONErrorResponse(
+                title=_("Cannot delete"),
+                message=str(error),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        return JSONResponse({"deleted_concept_count": deleted_concept_count})
