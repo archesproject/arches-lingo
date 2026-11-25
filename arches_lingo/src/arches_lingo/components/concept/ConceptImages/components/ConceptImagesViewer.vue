@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, onMounted, computed } from "vue";
+import { inject, nextTick, ref, computed, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "openvue/button";
@@ -7,15 +7,29 @@ import ConfirmDialog from "openvue/confirmdialog";
 import Image from "openvue/image";
 import Message from "openvue/message";
 import Skeleton from "openvue/skeleton";
-import Tag from "openvue/tag";
 import { useConfirm } from "openvue/useconfirm";
+import { useToast } from "openvue/usetoast";
+
+import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
-import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
+import {
+    DANGER,
+    DEFAULT_ERROR_TOAST_LIFE,
+    ERROR,
+    SECONDARY,
+    VIEW,
+} from "@/arches_lingo/constants.ts";
+import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
 import { storeToRefs } from "pinia";
-import { getFileUrl } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import {
+    getDigitalObjectImageAlt,
+    getDigitalObjectImageUrl,
+} from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
@@ -23,7 +37,6 @@ import type {
     ConceptInstance,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
-import type { FileListAliasedNodeData } from "@/arches_vue_components/datatypes/file-list/types.ts";
 import {
     fetchLingoResourcePartial,
     fetchLingoResourcesBatch,
@@ -77,6 +90,7 @@ const createTooltipText = computed(() => {
     );
 });
 const { isEditor } = useUserStore();
+const { selectedLanguage } = storeToRefs(useLanguageStore());
 const { targetDigitalObjectResourceInstanceId } = storeToRefs(
     useConceptImagesEditorStore(),
 );
@@ -86,43 +100,35 @@ const isLoading = ref(true);
 const resources = ref<DigitalObjectInstance[]>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
+const toast = useToast();
+const sectionHeadingRef = ref<HTMLElement | null>(null);
 
-onMounted(async () => {
-    if (props.tileData) {
+// The report refreshes its resource in place after a merge rather than
+// remounting this section, so the images are refetched whenever the tile does.
+watch(
+    () => props.tileData,
+    async (tileData) => {
+        const digitalObjectIds =
+            tileData?.aliased_data.depicting_digital_asset_internal?.node_value
+                ?.map((reference) => reference.resourceId)
+                .filter(Boolean) ?? [];
+
+        configurationError.value = undefined;
+        resources.value = [];
         try {
-            const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal.node_value
-                    ?.map((ref) => ref.resourceId)
-                    .filter(Boolean);
-            if (digitalObjectInstances) {
+            if (digitalObjectIds.length) {
                 resources.value = await fetchLingoResourcesBatch(
                     "digital_object_system",
-                    digitalObjectInstances,
+                    digitalObjectIds,
                 );
             }
         } catch (error) {
             configurationError.value = error;
         }
-    }
-    isLoading.value = false;
-});
-
-function getImageUrl(resource: DigitalObjectInstance): string | undefined {
-    const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListAliasedNodeData | undefined;
-    const fileReference = contentData?.node_value?.[0];
-    if (fileReference?.url) {
-        return getFileUrl(fileReference.url);
-    }
-    return undefined;
-}
-
-function getImageAlt(resource: DigitalObjectInstance): string {
-    const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListAliasedNodeData | undefined;
-    const fileReference = contentData?.node_value?.[0];
-    return fileReference?.altText || fileReference?.name || "";
-}
+        isLoading.value = false;
+    },
+    { immediate: true },
+);
 
 function confirmDelete(removedResourceInstanceId: string) {
     confirm.require({
@@ -130,59 +136,79 @@ function confirmDelete(removedResourceInstanceId: string) {
         message: $gettext(
             "Do you want to remove this digital resource from concept images? (This does not delete the digital resource)",
         ),
-        accept: async () => {
-            isLoading.value = true;
-
-            const resourceInstanceId = props.tileData?.resourceinstance;
-
-            if (resourceInstanceId) {
-                const resource: ConceptInstance =
-                    await fetchLingoResourcePartial(
-                        props.graphSlug,
-                        resourceInstanceId,
-                        props.nodegroupAlias,
-                    );
-
-                const depictingDigitalAssetInternalData =
-                    resource.aliased_data.depicting_digital_asset_internal
-                        ?.aliased_data;
-                if (
-                    depictingDigitalAssetInternalData?.depicting_digital_asset_internal
-                ) {
-                    const currentNodeValue =
-                        depictingDigitalAssetInternalData
-                            .depicting_digital_asset_internal.node_value ?? [];
-                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
-                        currentNodeValue.filter(
-                            (ref) =>
-                                ref.resourceId !== removedResourceInstanceId,
-                        );
-                    resources.value = resources.value?.filter(
-                        (resource) =>
-                            resource.resourceinstanceid !==
-                            removedResourceInstanceId,
-                    );
-                    await updateLingoResource(
-                        props.graphSlug,
-                        resourceInstanceId,
-                        resource,
-                    );
-                }
-
-                isLoading.value = false;
-                newResource();
-            }
-        },
+        accept: () => removeDigitalResource(removedResourceInstanceId),
         rejectProps: {
             label: $gettext("Cancel"),
             severity: SECONDARY,
             outlined: true,
         },
         acceptProps: {
-            label: $gettext("Delete"),
+            label: $gettext("Remove"),
             severity: DANGER,
         },
     });
+}
+
+async function removeDigitalResource(removedResourceInstanceId: string) {
+    const resourceInstanceId = props.tileData?.resourceinstance;
+    if (!resourceInstanceId) {
+        return;
+    }
+
+    isLoading.value = true;
+    try {
+        const resource: ConceptInstance = await fetchLingoResourcePartial(
+            props.graphSlug,
+            resourceInstanceId,
+            props.nodegroupAlias,
+        );
+
+        const depictingDigitalAssetInternalData =
+            resource.aliased_data.depicting_digital_asset_internal
+                ?.aliased_data;
+        if (
+            depictingDigitalAssetInternalData?.depicting_digital_asset_internal
+        ) {
+            const currentNodeValue =
+                depictingDigitalAssetInternalData
+                    .depicting_digital_asset_internal.node_value ?? [];
+            depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
+                currentNodeValue.filter(
+                    (ref) => ref.resourceId !== removedResourceInstanceId,
+                );
+            await updateLingoResource(
+                props.graphSlug,
+                resourceInstanceId,
+                resource,
+            );
+            resources.value = resources.value?.filter(
+                (resource) =>
+                    resource.resourceinstanceid !== removedResourceInstanceId,
+            );
+        }
+        newResource();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to remove the image."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLoading.value = false;
+    }
+
+    await nextTick();
+    if (sectionHeadingRef.value) {
+        focusWithoutScrolling(sectionHeadingRef.value);
+    }
+}
+
+function getImageName(resource: DigitalObjectInstance): string {
+    return (
+        resource.aliased_data.name?.aliased_data.name_content?.display_value ||
+        $gettext("image")
+    );
 }
 
 function newResource() {
@@ -205,32 +231,21 @@ function modifyResource(resourceInstanceId?: string) {
 
         <div class="section-header">
             <div class="section-title">
-                <h2>{{ props.sectionTitle }}</h2>
-                <Tag
+                <h2 ref="sectionHeadingRef">{{ props.sectionTitle }}</h2>
+                <CountTag
                     v-if="resources?.length"
-                    :value="String(resources.length)"
-                    severity="secondary"
+                    :count="resources.length"
                 />
             </div>
-            <Button
+            <DisabledReasonButton
                 v-if="isEditor"
-                v-tooltip.top="{
-                    disabled: Boolean(!isCreateDisabled),
-                    value: createTooltipText,
-                    showDelay: 300,
-                    pt: {
-                        text: {
-                            style: { fontFamily: 'var(--p-lingo-font-family)' },
-                        },
-                        arrow: { style: { display: 'none' } },
-                    },
-                }"
-                :disabled="isCreateDisabled"
+                :is-disabled="isCreateDisabled"
+                :disabled-reason="createTooltipText"
                 :label="$gettext('Add Image')"
                 class="add-button"
                 icon="pi pi-plus-circle"
                 @click="newResource"
-            ></Button>
+            />
         </div>
 
         <Skeleton
@@ -265,9 +280,14 @@ function modifyResource(resourceInstanceId?: string) {
                 >
                     <div class="image-container">
                         <Image
-                            v-if="getImageUrl(resource)"
-                            :src="getImageUrl(resource)"
-                            :alt="getImageAlt(resource)"
+                            v-if="getDigitalObjectImageUrl(resource)"
+                            :src="getDigitalObjectImageUrl(resource)"
+                            :alt="
+                                getDigitalObjectImageAlt(
+                                    resource,
+                                    selectedLanguage.code,
+                                )
+                            "
                             preview
                             class="card-image"
                         />
@@ -275,7 +295,10 @@ function modifyResource(resourceInstanceId?: string) {
                             v-else
                             class="image-placeholder"
                         >
-                            <i class="pi pi-image" />
+                            <i
+                                class="pi pi-image"
+                                aria-hidden="true"
+                            />
                         </div>
                     </div>
                     <div class="card-body">
@@ -301,7 +324,16 @@ function modifyResource(resourceInstanceId?: string) {
                                     class="controls edit-button"
                                     icon="pi pi-file-edit"
                                     variant="text"
-                                    :aria-label="$gettext('edit')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Edit %{imageName}',
+                                            {
+                                                imageName:
+                                                    getImageName(resource),
+                                            },
+                                            true,
+                                        )
+                                    "
                                     @click="
                                         editResource(
                                             resource.resourceinstanceid,
@@ -312,7 +344,16 @@ function modifyResource(resourceInstanceId?: string) {
                                     v-if="canEditResourceInstances"
                                     class="controls delete-button"
                                     icon="pi pi-trash"
-                                    :aria-label="$gettext('Delete')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Remove %{imageName}',
+                                            {
+                                                imageName:
+                                                    getImageName(resource),
+                                            },
+                                            true,
+                                        )
+                                    "
                                     variant="text"
                                     @click="
                                         confirmDelete(
@@ -422,9 +463,7 @@ function modifyResource(resourceInstanceId?: string) {
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-text-color);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
     flex: 1;
     min-width: 0;
 }

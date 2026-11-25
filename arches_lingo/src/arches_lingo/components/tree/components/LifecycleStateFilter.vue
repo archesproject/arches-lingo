@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
+import { computed, ref, useId, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "openvue/button";
@@ -29,6 +29,8 @@ const LIFECYCLE_STATE_FILTER_LABEL = computed(() =>
 );
 
 const popoverRef = useTemplateRef<PopoverMethods>("popover");
+const isPopoverOpen = ref(false);
+const lifecycleFilterHeadingId = useId();
 
 const isFilterActive = computed(
     () => selectedLifecycleStateIds.value.length < props.lifecycleStates.length,
@@ -86,14 +88,24 @@ function openPopover(event: MouseEvent) {
             :class="{ 'filter-active': isFilterActive }"
             :aria-label="FILTER_BY_LIFECYCLE_STATE"
             :title="FILTER_BY_LIFECYCLE_STATE"
+            :aria-expanded="isPopoverOpen"
+            aria-haspopup="dialog"
             :text="true"
             :rounded="true"
             @click="openPopover"
         />
 
-        <Popover ref="popover">
+        <Popover
+            ref="popover"
+            :pt="{ root: { 'aria-labelledby': lifecycleFilterHeadingId } }"
+            @show="isPopoverOpen = true"
+            @hide="isPopoverOpen = false"
+        >
             <div class="lifecycle-filter-panel">
-                <div class="lifecycle-filter-heading">
+                <div
+                    :id="lifecycleFilterHeadingId"
+                    class="lifecycle-filter-heading"
+                >
                     {{ LIFECYCLE_STATE_FILTER_LABEL }}
                 </div>
 
@@ -142,7 +154,7 @@ function openPopover(event: MouseEvent) {
     font-weight: 600;
     font-size: 0.875rem;
     padding-bottom: 0.5rem;
-    border-bottom: 0.0625rem solid var(--p-menubar-border-color);
+    border-bottom: 0.0625rem solid var(--p-content-border-color);
 }
 
 .lifecycle-filter-option {

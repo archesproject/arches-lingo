@@ -17,13 +17,17 @@
                 <label for="resource-model-select" data-bind="text: $root.translations.selectAThesaurusToMigrate"></label>
             </div>
             <select id="resource-model-select" data-bind="
+                attr: {'data-label': $root.translations.selectAThesaurusToMigrate},
                 value: selectedScheme,
+                valueAllowUnset: true,
                 options: schemes,
                 optionsText: 'prefLabel',
                 optionsValue: 'conceptid',
-                optionsCaption: $root.translations.select + '...',
-                valueAllowUnset: true,
-                chosen: {width: '500px'}"
+                select2Query: {select2Config: {
+                    value: selectedScheme,
+                    placeholder: $root.translations.select + '...',
+                    allowClear: true
+                }}"
             ></select>
         </div>
     </div>

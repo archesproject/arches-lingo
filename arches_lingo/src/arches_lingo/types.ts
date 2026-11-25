@@ -27,9 +27,13 @@ export interface User {
 
 export interface AppSettings {
     allow_anonymous_access: boolean;
+    reconciliation_enabled: boolean;
+    reconciliation_service_url: string | null;
+    scheme_reconciliation_service_url_template: string | null;
     public_server_address: string | null;
     arches_version: string;
     lingo_version: string;
+    accessibility_mode: boolean;
 }
 
 export interface DisplayedRowRefAndSetter {
@@ -370,6 +374,12 @@ export interface SchemeHeader {
     identifier?: string;
 }
 
+export interface RdfExportFormat {
+    token: string;
+    label: string;
+    extension: string;
+}
+
 export interface LanguageLabelCount {
     language: string;
     code: string;
@@ -408,6 +418,11 @@ export interface SideNavMenuItem extends MenuItem {
     component?: Component;
     showIconIfCollapsed?: boolean;
 }
+
+// Stored as `meta.title` on each route. It takes $gettext so the title is
+// extracted for translation and follows UI language changes.
+export type TranslateFunction = (msgid: string) => string;
+export type RouteTitle = ($gettext: TranslateFunction) => string;
 
 export interface SearchResultItem {
     id: string;
@@ -454,6 +469,16 @@ export interface Notification {
         url: string;
     }>;
 }
+
+export interface ExportedFile {
+    fileid: string;
+    name: string;
+    url: string;
+}
+
+export type ThesaurusExportResponse =
+    | { status: "queued" }
+    | { status: "complete"; file: ExportedFile };
 
 export interface PaginatorDetails {
     current_page: number;
@@ -609,3 +634,144 @@ export interface ConceptSetDetail extends ConceptSetItem {
 }
 
 export type DeleteConceptStrategy = "reparent" | "delete_children" | "orphan";
+
+// Only the merge endpoint accepts handing the children to the surviving concept;
+// the delete and retire endpoints reject it.
+export type MergeRetirementStrategy =
+    | DeleteConceptStrategy
+    | "reparent_to_survivor";
+
+export interface MergeRequestPayload {
+    absorbed_concept_id: string;
+    tile_selections: string[];
+    digital_object_selections: string[];
+    pref_label_demotions: string[];
+    survivor_pref_label_demotions: string[];
+    create_exact_match_tiles: boolean;
+    retire_absorbed_concept: boolean;
+    delete_absorbed_concept: boolean;
+    retirement_strategy: MergeRetirementStrategy | null;
+}
+
+export interface ConceptMergeResult {
+    merged: boolean;
+    concept_merge_id: number;
+    edit_transaction_id: string;
+}
+
+export type MergeTileState =
+    | "selectable"
+    | "already_on_survivor"
+    | "dropped"
+    | "blocked";
+
+export interface ConceptMergePreview {
+    is_cross_scheme: boolean;
+    tile_states: Record<string, MergeTileState>;
+    blocked_nodegroup_aliases: string[];
+}
+
+export interface ConceptMergeHistoryEntry {
+    id: number;
+    created: string;
+    direction: "absorbed" | "merged_into";
+    is_cross_scheme: boolean;
+    counterpart_concept_id: string;
+    counterpart_concept_labels: Label[];
+    counterpart_concept_exists: boolean;
+}
+
+export type ConceptMatchRunStatus =
+    | "pending"
+    | "running"
+    | "complete"
+    | "failed";
+
+export type ConceptMatchCandidateStatus =
+    | "pending"
+    | "dismissed"
+    | "linked"
+    | "merged";
+
+export type ConceptMatchSignal =
+    | "shared_identifier"
+    | "exact_label"
+    | "trigram";
+
+export interface ConceptMatchRunParameters {
+    scheme_ids: string[];
+    source_concept_set_id: number | null;
+    source_concept_ids: string[];
+    cross_scheme_only: boolean;
+    signals: ConceptMatchSignal[];
+    same_language_only: boolean;
+    similarity_threshold: number;
+}
+
+export interface ConceptMatchRun {
+    id: number;
+    name: string;
+    status: ConceptMatchRunStatus;
+    created: string;
+    finished: string | null;
+    elapsed_seconds: number;
+    parameters: ConceptMatchRunParameters;
+    candidate_count: number;
+    counts_by_status: Record<ConceptMatchCandidateStatus, number>;
+    pending_count: number;
+    error_message: string;
+    created_by: string | null;
+    started_by_viewer: boolean;
+    can_delete: boolean;
+}
+
+export interface MatchedConceptSummary {
+    id: string;
+    labels: Label[];
+    scheme_id: string | null;
+    scheme_name: string | null;
+    can_receive_data: boolean;
+    cannot_receive_reason: "not_editable" | "scheme_locked" | null;
+}
+
+export interface ConceptMatchCandidate {
+    id: number;
+    score: number;
+    signal: ConceptMatchSignal;
+    evidence: string;
+    status: ConceptMatchCandidateStatus;
+    concept_a: MatchedConceptSummary | null;
+    concept_b: MatchedConceptSummary | null;
+    is_cross_scheme: boolean;
+}
+
+export interface ConceptMatchCandidatePage {
+    data: ConceptMatchCandidate[];
+    total_results: number;
+    current_page: number;
+    items_per_page: number;
+}
+
+export interface ConceptMatchStatusChange {
+    updated: number;
+    status: ConceptMatchCandidateStatus;
+    skipped: Record<string, number>;
+}
+
+export interface ConceptMatchRunRequest {
+    name?: string;
+    scheme_ids?: string[];
+    source_concept_ids?: string[];
+    cross_scheme_only?: boolean;
+    signals?: ConceptMatchSignal[];
+    same_language_only?: boolean;
+    similarity_threshold?: number;
+}
+
+export type ConceptMatchLinkType = "exactMatch" | "closeMatch" | "relatedMatch";
+
+export interface ConceptMatchLinkResult {
+    linked: number;
+    linked_one_way: number;
+    skipped: Record<string, number>;
+}

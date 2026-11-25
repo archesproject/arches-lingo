@@ -9,6 +9,7 @@ import RadioButton from "openvue/radiobutton";
 import { INFO, SECONDARY } from "@/arches_lingo/constants.ts";
 
 const { resourceName, resourceType, isLoading } = defineProps<{
+    visible: boolean;
     resourceId: string;
     resourceName: string | undefined;
     resourceType: "concept" | "scheme";
@@ -18,29 +19,39 @@ const { resourceName, resourceType, isLoading } = defineProps<{
 const emit = defineEmits<{
     confirm: [cascade: boolean];
     cancel: [];
+    "after-hide": [];
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 
 const selectedCascade = ref(false);
 
 const confirmationText = computed(function () {
-    return $gettext(
-        'Are you sure you want to reinstate "%{name}"? It will return to Editing state.',
+    return interpolate(
+        $gettext(
+            'Are you sure you want to reinstate "%{name}"? It will return to Editing state.',
+        ),
         { name: resourceName ?? "" },
+        true,
     );
 });
 
 const childrenText = computed(function () {
     if (resourceType === "scheme") {
-        return $gettext(
-            'Would you also like to reinstate the concepts within "%{name}"?',
+        return interpolate(
+            $gettext(
+                'Would you also like to reinstate the concepts within "%{name}"?',
+            ),
             { name: resourceName ?? "" },
+            true,
         );
     }
-    return $gettext(
-        'Would you also like to reinstate the child concepts within "%{name}"?',
+    return interpolate(
+        $gettext(
+            'Would you also like to reinstate the child concepts within "%{name}"?',
+        ),
         { name: resourceName ?? "" },
+        true,
     );
 });
 
@@ -76,13 +87,14 @@ function onConfirm() {
 
 <template>
     <Dialog
-        :visible="true"
+        :visible="visible"
         :modal="true"
         :dismissable-mask="false"
         :header="$gettext('Reinstate')"
         :closable="!isLoading"
         class="reinstate-dialog"
         @update:visible="!isLoading && $emit('cancel')"
+        @after-hide="$emit('after-hide')"
     >
         <div class="dialog-body">
             <div class="dialog-text">{{ confirmationText }}</div>
@@ -149,7 +161,7 @@ function onConfirm() {
 
 <style scoped>
 .reinstate-dialog {
-    width: 34rem;
+    width: min(34rem, 100%);
 }
 
 .dialog-body {

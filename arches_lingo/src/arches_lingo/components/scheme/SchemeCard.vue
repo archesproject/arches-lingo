@@ -62,47 +62,59 @@ function onImport() {
 </script>
 
 <template>
-    <RouterLink :to="schemeURL">
-        <Card :class="scheme.id === NEW ? 'new-scheme' : ''">
-            <template #title>
-                <div v-if="scheme.id === NEW">
+    <Card :class="scheme.id === NEW ? 'new-scheme' : ''">
+        <template #title>
+            <h2
+                v-if="scheme.id === NEW"
+                class="scheme-card-title"
+            >
+                <RouterLink
+                    :to="schemeURL"
+                    class="scheme-card-link"
+                >
                     {{ $gettext("New Scheme") }}
-                </div>
-                <div
-                    v-else
-                    class="scheme-card"
+                </RouterLink>
+            </h2>
+            <h2
+                v-else
+                class="scheme-card scheme-card-title"
+            >
+                <RouterLink
+                    :to="schemeURL"
+                    class="scheme-card-link"
                 >
                     {{ schemeName.value }}
+                </RouterLink>
+            </h2>
+        </template>
+        <template #content>
+            <div v-if="scheme.id === NEW">
+                <div class="scheme-circle">
+                    <i class="pi pi-share-alt new-scheme-icon"></i>
                 </div>
-            </template>
-            <template #content>
-                <div v-if="scheme.id === NEW">
-                    <div class="scheme-circle">
-                        <i class="pi pi-share-alt new-scheme-icon"></i>
-                    </div>
-                    <div>
-                        <span>{{
-                            $gettext(
-                                "Add a new thesaurus, manage concept hierarchies",
-                            )
-                        }}</span>
-                    </div>
+                <div>
+                    <span>{{
+                        $gettext(
+                            "Add a new thesaurus, manage concept hierarchies",
+                        )
+                    }}</span>
                 </div>
-                <span v-else>{{ schemeDescription }}</span>
-            </template>
-            <template
-                v-if="scheme.id === NEW"
-                #footer
-            >
-                <Button
-                    :label="$gettext('Import Thesauri')"
-                    type="button"
-                    outlined
-                    @click.stop.prevent="openImportDialog"
-                />
-            </template>
-        </Card>
-    </RouterLink>
+            </div>
+            <span v-else>{{ schemeDescription }}</span>
+        </template>
+        <template
+            v-if="scheme.id === NEW"
+            #footer
+        >
+            <Button
+                :label="$gettext('Import Thesauri')"
+                type="button"
+                outlined
+                class="import-button"
+                @click="openImportDialog"
+            />
+        </template>
+    </Card>
     <ImportThesauri
         v-if="showImportDialog"
         :key="importDialogKey"
@@ -111,21 +123,53 @@ function onImport() {
 </template>
 
 <style scoped>
-ul:first-child li:first-child .p-card {
-    color: var(--p-button-contrast-color);
-    background: var(--p-arches-blue);
-    border: 0.0625rem solid var(--p-surface-900);
+.p-card.new-scheme {
+    color: var(--p-lingo-new-scheme-card-color);
+    background: var(--p-lingo-new-scheme-card-background);
+    border: 0.0625rem solid var(--p-lingo-new-scheme-card-border-color);
 }
 
-ul:first-child li:first-child .p-card .scheme-circle {
-    background: var(--p-blue-600);
-}
-
-a {
+.scheme-card-link {
+    color: inherit;
     text-decoration: none;
 }
 
-:deep(.p-card) {
+.scheme-card-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+/* Draw the link's focus ring around the whole card, as before. */
+.scheme-card-link:focus-visible {
+    outline: none;
+}
+
+.p-card:has(.scheme-card-link:focus-visible) {
+    outline: var(--p-lingo-scheme-card-focus-outline);
+    outline-offset: var(--p-lingo-scheme-card-focus-outline-offset);
+}
+
+.import-button {
+    position: relative;
+    z-index: 1;
+}
+
+.import-button:focus-visible {
+    outline: 0.125rem solid
+        var(--p-lingo-new-scheme-card-button-focus-ring-color);
+    outline-offset: -0.25rem;
+    box-shadow: none;
+}
+
+.scheme-card-title {
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+.p-card {
+    position: relative;
     background-color: var(--p-button-primary-background);
     border: 0.0625rem solid var(--p-header-toolbar-border);
     color: var(--p-button-primary-color);
@@ -158,12 +202,14 @@ a {
     border-radius: 0;
     flex-grow: 1;
     font-size: var(--p-lingo-font-size-xsmall);
-    color: var(--p-button-contrast-color);
-    background: var(--p-button-primary-hover-background);
+    color: var(--p-lingo-new-scheme-card-button-color);
+    background: var(--p-lingo-new-scheme-card-button-background);
+    border-color: var(--p-lingo-new-scheme-card-button-border-color);
 }
 
 .new-scheme :deep(.p-button:hover) {
-    background: var(--p-primary-active-color);
+    color: var(--p-lingo-new-scheme-card-button-hover-color);
+    background: var(--p-lingo-new-scheme-card-button-hover-background);
 }
 
 :deep(.p-card-content) {
@@ -182,8 +228,8 @@ a {
     padding: 1.25rem;
     margin: 0.75rem;
     border-radius: 50%;
-    background: var(--p-surface-400);
-    border: 0.0625rem solid var(--p-surface-900);
+    background: var(--p-lingo-new-scheme-card-circle-background);
+    border: 0.0625rem solid var(--p-lingo-new-scheme-card-circle-border-color);
 }
 
 .new-scheme-icon {

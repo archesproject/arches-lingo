@@ -1,0 +1,135 @@
+<script setup lang="ts">
+import { onMounted, ref, watch } from "vue";
+import { useGettext } from "vue3-gettext";
+import { RouterLink } from "vue-router";
+import { storeToRefs } from "pinia";
+
+import Button from "openvue/button";
+
+import { fetchConceptMergeHistory } from "@/arches_lingo/api.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+
+import type { ConceptMergeHistoryEntry } from "@/arches_lingo/types.ts";
+
+const { resourceInstanceId } = defineProps<{
+    resourceInstanceId: string;
+}>();
+
+const { $gettext, interpolate } = useGettext();
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+const resourceStore = useResourceStore();
+
+const merges = ref<ConceptMergeHistoryEntry[]>([]);
+
+// A merge performed from this page adds an entry, so the history has to follow
+// the resource rather than only loading once.
+watch(() => resourceStore.resource.value, loadMergeHistory);
+
+onMounted(loadMergeHistory);
+
+function entryText(entry: ConceptMergeHistoryEntry) {
+    const counterpartName =
+        getItemLabel(
+            { labels: entry.counterpart_concept_labels },
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        ).value || $gettext("a deleted concept");
+
+    if (!entry.counterpart_concept_exists) {
+        return interpolate(
+            $gettext("Merged from %{name} (deleted)"),
+            { name: counterpartName },
+            true,
+        );
+    }
+    if (entry.direction === "absorbed" && entry.is_cross_scheme) {
+        return interpolate(
+            $gettext("Values copied from %{name}"),
+            { name: counterpartName },
+            true,
+        );
+    }
+    if (entry.direction === "absorbed") {
+        return interpolate(
+            $gettext("Merged from %{name}"),
+            { name: counterpartName },
+            true,
+        );
+    }
+    return interpolate(
+        $gettext("Merged into %{name}"),
+        { name: counterpartName },
+        true,
+    );
+}
+
+function counterpartRoute(entry: ConceptMergeHistoryEntry) {
+    return {
+        name: routeNames.concept,
+        params: { id: entry.counterpart_concept_id },
+    };
+}
+
+// A failed lookup should never block the header from rendering.
+async function loadMergeHistory() {
+    try {
+        merges.value = await fetchConceptMergeHistory(resourceInstanceId);
+    } catch {
+        merges.value = [];
+    }
+}
+</script>
+
+<template>
+    <ul
+        v-if="merges.length"
+        class="concept-merge-history"
+    >
+        <li
+            v-for="entry in merges"
+            :key="entry.id"
+        >
+            <i
+                class="pi pi-sign-in"
+                aria-hidden="true"
+            ></i>
+            <Button
+                v-if="entry.counterpart_concept_exists"
+                :as="RouterLink"
+                :to="counterpartRoute(entry)"
+                :label="entryText(entry)"
+                variant="link"
+                class="concept-merge-link"
+            />
+            <span v-else>{{ entryText(entry) }}</span>
+        </li>
+    </ul>
+</template>
+
+<style scoped>
+.concept-merge-history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.concept-merge-history li {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-text-muted-color);
+}
+
+.concept-merge-link {
+    padding: 0;
+    font-size: inherit;
+    text-decoration: underline;
+}
+</style>

@@ -9,7 +9,7 @@ from datetime import datetime
 from slugify import slugify
 
 from django.db import connection
-from django.utils.translation import gettext as _
+from django.utils.translation import get_language, gettext as _
 
 import arches.app.utils.task_management as task_management
 from arches.app.models.system_settings import settings
@@ -18,15 +18,18 @@ from arches.app.models.models import (
     LoadEvent,
     ResourceInstance,
     TempFile,
+    TileModel,
     User,
 )
 from arches.app.utils.data_management.resources.formats.rdffile import RdfWriter
 from arches.app.utils.data_management.resources.formats.rdffile import JsonLdWriter
 from arches.app.utils.data_management.resources.formats.csvfile import TileCsvWriter
-from arches_querysets.models import ResourceTileTree
+from arches.extensions.querysets.models import ResourceTileTree
 from arches.app.tasks import notify_completion
 
+from arches_lingo import const
 from arches_lingo.utils.concept_builder import ConceptBuilder
+from arches_lingo.utils.display_label import get_display_label
 from arches_lingo.utils.skos import SKOSWriter
 from arches_lingo.utils.skos_serializer import (
     build_resource_uri_map,
@@ -91,18 +94,35 @@ class LingoResourceExporter:
         )
         self.load_event = load_event
 
-        if task_management.check_if_celery_available():
+        concept_count = self._count_concepts_for_export(self.resourceid)
+        if concept_count is None:
+            error = _(
+                "The selected resource could not be found and cannot be exported."
+            )
+            return self._handle_error(error)
+
+        if concept_count > const.CELERY_CONCEPT_COUNT_THRESHOLD:
+            if not task_management.check_if_celery_available():
+                error = _(
+                    "The thesaurus exceeds the threshold for synchronous export, but Celery is not available. Please contact your system administrator."
+                )
+                return self._handle_error(error)
             from arches_lingo import tasks as lingo_tasks
 
             task = lingo_tasks.export_lingo_resources_task.apply_async(
-                args=[self.loadid, self.user.id, self.resourceid, filename, format]
+                args=[self.loadid, self.user.id, self.resourceid, filename, format],
+                kwargs={"language": get_language()},
             )
             with connection.cursor() as cursor:
                 cursor.execute(
                     "UPDATE load_event SET taskid = %s WHERE loadid = %s",
                     (task.task_id, self.loadid),
                 )
-            return {"success": True, "data": "delegated_to_celery"}
+            return {
+                "success": True,
+                "status": const.EXPORT_STATUS_QUEUED,
+                "data": const.DELEGATED_TO_CELERY,
+            }
 
         try:
             response = self.run_export_task(self.resourceid, filename, format)
@@ -194,6 +214,61 @@ class LingoResourceExporter:
             referenced_ids |= collect_referenced_resource_ids(triples)
         return build_resource_uri_map(subject_ids | referenced_ids)
 
+    def _count_concepts_for_export(self, resourceid):
+        graph_id = (
+            ResourceInstance.objects.filter(pk=resourceid)
+            .values_list("graph_id", flat=True)
+            .first()
+        )
+        if graph_id is None:
+            return None
+
+        if str(graph_id) == const.SCHEMES_GRAPH_ID:
+            part_of_scheme_node = const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID
+            return (
+                TileModel.objects.filter(
+                    nodegroup_id=part_of_scheme_node,
+                    **{
+                        f"data__{part_of_scheme_node}__contains": [
+                            {"resourceId": str(resourceid)}
+                        ]
+                    },
+                )
+                .values("resourceinstance_id")
+                .distinct()
+                .count()
+            )
+
+        if str(graph_id) == const.CONCEPTS_GRAPH_ID:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    WITH RECURSIVE concept_and_descendants(concept_id) AS (
+                        SELECT %(root_concept_id)s::uuid
+                        UNION
+                        SELECT narrower_tile.resourceinstanceid
+                          FROM tiles narrower_tile
+                          JOIN concept_and_descendants broader
+                            ON narrower_tile.nodegroupid = %(nodegroup_id)s::uuid
+                           AND (narrower_tile.tiledata -> %(broader_node_id)s)
+                               @> jsonb_build_array(
+                                   jsonb_build_object(
+                                       'resourceId', broader.concept_id::text
+                                   )
+                               )
+                    )
+                    SELECT count(*) FROM concept_and_descendants
+                    """,
+                    {
+                        "root_concept_id": str(resourceid),
+                        "nodegroup_id": const.CLASSIFICATION_STATUS_NODEGROUP,
+                        "broader_node_id": const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+                    },
+                )
+                return cursor.fetchone()[0]
+
+        return None
+
     def _get_resource_ids_for_export(self, resourceid):
         """
         Return (scheme_ids, concept_ids) for use with core Arches export formats.
@@ -205,7 +280,7 @@ class LingoResourceExporter:
             graph_slug="scheme", resource_ids=[resourceid]
         )
         if len(schemes) > 0:
-            self.scheme_name = schemes.first().name[settings.LANGUAGE_CODE]
+            self.scheme_name = get_display_label(resourceid)
             concepts = ResourceTileTree.get_tiles(graph_slug="concept").filter(
                 part_of_scheme__id=resourceid
             )
@@ -230,7 +305,7 @@ class LingoResourceExporter:
                 self._handle_error(error)
                 return [], []
             scheme_id = part_of_scheme.aliased_data.part_of_scheme.pk
-            self.scheme_name = root_concept.name[settings.LANGUAGE_CODE]
+            self.scheme_name = get_display_label(resourceid)
 
             concept_builder = ConceptBuilder()
             all_ids = {str(resourceid)}
@@ -377,6 +452,8 @@ class LingoResourceExporter:
 
             return {
                 "success": True,
+                "status": const.EXPORT_STATUS_COMPLETE,
+                "file": file_details,
                 "data": {
                     "message": "success",
                     "load_details": json.dumps(self.load_event.load_details),
@@ -401,7 +478,7 @@ class LingoResourceExporter:
             concepts = ResourceTileTree.get_tiles(graph_slug="concept").filter(
                 part_of_scheme__id=resourceid
             )
-            self.scheme_name = schemes.first().name[settings.LANGUAGE_CODE]
+            self.scheme_name = get_display_label(resourceid)
         # Partial Hierarchy Export
         else:
             root_concept = ResourceTileTree.get_tiles(
@@ -421,7 +498,7 @@ class LingoResourceExporter:
             else:
                 scheme_id = part_of_scheme.aliased_data.part_of_scheme.pk
 
-            self.scheme_name = root_concept.name[settings.LANGUAGE_CODE]
+            self.scheme_name = get_display_label(resourceid)
 
             # use ConceptBuilder to identify correct hierarchy to export
             concept_builder = ConceptBuilder()
@@ -487,5 +564,7 @@ class LingoResourceExporter:
                 if scheme_name
                 else _("Export failed")
             )
+            if error:
+                message = f"{message}: {error}"
             notify_completion(message, self.user)
         return {"success": False, "message": error}

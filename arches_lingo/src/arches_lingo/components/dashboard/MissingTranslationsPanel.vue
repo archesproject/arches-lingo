@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Column from "openvue/column";
@@ -30,14 +30,9 @@ const emit = defineEmits<{
     pageChange: [event: { first: number; rows: number }];
 }>();
 
-const router = useRouter();
 const { $gettext } = useGettext();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
-
-function navigateToConcept(conceptId: string) {
-    router.push({ name: routeNames.concept, params: { id: conceptId } });
-}
 
 function getConceptLabel(concept: SearchResultItem): string {
     return (
@@ -79,14 +74,14 @@ function getConceptScheme(concept: SearchResultItem): string {
                 </span>
             </div>
             <div class="filter-group">
-                <label
-                    for="language-filter"
+                <span
+                    id="language-filter-label"
                     class="filter-label"
                 >
                     {{ $gettext("Language") }}:
-                </label>
+                </span>
                 <Select
-                    id="language-filter"
+                    aria-labelledby="language-filter-label"
                     :model-value="props.translationLanguage"
                     :options="props.languages"
                     option-label="name"
@@ -127,6 +122,7 @@ function getConceptScheme(concept: SearchResultItem): string {
                     <div class="empty-state">
                         <i
                             class="pi pi-check-circle empty-icon empty-icon--success"
+                            aria-hidden="true"
                         />
                         <span>{{
                             $gettext(
@@ -137,15 +133,15 @@ function getConceptScheme(concept: SearchResultItem): string {
                 </template>
                 <Column :header="$gettext('Concept')">
                     <template #body="slotProps">
-                        <a
+                        <RouterLink
                             class="resource-link"
-                            href="#"
-                            @click.prevent="
-                                navigateToConcept(slotProps.data.id)
-                            "
+                            :to="{
+                                name: routeNames.concept,
+                                params: { id: slotProps.data.id },
+                            }"
                         >
                             {{ getConceptLabel(slotProps.data) }}
-                        </a>
+                        </RouterLink>
                     </template>
                 </Column>
                 <Column :header="$gettext('Scheme')">
@@ -180,7 +176,7 @@ function getConceptScheme(concept: SearchResultItem): string {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     padding-bottom: 0.5rem;
 }
 
@@ -188,7 +184,7 @@ function getConceptScheme(concept: SearchResultItem): string {
     margin: 0;
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
 }
 
 .section-header-left {
@@ -202,7 +198,7 @@ function getConceptScheme(concept: SearchResultItem): string {
     align-items: center;
     justify-content: center;
     background: var(--p-primary-100);
-    color: var(--p-primary-700);
+    color: var(--p-lingo-accent-badge-color);
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
     padding: 0.125rem 0.5rem;
@@ -219,7 +215,7 @@ function getConceptScheme(concept: SearchResultItem): string {
 .filter-label {
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     white-space: nowrap;
 }
 
@@ -254,7 +250,7 @@ function getConceptScheme(concept: SearchResultItem): string {
 }
 
 .resource-link {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     text-decoration: none;
     font-size: var(--p-lingo-font-size-smallnormal);
 }
@@ -270,7 +266,7 @@ function getConceptScheme(concept: SearchResultItem): string {
 
 :deep(.p-datatable-column-title) {
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
     font-size: var(--p-lingo-font-size-small);
 }
 

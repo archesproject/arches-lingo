@@ -9,6 +9,8 @@ import Button from "openvue/button";
 import Skeleton from "openvue/skeleton";
 
 import ConceptHeaderToolbar from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue";
+import ConceptMergeHistory from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptMergeHistory.vue";
+import GetAsMenu from "@/arches_lingo/components/generic/GetAsMenu.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import {
@@ -18,17 +20,16 @@ import {
 import {
     CONCEPT_TYPE_NODE_ALIAS,
     DEFAULT_ERROR_TOAST_LIFE,
-    DEFAULT_TOAST_LIFE,
     ERROR,
     SKOS_PREF_LABEL_URI,
     SKOS_ALT_LABEL_URI,
-    SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL, ALT_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
+import { useCopyToClipboard } from "@/arches_lingo/composables/useCopyToClipboard.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -62,6 +63,7 @@ const resourceInstanceLifecycleState = inject<
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const { copyToClipboard } = useCopyToClipboard();
 
 const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
@@ -78,12 +80,10 @@ const conceptTypeTile = ref();
 const isWidgetLoading = ref(false);
 const ancestorLabelsById = ref<Map<string, Label[]>>(new Map());
 
-async function copyUriToClipboard(uri: string) {
-    await navigator.clipboard.writeText(uri);
-    toast.add({
-        severity: SUCCESS,
-        life: DEFAULT_TOAST_LIFE,
-        summary: $gettext("URI copied to clipboard"),
+async function copyUriToClipboard(uri: string): Promise<void> {
+    await copyToClipboard(uri, {
+        copiedSummary: $gettext("URI copied to clipboard"),
+        failedSummary: $gettext("Unable to copy the URI"),
     });
 }
 
@@ -313,15 +313,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 </script>
 
 <template>
-    <Skeleton
-        v-if="isLoading"
-        height="9rem"
-        class="loading-skeleton"
-    />
-    <div
-        v-show="!isLoading"
-        class="concept-header"
-    >
+    <div class="concept-header">
         <ConceptHeaderToolbar
             :concept="concept"
             :label="label"
@@ -329,10 +321,20 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
             :resource-instance-id="resourceInstanceId"
             :concept-type-tile="conceptTypeTile"
             :is-top-concept="isTopConcept"
+            :is-header-loading="isLoading"
             @update:is-widget-loading="isWidgetLoading = $event"
         />
 
-        <div class="header-content">
+        <div
+            v-if="isLoading"
+            class="header-content"
+        >
+            <Skeleton height="5.5rem" />
+        </div>
+        <div
+            v-show="!isLoading"
+            class="header-content"
+        >
             <div class="concept-header-section">
                 <div class="header-row">
                     <div class="header-item">
@@ -367,6 +369,17 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                                 :aria-label="$gettext('Copy URI')"
                                 @click="copyUriToClipboard(data.uri)"
                             ></Button>
+                            <GetAsMenu
+                                resource-type="concept"
+                                :resource-instance-id="resourceInstanceId!"
+                                :file-base-name="
+                                    conceptIdentifierValue ||
+                                    resourceInstanceId!
+                                "
+                                :lifecycle-state-id="
+                                    resourceInstanceLifecycleState?.id
+                                "
+                            />
                         </div>
                         <span
                             v-else
@@ -452,6 +465,10 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                         {{ data?.principalUser || $gettext("Anonymous") }}
                     </span>
                 </div>
+                <ConceptMergeHistory
+                    v-if="resourceInstanceId"
+                    :resource-instance-id="resourceInstanceId"
+                />
             </div>
         </div>
     </div>
@@ -478,13 +495,13 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 .concept-uri {
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .uri-copy-button {
     flex-shrink: 0;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .p-button-link {
@@ -527,7 +544,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 .header-item-value,
 :deep(a) {
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .top-concept-owner {
@@ -539,6 +556,6 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 }
 
 .parent-concept:hover a {
-    color: var(--p-primary-700);
+    color: var(--p-lingo-accent-stronger-color);
 }
 </style>

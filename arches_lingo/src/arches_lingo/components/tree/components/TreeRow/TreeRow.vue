@@ -23,6 +23,7 @@ const { node, focusLabel, unfocusLabel, addChildLabel, filterValue } =
         deleteLabel: string;
         exportLabel: string;
         filterValue: string;
+        actionTabIndex: number;
     }>();
 
 const focusedNode = defineModel<TreeNode | null>("focusedNode");
@@ -70,6 +71,11 @@ const shouldShowAddChildButton = computed(function () {
         class="tree-row"
         :class="{ retired: isRetired }"
     >
+        <i
+            v-if="isRetired"
+            class="pi pi-ban retired-icon"
+            aria-hidden="true"
+        />
         <TreeRowLabel
             :filter-value="filterValue"
             :node="node"
@@ -79,11 +85,13 @@ const shouldShowAddChildButton = computed(function () {
             :focus-label="focusLabel"
             :node="node"
             :unfocus-label="unfocusLabel"
+            :action-tab-index="actionTabIndex"
         />
         <AddChildIcon
             v-if="shouldShowAddChildButton"
             :node="node"
             :add-child-label="addChildLabel"
+            :action-tab-index="actionTabIndex"
         />
         <DeleteIcon
             v-if="
@@ -92,11 +100,13 @@ const shouldShowAddChildButton = computed(function () {
                 !isNodeInLockedScheme
             "
             :delete-label="deleteLabel"
+            :action-tab-index="actionTabIndex"
         />
         <ExportIcon
             v-if="node.data.id !== NEW && userStore.isEditor"
             :node="node"
             :export-label="exportLabel"
+            :action-tab-index="actionTabIndex"
         />
     </div>
 </template>
@@ -110,7 +120,12 @@ const shouldShowAddChildButton = computed(function () {
 }
 
 .tree-row.retired {
-    opacity: 0.5;
+    color: var(--p-text-muted-color);
+    font-style: italic;
     text-decoration: line-through;
+}
+
+.tree-row.retired .retired-icon {
+    font-size: var(--p-lingo-font-size-xsmall);
 }
 </style>

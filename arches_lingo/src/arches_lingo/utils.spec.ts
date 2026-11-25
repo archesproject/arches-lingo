@@ -1,11 +1,21 @@
 import {
     CONCEPT_ICON,
+    DRAFT_LIFECYCLE_STATE_ID,
+    EDITING_LIFECYCLE_STATE_ID,
     GUIDE_TERM_ICON,
+    LOCKED_LIFECYCLE_STATE_ID,
+    PUBLISHED_LIFECYCLE_STATE_ID,
+    RETIRED_LIFECYCLE_STATE_ID,
     SCHEME_ICON,
 } from "@/arches_lingo/constants.ts";
 import {
+    canUserDereferenceResource,
     dataIsScheme,
     dataIsConcept,
+    focusNeighborAfterRemoval,
+    focusWithoutScrolling,
+    getSplitterGutterPassThrough,
+    scaleWithRootFontSize,
     treeFromSchemes,
 } from "@/arches_lingo/utils.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
@@ -105,5 +115,218 @@ describe("Build scheme hierarchy", () => {
             (n) => n.data.labels[0].value === "Concept 2",
         )!;
         expect(concept2Node.icon).toEqual(CONCEPT_ICON);
+    });
+});
+
+describe("Cyclic hierarchies", () => {
+    // SKOS lets concepts declare each other a parent, and the concept store
+    // hands out one shared object per concept, so once both sides have their
+    // children loaded `narrower` holds a real cycle. Without a guard the tree
+    // build recurses until the tab dies.
+    function buildMutuallyNestedConcepts() {
+        const first = {
+            id: "aaaaaaaa-0000-0000-0000-000000000001",
+            labels: [
+                {
+                    value: "first",
+                    language_id: "en",
+                    valuetype_id: "prefLabel",
+                },
+            ],
+            narrower: [],
+            has_narrower: true,
+        } as unknown as Scheme["top_concepts"][number];
+
+        const second = {
+            id: "aaaaaaaa-0000-0000-0000-000000000002",
+            labels: [
+                {
+                    value: "second",
+                    language_id: "en",
+                    valuetype_id: "prefLabel",
+                },
+            ],
+            narrower: [],
+            has_narrower: true,
+        } as unknown as Scheme["top_concepts"][number];
+
+        first.narrower = [second];
+        second.narrower = [first];
+        return { first, second };
+    }
+
+    it("Should terminate and not repeat a concept inside its own subtree", () => {
+        const { first } = buildMutuallyNestedConcepts();
+        const scheme = {
+            id: "bbbbbbbb-0000-0000-0000-000000000001",
+            labels: [
+                {
+                    value: "scheme",
+                    language_id: "en",
+                    valuetype_id: "prefLabel",
+                },
+            ],
+            top_concepts: [first],
+        } as unknown as Scheme;
+
+        const nodes = treeFromSchemes(
+            [scheme],
+            ENGLISH,
+            ENGLISH,
+            iconLabels,
+            null,
+            true,
+            () => true,
+        );
+
+        const firstNode = nodes[0].children![0];
+        expect(firstNode.label).toBe("first");
+
+        const secondNode = firstNode.children![0];
+        expect(secondNode.label).toBe("second");
+
+        // The cycle closes here: `second.narrower` points back at `first`, and
+        // that edge must be dropped rather than followed.
+        expect(secondNode.children).toHaveLength(0);
+    });
+});
+
+describe("RDF dereferencing permissions", () => {
+    it("Should let signed-in users dereference any lifecycle state", () => {
+        expect(
+            canUserDereferenceResource(false, EDITING_LIFECYCLE_STATE_ID),
+        ).toBe(true);
+        expect(canUserDereferenceResource(false, undefined)).toBe(true);
+    });
+
+    it("Should let anonymous users dereference only public lifecycle states", () => {
+        expect(
+            canUserDereferenceResource(true, PUBLISHED_LIFECYCLE_STATE_ID),
+        ).toBe(true);
+        expect(
+            canUserDereferenceResource(true, LOCKED_LIFECYCLE_STATE_ID),
+        ).toBe(true);
+        expect(
+            canUserDereferenceResource(true, RETIRED_LIFECYCLE_STATE_ID),
+        ).toBe(true);
+        expect(canUserDereferenceResource(true, DRAFT_LIFECYCLE_STATE_ID)).toBe(
+            false,
+        );
+        expect(
+            canUserDereferenceResource(true, EDITING_LIFECYCLE_STATE_ID),
+        ).toBe(false);
+    });
+
+    it("Should not let anonymous users dereference before the state loads", () => {
+        expect(canUserDereferenceResource(true, undefined)).toBe(false);
+    });
+});
+
+describe("Splitter gutter pass-through", () => {
+    it("Should put the separator role, name and range on the focusable handle", () => {
+        const passThrough = getSplitterGutterPassThrough({
+            label: "Resize the Explore panel",
+            primaryPanelId: "hierarchy-panel",
+        });
+
+        expect(passThrough.gutter.role).toBe("none");
+        expect(passThrough.gutterHandle).toMatchObject({
+            role: "separator",
+            "aria-label": "Resize the Explore panel",
+            "aria-controls": "hierarchy-panel",
+            "aria-valuemin": 0,
+            "aria-valuemax": 100,
+        });
+    });
+
+    it("Should give the separator the orientation perpendicular to the layout", () => {
+        const sideBySide = getSplitterGutterPassThrough({
+            label: "Resize",
+            primaryPanelId: "panel",
+            layout: "horizontal",
+        });
+        const stacked = getSplitterGutterPassThrough({
+            label: "Resize",
+            primaryPanelId: "panel",
+            layout: "vertical",
+        });
+
+        expect(sideBySide.gutterHandle["aria-orientation"]).toBe("vertical");
+        expect(stacked.gutterHandle["aria-orientation"]).toBe("horizontal");
+    });
+
+    it("Should hide the gutter while the resized panel is hidden", () => {
+        const visible = getSplitterGutterPassThrough({
+            label: "Resize",
+            primaryPanelId: "panel",
+        });
+        const hidden = getSplitterGutterPassThrough({
+            label: "Resize",
+            primaryPanelId: "panel",
+            isVisible: false,
+        });
+
+        expect(visible.gutter.style.display).toBe("flex");
+        expect(hidden.gutter.style.display).toBe("none");
+    });
+});
+
+describe("Focus after removing a list item", () => {
+    async function getFocusTarget(
+        remainingItems: string[],
+        removedIndex: number,
+    ) {
+        let focusedTarget: string | null = null;
+        await focusNeighborAfterRemoval({
+            remainingItems,
+            removedIndex,
+            focusItem: (item) => {
+                focusedTarget = item;
+            },
+            focusWhenEmpty: () => {
+                focusedTarget = "empty";
+            },
+        });
+        return focusedTarget;
+    }
+
+    it("focuses the item that took the removed one's place", async () => {
+        // "b" was removed from ["a", "b", "c"].
+        expect(await getFocusTarget(["a", "c"], 1)).toBe("c");
+    });
+
+    it("focuses the previous item when the last one was removed", async () => {
+        // "c" was removed from ["a", "b", "c"].
+        expect(await getFocusTarget(["a", "b"], 2)).toBe("b");
+    });
+
+    it("falls back when the list is now empty", async () => {
+        expect(await getFocusTarget([], 0)).toBe("empty");
+    });
+});
+
+describe("Focus and sizing helpers", () => {
+    afterEach(() => {
+        document.documentElement.style.fontSize = "";
+        document.body.replaceChildren();
+    });
+
+    it("scales a pixel size with the root font size", () => {
+        document.documentElement.style.fontSize = "20px";
+        expect(scaleWithRootFontSize(36)).toBe(45);
+    });
+
+    it("makes a heading focusable but leaves a button's tab stop alone", () => {
+        const heading = document.createElement("h2");
+        const button = document.createElement("button");
+        document.body.append(heading, button);
+
+        focusWithoutScrolling(heading);
+        expect(document.activeElement).toBe(heading);
+        expect(heading.getAttribute("tabindex")).toBe("-1");
+
+        focusWithoutScrolling(button);
+        expect(document.activeElement).toBe(button);
+        expect(button.hasAttribute("tabindex")).toBe(false);
     });
 });

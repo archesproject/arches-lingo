@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, inject, nextTick, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "openvue/usetoast";
@@ -20,6 +20,7 @@ import {
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 
 import type { DataComponentMode, EditLogEntry } from "@/arches_lingo/types.ts";
 
@@ -60,6 +61,7 @@ const isReverting = ref(false);
 
 const edits = ref([] as EditLogEntry[]);
 const pendingRevertTimestamp = ref<string | null>(null);
+const editLogEntriesRef = ref<HTMLElement | null>(null);
 
 const isRevertDialogVisible = computed(
     () => pendingRevertTimestamp.value !== null,
@@ -183,6 +185,17 @@ function canRevert(editEntry: EditLogEntry) {
     );
 }
 
+function getRevertButtonAriaLabel(editEntry: EditLogEntry) {
+    return $gettext(
+        "Revert to here: %{editType}, %{timestamp}",
+        {
+            editType: formatEditTypeLabel(editEntry),
+            timestamp: formatTimestamp(editEntry.timestamp),
+        },
+        true,
+    );
+}
+
 function confirmRevert(editEntry: EditLogEntry) {
     pendingRevertTimestamp.value = editEntry.timestamp;
 }
@@ -218,6 +231,10 @@ async function acceptRevert() {
 
         await loadEditLog();
         refreshReportSection?.("all");
+        await nextTick();
+        if (editLogEntriesRef.value) {
+            focusWithoutScrolling(editLogEntriesRef.value);
+        }
     } catch (caughtError) {
         toast.add({
             severity: ERROR,
@@ -248,6 +265,7 @@ async function acceptRevert() {
                 :label="$gettext('Cancel')"
                 severity="secondary"
                 outlined
+                autofocus
                 @click="cancelRevert"
             />
             <Button
@@ -269,15 +287,20 @@ async function acceptRevert() {
             v-else-if="!edits.length"
             class="no-edits"
         >
-            <i class="pi pi-history no-edits-icon" />
+            <i
+                class="pi pi-history no-edits-icon"
+                aria-hidden="true"
+            />
             <p>{{ $gettext("No edit history found.") }}</p>
         </div>
 
-        <div
+        <ul
             v-else
+            ref="editLogEntriesRef"
             class="edit-log-entries"
+            :aria-label="$gettext('Edit history')"
         >
-            <div
+            <li
                 v-for="(edit, index) in edits"
                 :key="edit.editlogid"
                 class="edit-entry"
@@ -289,7 +312,10 @@ async function acceptRevert() {
                             `edit-type-${getEditTypeSeverity(edit.edittype)}`,
                         ]"
                     >
-                        <i :class="['pi', getEditTypeIcon(edit.edittype)]" />
+                        <i
+                            :class="['pi', getEditTypeIcon(edit.edittype)]"
+                            aria-hidden="true"
+                        />
                     </div>
                     <div
                         v-if="index < edits.length - 1"
@@ -308,6 +334,7 @@ async function acceptRevert() {
                             severity="secondary"
                             size="small"
                             :label="$gettext('Revert to here')"
+                            :aria-label="getRevertButtonAriaLabel(edit)"
                             :loading="isReverting"
                             :disabled="isReverting"
                             @click="confirmRevert(edit)"
@@ -318,23 +345,32 @@ async function acceptRevert() {
                         v-if="shouldShowCardNameRow(edit)"
                         class="edit-card-name"
                     >
-                        <i class="pi pi-table" />
+                        <i
+                            class="pi pi-table"
+                            aria-hidden="true"
+                        />
                         {{ edit.card_name }}
                     </div>
 
                     <div class="edit-meta">
                         <span class="edit-user">
-                            <i class="pi pi-user" />
+                            <i
+                                class="pi pi-user"
+                                aria-hidden="true"
+                            />
                             {{ formatUser(edit) }}
                         </span>
                         <span class="edit-timestamp">
-                            <i class="pi pi-clock" />
+                            <i
+                                class="pi pi-clock"
+                                aria-hidden="true"
+                            />
                             {{ formatTimestamp(edit.timestamp) }}
                         </span>
                     </div>
                 </div>
-            </div>
-        </div>
+            </li>
+        </ul>
     </div>
 </template>
 
@@ -361,7 +397,9 @@ async function acceptRevert() {
 .edit-log-entries {
     overflow-y: auto;
     flex: 1;
+    margin: 0;
     padding: 0.75rem 1rem;
+    list-style: none;
 }
 
 .no-edits {
@@ -462,7 +500,7 @@ async function acceptRevert() {
 
 .edit-card-name {
     font-size: var(--p-lingo-font-size-xsmall);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     margin-top: 0.2rem;
     display: flex;
     align-items: center;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
@@ -7,19 +7,23 @@ import { useRouter } from "vue-router";
 import Button from "openvue/button";
 import Popover from "openvue/popover";
 
+import DisplaySettingsMenu from "@/arches_lingo/components/generic/DisplaySettingsMenu.vue";
 import UserInteractionMenu from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/UserInteractionMenu.vue";
 
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
+import { focusFirstFocusableElement } from "@/arches_lingo/utils.ts";
 
 import type { PopoverMethods } from "openvue/popover";
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const router = useRouter();
 const userStore = useUserStore();
 const { user, isAnonymous } = storeToRefs(userStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
+const userMenu = useTemplateRef<HTMLElement>("userMenu");
+const isUserMenuVisible = ref(false);
 
 const displayName = computed(() => {
     if (!user.value) return "";
@@ -27,10 +31,14 @@ const displayName = computed(() => {
     if (user.value.first_name && user.value.last_name) {
         // Using gettext here to handle localization-dependant
         // ordering of first name / last name
-        return $gettext("%{firstName} %{lastName}", {
-            firstName: user.value.first_name,
-            lastName: user.value.last_name,
-        });
+        return interpolate(
+            $gettext("%{firstName} %{lastName}"),
+            {
+                firstName: user.value.first_name,
+                lastName: user.value.last_name,
+            },
+            true,
+        );
     }
 
     return user.value.username;
@@ -53,6 +61,11 @@ function openUserMenu(event: MouseEvent) {
     popover.value!.toggle(event);
 }
 
+function onUserMenuShow() {
+    isUserMenuVisible.value = true;
+    focusFirstFocusableElement(userMenu.value);
+}
+
 function navigateToLogin() {
     router.push({ name: routeNames.login });
 }
@@ -61,6 +74,7 @@ function navigateToLogin() {
 <template>
     <div class="user-interaction">
         <template v-if="isAnonymous">
+            <DisplaySettingsMenu />
             <Button
                 :label="$gettext('Login')"
                 :aria-label="$gettext('Login')"
@@ -70,7 +84,8 @@ function navigateToLogin() {
         </template>
         <template v-else>
             <Button
-                :aria-label="$gettext('Open user menu')"
+                aria-haspopup="dialog"
+                :aria-expanded="isUserMenuVisible"
                 @click="openUserMenu"
             >
                 <div
@@ -85,11 +100,16 @@ function navigateToLogin() {
             <Popover
                 ref="popover"
                 class="user-interaction-popover"
+                :pt="{ root: { 'aria-label': $gettext('User menu') } }"
+                @show="onUserMenuShow"
+                @hide="isUserMenuVisible = false"
             >
-                <UserInteractionMenu
-                    :display-name="displayName"
-                    :email="user?.email ?? ''"
-                />
+                <div ref="userMenu">
+                    <UserInteractionMenu
+                        :display-name="displayName"
+                        :email="user?.email ?? ''"
+                    />
+                </div>
             </Popover>
         </template>
     </div>
@@ -106,7 +126,7 @@ function navigateToLogin() {
     padding: 0.5rem;
 }
 
-.p-button {
+.user-interaction :deep(.p-button) {
     background: transparent !important;
     border: none !important;
     border-radius: 0 !important;
@@ -115,11 +135,8 @@ function navigateToLogin() {
     height: 3rem;
 }
 
-.p-button:hover {
-    background: var(
-        --p-button-text-hover-background,
-        var(--p-button-primary-hover-background)
-    ) !important;
+.user-interaction :deep(.p-button:hover) {
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 
 .initials-circle {

@@ -18,6 +18,10 @@ class ThesaurusExportView(LingoEditorMixin, View):
         exporter = LingoResourceExporter(request=request)
         response = exporter.start(request)
 
-        if response["success"]:
-            return JSONResponse({"result": response["data"]})
-        return JSONErrorResponse(content=response)
+        if not response["success"]:
+            return JSONErrorResponse(content=response)
+
+        export_result = {"result": response["data"], "status": response["status"]}
+        if "file" in response:
+            export_result["file"] = response["file"]
+        return JSONResponse(export_result)

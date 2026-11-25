@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, provide, ref, watch } from "vue";
+import { onMounted, provide, ref, watch, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useGettext } from "vue3-gettext";
 import type { RouteLocationNormalized } from "vue-router";
 
 import Splitter from "openvue/splitter";
@@ -9,9 +10,21 @@ import ConfirmDialog from "openvue/confirmdialog";
 import Toast from "openvue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
+import LiveAnnouncer from "@/arches_lingo/components/generic/LiveAnnouncer.vue";
 
+import {
+    HIERARCHY_PANEL_ID,
+    MAIN_CONTENT_ID,
+} from "@/arches_lingo/constants.ts";
+import {
+    TOAST_MESSAGE_PASS_THROUGH,
+    useAccessibleToasts,
+} from "@/arches_lingo/composables/useAccessibleToasts.ts";
+import { usePageTitle } from "@/arches_lingo/composables/usePageTitle.ts";
+import { useRouteChangeFocus } from "@/arches_lingo/composables/useRouteChangeFocus.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
+import { getSplitterGutterPassThrough } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
@@ -23,6 +36,11 @@ const languageStore = useLanguageStore();
 
 const router = useRouter();
 const route = useRoute();
+const { $gettext } = useGettext();
+
+const { pageTitleDetail } = usePageTitle(route);
+useRouteChangeFocus(router, pageTitleDetail);
+const { onToastKeydown, onToastClose } = useAccessibleToasts();
 
 const isNavExpanded = ref(false);
 const schemeHierarchyKey = ref(0);
@@ -31,6 +49,13 @@ const shouldShowHierarchy = ref(
 );
 
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
+
+watchEffect(() => {
+    document.documentElement.lang = languageStore.selectedLanguage.code;
+    document.documentElement.dir =
+        languageStore.selectedLanguage.default_direction ?? "ltr";
+    document.body.dir = document.documentElement.dir;
+});
 
 onMounted(function () {
     languageStore.initialize();
@@ -103,16 +128,28 @@ function refreshSchemeHierarchy() {
     conceptStore.refresh();
     schemeHierarchyKey.value++;
 }
+
+function focusMainContent() {
+    document.getElementById(MAIN_CONTENT_ID)?.focus();
+}
 </script>
 
 <template>
-    <main>
+    <div class="app-shell">
+        <a
+            :href="`#${MAIN_CONTENT_ID}`"
+            class="skip-link"
+            @click.prevent="focusMainContent"
+        >
+            {{ $gettext("Skip to main content") }}
+        </a>
+
         <SideNav
             v-if="route.meta.shouldShowNavigation"
             @update:is-nav-expanded="isNavExpanded = $event"
         />
 
-        <div class="main-content">
+        <div class="app-content">
             <PageHeader
                 v-if="route.meta.shouldShowNavigation"
                 v-model="shouldShowHierarchy"
@@ -120,19 +157,23 @@ function refreshSchemeHierarchy() {
             />
             <Splitter
                 class="main-splitter"
-                :pt="{
-                    gutter: {
-                        style: {
-                            display: shouldShowHierarchy ? 'flex' : 'none',
-                        },
-                    },
-                }"
+                :pt="
+                    getSplitterGutterPassThrough({
+                        label: $gettext('Resize the Explore panel'),
+                        primaryPanelId: HIERARCHY_PANEL_ID,
+                        isVisible: shouldShowHierarchy,
+                    })
+                "
             >
                 <SplitterPanel
                     v-show="shouldShowHierarchy"
                     :size="25"
                 >
-                    <div class="hierarchy-panel">
+                    <aside
+                        :id="HIERARCHY_PANEL_ID"
+                        class="hierarchy-panel"
+                        :aria-label="$gettext('Explore')"
+                    >
                         <SchemeHierarchy
                             v-if="route.meta.shouldShowNavigation"
                             :key="schemeHierarchyKey"
@@ -141,36 +182,64 @@ function refreshSchemeHierarchy() {
                                 shouldShowHierarchy = $event
                             "
                         />
-                    </div>
+                    </aside>
                 </SplitterPanel>
                 <SplitterPanel :size="75">
-                    <RouterView :key="route.path" />
+                    <main
+                        :id="MAIN_CONTENT_ID"
+                        class="page-content"
+                        tabindex="-1"
+                    >
+                        <RouterView :key="route.path" />
+                    </main>
                 </SplitterPanel>
             </Splitter>
         </div>
-    </main>
+    </div>
+    <LiveAnnouncer />
     <Toast
         :pt="{
+            root: { onKeydown: onToastKeydown },
+            message: TOAST_MESSAGE_PASS_THROUGH,
             summary: { fontSize: 'medium' },
             detail: { fontSize: 'small' },
             messageIcon: {
                 style: { marginTop: 'var(--p-toast-messageicon-margintop)' },
             },
         }"
+        @close="onToastClose"
     />
     <ConfirmDialog group="unsaved-changes" />
     <ConfirmDialog group="logout" />
 </template>
 
 <style scoped>
-main {
+.app-shell {
     height: 100vh;
+    height: 100dvh;
     width: 100vw;
     overflow: hidden;
     display: flex;
 }
 
-.main-content {
+.skip-link {
+    position: absolute;
+    inset-block-start: 0.5rem;
+    inset-inline-start: 0.5rem;
+    z-index: 1200;
+    padding: 0.5rem 1rem;
+    background: var(--p-content-background);
+    color: var(--p-text-color);
+    border: 0.125rem solid var(--p-text-color);
+    border-radius: 0.25rem;
+    transform: translateY(-200%);
+}
+
+.skip-link:focus {
+    transform: none;
+}
+
+.app-content {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
@@ -189,10 +258,22 @@ main {
     display: flex;
     flex-direction: column;
 }
+
+.page-content {
+    height: 100%;
+    overflow: auto;
+}
+
+/* <main> only takes focus programmatically (skip link, route changes) and
+   is not a control, so it needs no focus indicator. */
+.page-content:focus {
+    outline: none;
+}
 </style>
 
 <style>
 @import url("arches/arches/app/media/fonts/openSans.css");
+@import url("./themes/high_contrast.css");
 
 :root {
     --p-font-family: var(--p-lingo-font-family);

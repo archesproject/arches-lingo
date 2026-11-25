@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "openvue/usetoast";
 
@@ -8,6 +8,7 @@ import InputText from "openvue/inputtext";
 
 import { upsertSchemeURITemplate } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { focusFirstElementById } from "@/arches_lingo/utils.ts";
 
 type SchemeURITemplate = {
     scheme_resource_instance_id: string;
@@ -31,6 +32,14 @@ const emit = defineEmits<{
 const toast = useToast();
 const { $gettext } = useGettext();
 
+const schemeURITemplateLabelId = useId();
+const schemeURITemplateInputId = useId();
+const schemeURITemplateEditButtonId = useId();
+const schemeURITemplateHelpId = useId();
+const schemeURITemplateHelpText = $gettext(
+    "Placeholders: <scheme_identifier>, <concept_identifier>",
+);
+
 const isEditingSchemeURITemplate = ref(false);
 const schemeURITemplateDraft = ref("");
 const isSavingSchemeURITemplate = ref(false);
@@ -44,14 +53,21 @@ const schemeURITemplateValue = computed(() => {
     return props.defaultSchemeURITemplate;
 });
 
-function editSchemeURITemplate() {
+async function editSchemeURITemplate() {
     schemeURITemplateDraft.value = schemeURITemplateValue.value || "";
     isEditingSchemeURITemplate.value = true;
+    await nextTick();
+    focusFirstElementById(schemeURITemplateInputId);
 }
 
-function cancelEditingSchemeURITemplate() {
+async function cancelEditingSchemeURITemplate() {
     schemeURITemplateDraft.value = "";
     isEditingSchemeURITemplate.value = false;
+    await nextTick();
+    focusFirstElementById(
+        schemeURITemplateEditButtonId,
+        schemeURITemplateLabelId,
+    );
 }
 
 async function saveSchemeURITemplate() {
@@ -85,21 +101,28 @@ async function saveSchemeURITemplate() {
 
 <template>
     <div class="header-item">
-        <span class="header-item-label">
+        <span
+            :id="schemeURITemplateLabelId"
+            class="header-item-label"
+        >
             {{ $gettext("URI template:") }}
         </span>
 
         <template v-if="isEditingSchemeURITemplate">
             <div class="uri-input-wrapper">
                 <InputText
+                    :id="schemeURITemplateInputId"
                     v-model="schemeURITemplateDraft"
                     size="small"
-                    :placeholder="
-                        $gettext(
-                            'Placeholders: <scheme_identifier>, <concept_identifier>',
-                        )
-                    "
+                    :aria-labelledby="schemeURITemplateLabelId"
+                    :aria-describedby="schemeURITemplateHelpId"
                 />
+                <small
+                    :id="schemeURITemplateHelpId"
+                    class="uri-template-help"
+                >
+                    {{ schemeURITemplateHelpText }}
+                </small>
             </div>
             <Button
                 icon="pi pi-check"
@@ -129,6 +152,7 @@ async function saveSchemeURITemplate() {
             </span>
             <Button
                 v-if="canEditResourceInstances"
+                :id="schemeURITemplateEditButtonId"
                 icon="pi pi-pencil"
                 variant="text"
                 size="small"
@@ -142,9 +166,17 @@ async function saveSchemeURITemplate() {
 
 <style scoped>
 .uri-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
     flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
+}
+
+.uri-template-help {
+    font-size: var(--p-lingo-font-size-xsmall);
+    overflow-wrap: anywhere;
 }
 
 :deep(input) {

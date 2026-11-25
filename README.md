@@ -21,14 +21,14 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 
 1. If you don't already have an Arches project, you'll need to create one by following the instructions in the Arches [documentation](http://archesproject.org/documentation/).
 
-2. When your project is ready, add "arches_querysets", "arches_vue_components", "arches_controlled_lists", "arches_lingo", and "pgtrigger" to INSTALLED_APPS **below** the name of your project:
+2. When your project is ready, add "arches.extensions.querysets", "arches.extensions.vue_components", "arches.extensions.controlled_lists", "arches_lingo", and "pgtrigger" to INSTALLED_APPS **below** the name of your project:
     ```
     INSTALLED_APPS = (
         ...
         "my_project_name",
-        "arches_querysets",
-        "arches_vue_components",
-        "arches_controlled_lists",
+        "arches.extensions.querysets",
+        "arches.extensions.vue_components",
+        "arches.extensions.controlled_lists",
         "arches_lingo",
     )
     ```
@@ -38,7 +38,7 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     REFERENCES_INDEX_NAME = "references"
     ELASTICSEARCH_CUSTOM_INDEXES = [
         {
-            "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+            "module": "arches.extensions.controlled_lists.search_indexes.reference_index.ReferenceIndex",
             "name": REFERENCES_INDEX_NAME,
             "should_update_asynchronously": True,
         }
@@ -60,16 +60,22 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
             "type": "reference",
             "label": _("References"),
             "key": REFERENCES_INDEX_NAME,
-            "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+            "module": "arches.extensions.controlled_lists.search_indexes.reference_index.ReferenceIndex",
         },
     ]
 
     ES_MAPPING_MODIFIER_CLASSES = [
-        "arches_controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
+        "arches.extensions.controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
     ]
     ```
 
     Note: the `should_update_asynchronously: True` setting requires Celery to be running. See the [Arches documentation](http://archesproject.org/documentation/) for instructions on configuring and running Celery.
+
+    Finding matching concepts also requires Celery: every match search runs on a worker. A search over a whole vocabulary can occupy a worker for tens of minutes, so on a production server consider giving it a queue of its own, so that imports and exports are not held up behind it:
+    ```
+    LINGO_MATCH_TASK_QUEUE = "lingo_matching"
+    ```
+    and start a worker for that queue alongside your usual one, e.g. `celery -A <project> worker -Q lingo_matching`. Left unset, match searches use the default queue. Without a worker, a search can still be run from the command line with `python manage.py detect_concept_matches`.
 
 4. Optionally, enable anonymous (read-only) access by adding the following setting to your project's `settings.py` or `settings_local.py`:
     ```
@@ -77,11 +83,24 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
     When enabled, unauthenticated users can browse schemes, concepts, and search results in a read-only mode. When disabled (the default), all users must log in to access any Lingo content. Authenticated users who are not members of the "Lingo Editor" group will still see a read-only experience regardless of this setting.
 
-5. Next ensure arches, arches-vue-components, and arches_lingo are included as dependencies in package.json
+    Optionally, enable the [OpenRefine](https://openrefine.org/) reconciliation service so spreadsheet data can be matched against your published vocabularies:
+    ```
+    LINGO_RECONCILIATION_ENABLED = True
+    LINGO_RECONCILIATION_SERVICE_NAME = "My Organization Thesauri"  # defaults to "Arches Lingo"
+    LINGO_RECONCILIATION_RATE_LIMIT = "120/m"  # requests per client address (s, m, h or d); defaults to None (no limit)
+    ```
+    - **Endpoints:** `<PUBLIC_SERVER_ADDRESS>/api/lingo/reconcile` searches every published scheme; `/api/lingo/schemes/<scheme identifier>/reconcile` is limited to one scheme, and its queries, suggestions and data extension never reach another. Published and locked schemes, and the home page, show the URL to copy into OpenRefine.
+    - **Access:** the service accepts anonymous, cross-origin requests even when `LINGO_ALLOW_ANONYMOUS_ACCESS` is `False`. While that setting is `False`, the links it hands out (a candidate's "view" link, the preview card's title, and concept URIs pulled in by data extension) lead to Lingo's login page for anyone not signed in.
+    - **What is exposed:** for published and locked concepts in published and locked schemes, anyone who can reach the server can read labels in every language, broader concepts, identifiers, URIs, exact and close matches, scope notes and definitions. Retired concepts are offered as candidates only when a query asks for them (`includeRetired`), but previews and data extension still answer for them, since a sheet may already hold their ids. Draft and editing-state concepts are never returned; requests for them get the same empty or 404 response as an unknown id.
+    - **Links:** set `PUBLIC_SERVER_ADDRESS` to the address OpenRefine users will reach, because the service's links are built from it. The `arches_lingo.W001` system check warns while it is empty or a local address such as `localhost`.
+    - **Request limits:** each request is capped at 50 queries or ids, and each query at 25 candidates and 25 property values. On a public server, also limit request rates, at your reverse proxy or with `LINGO_RECONCILIATION_RATE_LIMIT`, which answers callers over the limit with HTTP 429. The `arches_lingo.W002` system check warns while the service is enabled with no rate limit set; if your reverse proxy limits rates instead, add it to `SILENCED_SYSTEM_CHECKS`.
+    - **Rate limiting setup:** the setting is enforced with [django-ratelimit](https://django-ratelimit.readthedocs.io/), the library Arches uses for its own login limits. It counts requests per client address in `RATELIMIT_USE_CACHE` (the default cache), which must be shared by every server process (such as Redis or Memcached, not the per-process default). Behind a reverse proxy, set `RATELIMIT_IP_META_KEY` to the header carrying the client address; otherwise every caller shares one limit.
+    - **Counting clients:** OpenRefine sends reconciliation and data extension batches from the OpenRefine server, so all users of a shared OpenRefine instance count as one client. Suggest and preview requests come from each user's browser, and OpenRefine loads a preview for each candidate a user hovers over, so leave room for those when choosing a rate.
+
+5. Next ensure arches and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {
-        "arches": "archesproject/arches#dev/8.1.x",
-        "arches-vue-components": "archesproject/arches-vue-components#dev/2.0.x",
+        "arches": "archesproject/arches#dev/8.2.x",
         "arches_lingo": "archesproject/arches-lingo#main"
     }
     ```

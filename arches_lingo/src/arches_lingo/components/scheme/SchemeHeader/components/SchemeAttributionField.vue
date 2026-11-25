@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "openvue/usetoast";
 
@@ -8,6 +8,7 @@ import Textarea from "openvue/textarea";
 
 import { upsertSchemeAttribution } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { focusFirstElementById } from "@/arches_lingo/utils.ts";
 
 type SchemeAttribution = {
     scheme_resource_instance_id: string;
@@ -30,18 +31,26 @@ const emit = defineEmits<{
 const toast = useToast();
 const { $gettext } = useGettext();
 
+const attributionLabelId = useId();
+const attributionInputId = useId();
+const attributionEditButtonId = useId();
+
 const isEditingAttribution = ref(false);
 const attributionDraft = ref("");
 const isSavingAttribution = ref(false);
 
-function editAttribution() {
+async function editAttribution() {
     attributionDraft.value = props.schemeAttribution?.attribution ?? "";
     isEditingAttribution.value = true;
+    await nextTick();
+    focusFirstElementById(attributionInputId);
 }
 
-function cancelEditingAttribution() {
+async function cancelEditingAttribution() {
     attributionDraft.value = "";
     isEditingAttribution.value = false;
+    await nextTick();
+    focusFirstElementById(attributionEditButtonId, attributionLabelId);
 }
 
 async function saveAttribution() {
@@ -75,14 +84,19 @@ async function saveAttribution() {
 
 <template>
     <div class="header-item attribution-header-item">
-        <span class="header-item-label">
+        <span
+            :id="attributionLabelId"
+            class="header-item-label"
+        >
             {{ $gettext("Attribution:") }}
         </span>
 
         <template v-if="isEditingAttribution">
             <div class="attribution-input-wrapper">
                 <Textarea
+                    :id="attributionInputId"
                     v-model="attributionDraft"
+                    :aria-labelledby="attributionLabelId"
                     :rows="3"
                     :placeholder="
                         $gettext('Enter attribution information here...')
@@ -122,6 +136,7 @@ async function saveAttribution() {
             </span>
             <Button
                 v-if="canEditResourceInstances"
+                :id="attributionEditButtonId"
                 icon="pi pi-pencil"
                 variant="text"
                 size="small"
@@ -146,6 +161,12 @@ async function saveAttribution() {
     align-items: center;
 }
 
+.attribution-header-item .header-item-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--scheme-header-field-min-height);
+}
+
 .attribution-value {
     flex-basis: 100%;
     width: 100%;
@@ -154,7 +175,7 @@ async function saveAttribution() {
     overflow-y: auto;
     max-height: 6rem;
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     background: var(--p-content-background);
     border: 1px solid var(--p-content-border-color);
     border-radius: var(--p-border-radius-sm);

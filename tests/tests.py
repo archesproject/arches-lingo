@@ -18,7 +18,7 @@ from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
 )
 
-from arches_controlled_lists.management.commands.packages import (
+from arches.extensions.controlled_lists.management.commands.packages import (
     Command as ControlledListsPackageCommand,
 )
 
@@ -52,7 +52,11 @@ from arches_lingo.utils.concept_builder import ConceptBuilder
 # python manage.py test tests.tests --settings="tests.test_settings"
 
 
-class ViewTests(TestCase):
+class SchemeWithConceptsTestCase(TestCase):
+    """A scheme with five concepts, each narrower than the last, and an admin
+    logged in. Subclass this rather than ViewTests to reuse the data without
+    re-running ViewTests' own tests."""
+
     graph_fixtures = ["Scheme.json", "Concept.json"]
 
     @classmethod
@@ -252,6 +256,8 @@ class ViewTests(TestCase):
     def setUp(self):
         self.client.force_login(self.admin)
 
+
+class ViewTests(SchemeWithConceptsTestCase):
     def test_get_concept_trees(self):
         with self.assertNumQueries(9):
             # 1: session
@@ -403,6 +409,15 @@ class ViewTests(TestCase):
                 ["Test Scheme", "Concept 5"],
             ],
         )
+
+    def test_like_wildcards_in_search_term_match_literally(self):
+        for wildcard_term in ["Concept _", "Concept %", "%"]:
+            with self.subTest(wildcard_term=wildcard_term):
+                response = self.client.get(
+                    reverse("api-search"),
+                    {"term": wildcard_term, "maxEditDistance": 0},
+                )
+                self.assertEqual(json.loads(response.content)["data"], [])
 
     def test_invalid_search_term(self):
         with self.assertLogs("django.request", level="WARNING"):
@@ -698,7 +713,7 @@ class ViewTests(TestCase):
 
 
 class ConceptBuilderCycleTests(TestCase):
-    """Unit tests for cycle detection in ConceptBuilder.find_paths_to_root."""
+    """Unit tests for cycle handling in ConceptBuilder's hierarchy walks."""
 
     def _make_builder(self):
         """Return a ConceptBuilder with no DB-loaded data for direct manipulation."""
@@ -760,6 +775,60 @@ class ConceptBuilderCycleTests(TestCase):
         self.assertEqual(len(paths), 1)
         self.assertEqual(paths[0], [scheme_s, concept_b, concept_a])
         self.assertTrue(any("Cycle detected" in msg for msg in logged.output))
+
+    def test_serializing_children_stops_where_a_cycle_closes(self):
+        """A→B→A in `narrower` would recurse until the interpreter gives up."""
+        builder = self._make_builder()
+        concept_a = str(uuid.uuid4())
+        concept_b = str(uuid.uuid4())
+
+        builder.narrower_concepts[concept_a].add(concept_b)
+        builder.narrower_concepts[concept_b].add(concept_a)
+
+        serialized = builder.serialize_concept(concept_a)
+
+        self.assertEqual(serialized["narrower"][0]["id"], concept_b)
+        # B's only child is A, already on the path, so the subtree ends here.
+        self.assertEqual(serialized["narrower"][0]["narrower"], [])
+
+    def test_a_concept_reachable_by_two_paths_is_still_serialized_on_both(self):
+        """The guard tracks the path to the node, not every node already seen,
+        so polyhierarchy is unaffected."""
+        builder = self._make_builder()
+        parent = str(uuid.uuid4())
+        first_child = str(uuid.uuid4())
+        second_child = str(uuid.uuid4())
+        shared_grandchild = str(uuid.uuid4())
+
+        builder.narrower_concepts[parent].update({first_child, second_child})
+        builder.narrower_concepts[first_child].add(shared_grandchild)
+        builder.narrower_concepts[second_child].add(shared_grandchild)
+
+        serialized = builder.serialize_concept(parent)
+
+        grandchild_ids = [
+            grandchild["id"]
+            for child in serialized["narrower"]
+            for grandchild in child["narrower"]
+        ]
+        self.assertEqual(grandchild_ids, [shared_grandchild, shared_grandchild])
+
+    def test_serializing_children_terminates_on_a_three_concept_cycle(self):
+        builder = self._make_builder()
+        concept_a = str(uuid.uuid4())
+        concept_b = str(uuid.uuid4())
+        concept_c = str(uuid.uuid4())
+
+        builder.narrower_concepts[concept_a].add(concept_b)
+        builder.narrower_concepts[concept_b].add(concept_c)
+        builder.narrower_concepts[concept_c].add(concept_a)
+
+        serialized = builder.serialize_concept(concept_a)
+
+        self.assertEqual(
+            serialized["narrower"][0]["narrower"][0]["narrower"],
+            [],
+        )
 
 
 class IsGuideTermTileTests(TestCase):
@@ -865,6 +934,12 @@ class PermissionTests(TestCase):
         response = self.client.get(reverse("api-lingo-settings"))
         result = json.loads(response.content)
         self.assertFalse(result["allow_anonymous_access"])
+
+    @override_settings(ACCESSIBILITY_MODE=True)
+    def test_app_settings_view_accessibility_mode(self):
+        response = self.client.get(reverse("api-lingo-settings"))
+        result = json.loads(response.content)
+        self.assertTrue(result["accessibility_mode"])
 
 
 class ConceptResourceViewTests(ViewTests):

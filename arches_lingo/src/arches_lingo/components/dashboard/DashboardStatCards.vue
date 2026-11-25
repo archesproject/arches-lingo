@@ -16,7 +16,10 @@ defineProps<{
     <div class="stats-row">
         <div class="stat-card">
             <div class="stat-card-title">
-                <i class="pi pi-folder stat-icon" />
+                <i
+                    class="pi pi-folder stat-icon"
+                    aria-hidden="true"
+                />
                 {{ $gettext("Schemes") }}
             </div>
             <Skeleton
@@ -33,7 +36,10 @@ defineProps<{
         </div>
         <div class="stat-card">
             <div class="stat-card-title">
-                <i class="pi pi-lightbulb stat-icon" />
+                <i
+                    class="pi pi-lightbulb stat-icon"
+                    aria-hidden="true"
+                />
                 {{ $gettext("Concepts") }}
             </div>
             <Skeleton
@@ -50,7 +56,10 @@ defineProps<{
         </div>
         <div class="stat-card">
             <div class="stat-card-title">
-                <i class="pi pi-tag stat-icon" />
+                <i
+                    class="pi pi-tag stat-icon"
+                    aria-hidden="true"
+                />
                 {{ $gettext("Labels") }}
             </div>
             <Skeleton
@@ -67,7 +76,10 @@ defineProps<{
         </div>
         <div class="stat-card">
             <div class="stat-card-title">
-                <i class="pi pi-chart-bar stat-icon" />
+                <i
+                    class="pi pi-chart-bar stat-icon"
+                    aria-hidden="true"
+                />
                 {{ $gettext("Labels / Concept") }}
             </div>
             <Skeleton
@@ -107,14 +119,14 @@ defineProps<{
     gap: 0.375rem;
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
 
 .stat-icon {
     font-size: 0.75rem;
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .stat-count {
@@ -127,6 +139,13 @@ defineProps<{
 @media (max-width: 960px) {
     .stats-row {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 30rem) {
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
 }
 </style>

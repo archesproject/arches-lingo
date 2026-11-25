@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "openvue/usetoast";
 
@@ -8,6 +8,7 @@ import InputText from "openvue/inputtext";
 
 import { createConceptIdentifierCounter } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { focusFirstElementById } from "@/arches_lingo/utils.ts";
 
 type ConceptIdentifierCounter = {
     scheme_resource_instance_id: string;
@@ -33,6 +34,10 @@ const emit = defineEmits<{
 const toast = useToast();
 const { $gettext } = useGettext();
 
+const conceptIdentifierCounterLabelId = useId();
+const conceptIdentifierCounterInputId = useId();
+const conceptIdentifierCounterEditButtonId = useId();
+
 const isEditingConceptIdentifierCounter = ref(false);
 const conceptIdentifierCounterStartNumberDraft = ref("1");
 const isSavingConceptIdentifierCounter = ref(false);
@@ -52,7 +57,7 @@ const shouldShowConceptIdentifierCounterEditButton = computed(() => {
     );
 });
 
-function editConceptIdentifierCounter() {
+async function editConceptIdentifierCounter() {
     if (!props.conceptIdentifierCounter) {
         conceptIdentifierCounterStartNumberDraft.value = "1";
     } else {
@@ -62,11 +67,18 @@ function editConceptIdentifierCounter() {
     }
 
     isEditingConceptIdentifierCounter.value = true;
+    await nextTick();
+    focusFirstElementById(conceptIdentifierCounterInputId);
 }
 
-function cancelEditingConceptIdentifierCounter() {
+async function cancelEditingConceptIdentifierCounter() {
     conceptIdentifierCounterStartNumberDraft.value = "1";
     isEditingConceptIdentifierCounter.value = false;
+    await nextTick();
+    focusFirstElementById(
+        conceptIdentifierCounterEditButtonId,
+        conceptIdentifierCounterLabelId,
+    );
 }
 
 async function saveConceptIdentifierCounter() {
@@ -100,13 +112,18 @@ async function saveConceptIdentifierCounter() {
 
 <template>
     <div class="header-item">
-        <span class="header-item-label">
+        <span
+            :id="conceptIdentifierCounterLabelId"
+            class="header-item-label"
+        >
             {{ $gettext("Concept counter:") }}
         </span>
 
         <template v-if="isEditingConceptIdentifierCounter">
             <InputText
+                :id="conceptIdentifierCounterInputId"
                 v-model="conceptIdentifierCounterStartNumberDraft"
+                :aria-labelledby="conceptIdentifierCounterLabelId"
                 size="small"
             />
             <Button
@@ -137,6 +154,7 @@ async function saveConceptIdentifierCounter() {
             </span>
             <Button
                 v-if="shouldShowConceptIdentifierCounterEditButton"
+                :id="conceptIdentifierCounterEditButtonId"
                 icon="pi pi-pencil"
                 variant="text"
                 size="small"

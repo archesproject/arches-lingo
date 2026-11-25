@@ -27,9 +27,9 @@
     },
     "dependencies": {
         "@openvue/forms": "1.0.0",
-        "arches": "archesproject/arches#cbyrd/12934-migrate-to-openvue",
-        "arches-vue-components": "archesproject/arches-vue-components#cbyrd/migrate-to-openvue",
-        "arches-controlled-lists": "archesproject/arches-controlled-lists#cbyrd/migrate-to-openvue",
+        "@openvue/themes": "1.0.0",
+        "arches": "archesproject/arches#dev/8.2.x",
+        "openvue": "1.0.0",
         "pinia": "3.0.4",
         "vue-router": "4.4.3"
     },

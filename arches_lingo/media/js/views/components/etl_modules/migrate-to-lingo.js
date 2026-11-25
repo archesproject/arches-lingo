@@ -4,6 +4,7 @@ import uuid from 'uuid';
 import arches from 'arches';
 import JsonErrorAlertViewModel from 'viewmodels/alert-json';
 import migrateRDMTemplate from 'templates/views/components/etl_modules/migrate-to-lingo.htm';
+import 'bindings/select2-query';
 
 
 const viewModel = function(params) {

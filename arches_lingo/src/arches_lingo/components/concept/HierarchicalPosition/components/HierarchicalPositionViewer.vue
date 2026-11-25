@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, computed, ref } from "vue";
+import { inject, computed, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useConfirm } from "openvue/useconfirm";
 import { useToast } from "openvue/usetoast";
@@ -8,6 +8,9 @@ import { storeToRefs } from "pinia";
 import Button from "openvue/button";
 import ConfirmDialog from "openvue/confirmdialog";
 import Tag from "openvue/tag";
+
+import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import { getConceptIcon } from "@/arches_lingo/utils.ts";
@@ -54,9 +57,13 @@ const updateAfterComponentDeletion = inject<
     (componentName: string, tileId: string) => void
 >("updateAfterComponentDeletion");
 
-const refreshReportSection = inject<(componentName: string) => void>(
+const refreshReportSection = inject<(componentName: string) => Promise<void>>(
     "refreshReportSection",
 );
+const focusSectionHeading = inject<(componentName: string) => void>(
+    "focusSectionHeading",
+);
+const confirmDialogHeaderId = useId();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
@@ -274,10 +281,11 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
         );
 
         refreshSchemeHierarchy!();
-        refreshReportSection!(props.componentName);
+        await refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, hierarchy.tileid!);
 
         confirm.close();
+        focusSectionHeading!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -306,6 +314,7 @@ function getTreeNodeStyle(depth: number) {
         <ConfirmDialog
             :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
             group="delete-parent"
+            :aria-labelledby="confirmDialogHeaderId"
         >
             <template #container="{ message, rejectCallback }">
                 <div
@@ -314,7 +323,10 @@ function getTreeNodeStyle(depth: number) {
                     @mousedown.stop
                     @mouseup.stop
                 >
-                    <div class="confirm-dialog-header">
+                    <div
+                        :id="confirmDialogHeaderId"
+                        class="confirm-dialog-header"
+                    >
                         {{ message.header }}
                     </div>
                     <div class="confirm-dialog-message">
@@ -326,6 +338,7 @@ function getTreeNodeStyle(depth: number) {
                             :disabled="isDeletePending"
                             severity="secondary"
                             outlined
+                            autofocus
                             @click="
                                 () => {
                                     rejectCallback();
@@ -349,10 +362,9 @@ function getTreeNodeStyle(depth: number) {
         <div class="section-header">
             <div class="section-title">
                 <h2>{{ props.sectionTitle }}</h2>
-                <Tag
+                <CountTag
                     v-if="relationshipGroups.length"
-                    :value="String(relationshipGroups.length)"
-                    severity="secondary"
+                    :count="relationshipGroups.length"
                 />
                 <Button
                     v-if="relationshipGroups.length > 1"
@@ -395,27 +407,15 @@ function getTreeNodeStyle(depth: number) {
             </div>
 
             <div class="section-header-actions">
-                <Button
+                <DisabledReasonButton
                     v-if="isEditor"
-                    v-tooltip.top="{
-                        disabled: Boolean(!isCreateDisabled),
-                        value: createTooltipText,
-                        showDelay: 300,
-                        pt: {
-                            text: {
-                                style: {
-                                    fontFamily: 'var(--p-lingo-font-family)',
-                                },
-                            },
-                            arrow: { style: { display: 'none' } },
-                        },
-                    }"
-                    :disabled="isCreateDisabled"
+                    :is-disabled="isCreateDisabled"
+                    :disabled-reason="createTooltipText"
                     :label="$gettext('Add Hierarchical Parent')"
                     class="add-button wide"
                     icon="pi pi-plus-circle"
                     @click="openEditor!(props.componentName)"
-                ></Button>
+                />
             </div>
         </div>
 
@@ -477,7 +477,13 @@ function getTreeNodeStyle(depth: number) {
                                     class="controls edit-button"
                                     icon="pi pi-file-edit"
                                     variant="text"
-                                    :aria-label="$gettext('edit')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Edit relationship to %{parent}',
+                                            { parent: getParentLabel(group) },
+                                            true,
+                                        )
+                                    "
                                     :disabled="group.isTopConcept"
                                     @click="
                                         openEditor!(componentName, group.tileid)
@@ -490,7 +496,13 @@ function getTreeNodeStyle(depth: number) {
                                     class="controls delete-button"
                                     icon="pi pi-trash"
                                     variant="text"
-                                    :aria-label="$gettext('delete')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Delete relationship to %{parent}',
+                                            { parent: getParentLabel(group) },
+                                            true,
+                                        )
+                                    "
                                     @click="confirmDelete(group)"
                                 />
                             </div>
@@ -504,20 +516,21 @@ function getTreeNodeStyle(depth: number) {
                             v-for="(hierarchy, lineageIndex) in group.lineages"
                             :key="lineageIndex"
                         >
-                            <div
+                            <ol
                                 v-if="
                                     lineageIndex === 0 ||
                                     isGroupExpanded(groupIndex)
                                 "
                                 class="lineage-path"
                             >
-                                <div
+                                <li
                                     v-for="(
                                         item, depth
                                     ) in hierarchy.searchResults"
                                     :key="item.id"
                                     class="tree-node"
                                     :style="getTreeNodeStyle(depth)"
+                                    :aria-level="depth + 1"
                                 >
                                     <span
                                         :class="getIcon(item)"
@@ -528,6 +541,7 @@ function getTreeNodeStyle(depth: number) {
                                             item.id === props.resourceInstanceId
                                         "
                                         class="tree-node-label tree-node-label-current"
+                                        aria-current="page"
                                     >
                                         {{
                                             getItemLabel(
@@ -550,8 +564,8 @@ function getTreeNodeStyle(depth: number) {
                                             ).value
                                         }}
                                     </RouterLink>
-                                </div>
-                            </div>
+                                </li>
+                            </ol>
                         </template>
                         <Button
                             v-if="group.lineages.length > 1"
@@ -596,7 +610,7 @@ function getTreeNodeStyle(depth: number) {
 .bulk-action-button {
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
 }
 
 .relationship-group {
@@ -633,7 +647,7 @@ function getTreeNodeStyle(depth: number) {
 }
 
 .relationship-group-label:hover {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .relationship-group-actions {
@@ -657,7 +671,9 @@ function getTreeNodeStyle(depth: number) {
 }
 
 .lineage-path {
+    margin: 0;
     padding-inline-start: 0.5rem;
+    list-style: none;
 }
 
 .lineage-divider {
@@ -695,7 +711,7 @@ function getTreeNodeStyle(depth: number) {
 .tree-node-label {
     margin-inline-start: 0.5rem;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .tree-node-label-current {
@@ -715,7 +731,7 @@ function getTreeNodeStyle(depth: number) {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    min-width: 24rem;
+    min-width: min(24rem, 100%);
     padding: 1.5rem;
 }
 
@@ -792,6 +808,6 @@ function getTreeNodeStyle(depth: number) {
     margin-block-start: 0.25rem;
     padding-inline-start: 0;
     font-size: var(--p-lingo-font-size-xsmall);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 </style>

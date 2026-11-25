@@ -14,11 +14,13 @@ import {
     fetchMissingTranslations,
 } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 
 import BreakdownsGrid from "@/arches_lingo/components/dashboard/BreakdownsGrid.vue";
 import DashboardStatCards from "@/arches_lingo/components/dashboard/DashboardStatCards.vue";
 import MissingTranslationsPanel from "@/arches_lingo/components/dashboard/MissingTranslationsPanel.vue";
 import RecentActivityTable from "@/arches_lingo/components/dashboard/RecentActivityTable.vue";
+import ReconciliationEndpointPanel from "@/arches_lingo/components/dashboard/ReconciliationEndpointPanel.vue";
 
 import type { Language } from "@/arches_vue_components/types.ts";
 import type {
@@ -29,7 +31,8 @@ import type { ActivityPeriod } from "@/arches_lingo/components/dashboard/RecentA
 import type { ResourceInstanceResult } from "@/arches_lingo/types.ts";
 
 const toast = useToast();
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
+const { announce } = useAnnouncer();
 
 const schemes = ref<ResourceInstanceResult[]>([]);
 const selectedSchemeIds = ref<string[]>([]);
@@ -131,7 +134,7 @@ async function loadMissingTranslations() {
 const greeting = computed(() => {
     const name = stats.value?.user_display_name;
     if (name) {
-        return $gettext("Welcome, %{name}", { name });
+        return interpolate($gettext("Welcome, %{name}"), { name }, true);
     }
     return $gettext("Welcome");
 });
@@ -157,6 +160,20 @@ watch(translationLanguage, () => {
 onMounted(async () => {
     await Promise.all([loadSchemes(), loadLanguages(), loadStats()]);
 });
+
+watch(
+    isStatsLoading,
+    (isLoading) => {
+        announce(
+            isLoading
+                ? $gettext(
+                      "Gathering the latest statistics, this may take a moment...",
+                  )
+                : $gettext("Statistics loaded"),
+        );
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
@@ -178,8 +195,8 @@ onMounted(async () => {
                     {{ $gettext("Schemes") }}:
                 </label>
                 <MultiSelect
-                    id="scheme-filter"
                     v-model="selectedSchemeIds"
+                    input-id="scheme-filter"
                     :options="schemes"
                     option-label="name"
                     option-value="resourceinstanceid"
@@ -211,7 +228,10 @@ onMounted(async () => {
             :closable="false"
             class="stats-loading-notice"
         >
-            <i class="pi pi-spin pi-sync stats-loading-spinner" />
+            <i
+                class="pi pi-spin pi-sync stats-loading-spinner"
+                aria-hidden="true"
+            />
             <span>{{
                 $gettext(
                     "Gathering the latest statistics, this may take a moment...",
@@ -244,6 +264,8 @@ onMounted(async () => {
             :missing-page="missingPage"
             @page-change="onPageChange"
         />
+
+        <ReconciliationEndpointPanel />
     </div>
 </template>
 
@@ -281,7 +303,7 @@ onMounted(async () => {
 .filter-label {
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     white-space: nowrap;
 }
 

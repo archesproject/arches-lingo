@@ -14,29 +14,49 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpRequest
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
+from django.utils import translation
 from rdflib import Graph
 
+from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.models.models import (
     DRelationType,
     ETLModule,
     LoadEvent,
     Relation,
     ResourceInstance,
+    TileModel,
     UserXNotification,
     Value,
 )
 from arches.app.utils.skos import SKOSReader
-from arches_querysets.models import ResourceTileTree
+from arches.extensions.querysets.models import ResourceTileTree
 
-from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
+from arches_lingo.const import (
+    CONCEPT_NAME_CONTENT_NODE,
+    CONCEPT_NAME_LANGUAGE_NODE,
+    CONCEPT_NAME_NODEGROUP,
+    CONCEPT_NAME_TYPE_NODE,
+    CONCEPTS_GRAPH_ID,
+    DELEGATED_TO_CELERY,
+    EXPORT_STATUS_COMPLETE,
+    EXPORT_STATUS_QUEUED,
+    LABEL_LIST_ID,
+    LINGO_EDITOR_GROUP_NAME,
+)
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
+from arches_lingo.tasks import export_lingo_resources_task
+from arches_lingo.utils.display_label import get_display_label
 from tests.tests import ViewTests
 
 from .test_settings import PROJECT_TEST_ROOT
 
 
 class ImportTests(TransactionTestCase):
+    # Restores the rows arches' migrations provide after another
+    # TransactionTestCase's flush has cleared them; without this, setUp fails
+    # looking up the default language.
+    serialized_rollback = True
 
     @classmethod
     def register_etl_module(cls):
@@ -168,6 +188,36 @@ class ImportTests(TransactionTestCase):
         importer = LingoResourceImporter(request=request)
         return importer, load_event, importer.write(request=request)
 
+    def _assert_typed_relation_loaded(self):
+        """Assert that a GVP typed associative relation (gvp:aat2285_practiced-studied_by)
+        from the test fixture is imported with its relation type set on the subject
+        concept's relation_status tile.
+
+        The fixture has:
+          <Example Concept 2>  gvp:aat2285_practiced-studied_by  <Example Concept 1>
+
+        These relations read in one direction, and SKOSWriter exports a
+        relation_status tile with its own concept as the subject, so the tile
+        lives on the subject (Example Concept 2) with ascribed_comparate pointing
+        to the object (Example Concept 1).
+        """
+        concepts = ResourceTileTree.get_tiles(graph_slug="concept")
+        example_concept_2 = concepts.get(
+            appellative_status_ascribed_name_content__any_contains="Example Concept 2"
+        )
+        relations = example_concept_2.aliased_data.relation_status
+        self.assertEqual(len(relations), 1)
+        relation_data = relations[0].aliased_data
+        comparate = relation_data.relation_status_ascribed_comparate
+        self.assertEqual(comparate.name["en"], "Example Concept 1")
+        # The controlled list item for aat2285 is "practiced/studied by - role"
+        self.assertIn("practiced", str(relation_data.relation_status_ascribed_relation))
+
+        example_concept_1 = concepts.get(
+            appellative_status_ascribed_name_content__any_contains="Example Concept 1"
+        )
+        self.assertEqual(len(example_concept_1.aliased_data.relation_status), 0)
+
     def test_lingo_resource_importer(self):
         """
         This test is really several tests in one, but due to trouble with TransactionTestCase
@@ -198,6 +248,7 @@ class ImportTests(TransactionTestCase):
             stdout=stdout,
         )
         self._assert_resources_loaded()
+        self._assert_typed_relation_loaded()
         print("Test import from CLI completed.\n")
 
         # Reverse load to clear out the loaded resources
@@ -238,6 +289,7 @@ class ImportTests(TransactionTestCase):
         write_request0 = importer.write(request=request0)
         self.assertTrue(write_request0["success"])
         self._assert_resources_loaded()
+        self._assert_typed_relation_loaded()
         print("Test import from Lingo UI completed.\n")
 
         # Reverse load to clear out the loaded resources
@@ -567,6 +619,128 @@ class ExportTests(TestCase):
         ).count()
         self.assertGreater(notifications_after, notifications_before)
 
+    # --- Naming ---
+
+    def test_export_is_named_after_the_label_shown_to_the_user(self):
+        # A merge can leave the stored resource name pointing at any label.
+        ResourceInstance.objects.filter(pk=self.test_concept.pk).update(
+            name={"en": "Stale stored name"}
+        )
+        prefLabel_reference = DataTypeFactory().get_instance("reference")
+        TileModel.objects.create(
+            resourceinstance=self.test_concept,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "Concepto 1",
+                CONCEPT_NAME_TYPE_NODE: prefLabel_reference.transform_value_for_tile(
+                    "prefLabel", controlledList=LABEL_LIST_ID
+                ),
+                CONCEPT_NAME_LANGUAGE_NODE: "es",
+            },
+        )
+
+        response = self._run_export(self.test_concept.pk, "ttl", "partial")
+        file_details = self._assert_successful_export(response)
+        load_details = json.loads(json.loads(response["data"]["load_details"]))
+        self.assertEqual(load_details["scheme_name"], "Concept 1")
+        self.assertTrue(file_details["name"].startswith("Concept_1_"))
+        latest_notification = (
+            UserXNotification.objects.filter(recipient__username="admin")
+            .order_by("-notif__created")
+            .first()
+        )
+        self.assertEqual(
+            latest_notification.notif.message, "Concept 1 export completed"
+        )
+        os.remove(self.file_path)
+
+        with translation.override("es"):
+            response = self._run_export(self.test_concept.pk, "ttl", "partial")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].startswith("Concepto_1_"))
+
+    def test_display_label_skips_incomplete_label_tiles(self):
+        unlabelled_concept = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Unlabelled"
+        )
+        TileModel.objects.create(
+            resourceinstance=unlabelled_concept,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "No label type",
+                CONCEPT_NAME_TYPE_NODE: None,
+                CONCEPT_NAME_LANGUAGE_NODE: "en",
+            },
+        )
+
+        self.assertEqual(get_display_label(unlabelled_concept.pk), "")
+
+    @patch("arches_lingo.const.CELERY_CONCEPT_COUNT_THRESHOLD", 0)
+    @patch("arches_lingo.tasks.export_lingo_resources_task.apply_async")
+    @patch(
+        "arches_lingo.etl_modules.lingo_resource_exporter.task_management.check_if_celery_available",
+        return_value=True,
+    )
+    def test_background_export_runs_in_the_users_language(
+        self, mock_celery_available, mock_apply_async
+    ):
+        mock_apply_async.return_value.task_id = str(uuid.uuid4())
+        with translation.override("es"):
+            response = self._run_export(self.test_scheme.pk, "ttl")
+        self.assertEqual(response["data"], DELEGATED_TO_CELERY)
+        self.assertEqual(response["status"], EXPORT_STATUS_QUEUED)
+        task_kwargs = mock_apply_async.call_args.kwargs["kwargs"]
+        self.assertEqual(task_kwargs, {"language": "es"})
+
+        load_event = LoadEvent.objects.latest("load_start_time")
+        languages_seen = []
+        with patch.object(
+            LingoResourceExporter,
+            "run_export_task",
+            side_effect=lambda *args: languages_seen.append(translation.get_language()),
+        ):
+            export_lingo_resources_task(
+                str(load_event.loadid),
+                load_event.user_id,
+                str(self.test_scheme.pk),
+                format="ttl",
+                **task_kwargs,
+            )
+        self.assertEqual(languages_seen, ["es"])
+
+    def test_concept_count_matches_the_exported_concepts(self):
+        exporter = LingoResourceExporter()
+        exporter.load_event = LoadEvent()
+        for resource in (self.test_scheme, self.test_concept):
+            with self.subTest(resource=resource.name):
+                _scheme_ids, concept_ids = exporter._get_resource_ids_for_export(
+                    str(resource.pk)
+                )
+                self.assertGreater(len(concept_ids), 0)
+                self.assertEqual(
+                    exporter._count_concepts_for_export(str(resource.pk)),
+                    len(concept_ids),
+                )
+
+    @patch(
+        "arches_lingo.etl_modules.lingo_resource_exporter.LingoResourceExporter.run_export_task"
+    )
+    def test_missing_resource_fails_once_without_exporting(self, mock_run_export):
+        admin_user = User.objects.get(username="admin")
+        notifications_before = UserXNotification.objects.filter(
+            recipient=admin_user
+        ).count()
+
+        response = self._run_export(uuid.uuid4(), "ttl")
+
+        self.assertFalse(response["success"])
+        mock_run_export.assert_not_called()
+        notifications_after = UserXNotification.objects.filter(
+            recipient=admin_user
+        ).count()
+        self.assertEqual(notifications_after, notifications_before + 1)
+        self.assertEqual(LoadEvent.objects.latest("load_start_time").status, "failed")
+
 
 class ExportViewTests(TestCase):
     """Exports must be available to the Lingo Editor group without core Arches groups."""
@@ -586,7 +760,12 @@ class ExportViewTests(TestCase):
     @patch.object(
         LingoResourceExporter,
         "start",
-        return_value={"success": True, "data": {"load_id": "test-load-id"}},
+        return_value={
+            "success": True,
+            "status": EXPORT_STATUS_COMPLETE,
+            "file": {"name": "scheme.zip", "url": "/media/scheme.zip", "fileid": "1"},
+            "data": {"load_id": "test-load-id"},
+        },
     )
     def test_lingo_editor_can_start_export(self, mock_start):
         self.client.force_login(self.lingo_editor)
@@ -596,6 +775,29 @@ class ExportViewTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTrue(mock_start.called)
         self.assertEqual(response.json()["result"], {"load_id": "test-load-id"})
+        self.assertEqual(response.json()["status"], "complete")
+        self.assertEqual(
+            response.json()["file"],
+            {"name": "scheme.zip", "url": "/media/scheme.zip", "fileid": "1"},
+        )
+
+    @patch.object(
+        LingoResourceExporter,
+        "start",
+        return_value={
+            "success": True,
+            "status": EXPORT_STATUS_QUEUED,
+            "data": DELEGATED_TO_CELERY,
+        },
+    )
+    def test_export_delegated_to_celery_reports_queued_status(self, mock_start):
+        self.client.force_login(self.lingo_editor)
+
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["status"], "queued")
+        self.assertNotIn("file", response.json())
 
     @patch.object(
         LingoResourceExporter,

@@ -1,21 +1,19 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRouter } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Button from "openvue/button";
 
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import BasicSearch from "@/arches_lingo/components/basic-search/BasicSearch.vue";
-import {
-    SEARCH_RESULTS_PER_PAGE,
-    SEARCH_RESULT_ITEM_SIZE,
-} from "@/arches_lingo/constants.ts";
+import DisplaySettingsMenu from "@/arches_lingo/components/generic/DisplaySettingsMenu.vue";
+import { SEARCH_RESULTS_PER_PAGE } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const router = useRouter();
 const userStore = useUserStore();
 
@@ -60,14 +58,11 @@ const quickActions = [
         route: { name: routeNames.advancedSearch },
     },
 ];
-
-function navigateTo(route: { name: string }) {
-    router.push(route);
-}
 </script>
 
 <template>
     <div class="landing-page">
+        <DisplaySettingsMenu class="landing-display-settings" />
         <section class="landing-hero">
             <div class="hero-content">
                 <div class="hero-text">
@@ -95,9 +90,11 @@ function navigateTo(route: { name: string }) {
                     >
                         <p class="welcome-message">
                             {{
-                                $gettext("Welcome back, %{name}!", {
-                                    name: userDisplayName,
-                                })
+                                interpolate(
+                                    $gettext("Welcome back, %{name}!"),
+                                    { name: userDisplayName },
+                                    true,
+                                )
                             }}
                         </p>
                         <Button
@@ -298,7 +295,6 @@ function navigateTo(route: { name: string }) {
             <div class="landing-search-container">
                 <BasicSearch
                     :search-results-per-page="SEARCH_RESULTS_PER_PAGE"
-                    :search-result-item-size="SEARCH_RESULT_ITEM_SIZE"
                     results-display="floating"
                 />
             </div>
@@ -306,20 +302,23 @@ function navigateTo(route: { name: string }) {
 
         <section class="landing-cards-section">
             <div class="action-cards">
-                <button
+                <RouterLink
                     v-for="action in quickActions"
                     :key="action.key"
                     class="action-card"
-                    @click="navigateTo(action.route)"
+                    :to="action.route"
                 >
                     <span class="action-card-icon-wrap">
-                        <i :class="[action.icon, 'action-card-icon']" />
+                        <i
+                            :class="[action.icon, 'action-card-icon']"
+                            aria-hidden="true"
+                        />
                     </span>
                     <span class="action-card-label">{{ action.label }}</span>
                     <span class="action-card-description">{{
                         action.description
                     }}</span>
-                </button>
+                </RouterLink>
             </div>
         </section>
     </div>
@@ -327,11 +326,18 @@ function navigateTo(route: { name: string }) {
 
 <style scoped>
 .landing-page {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 100%;
     overflow-y: auto;
     background: var(--p-inputtext-background);
+}
+
+.landing-display-settings {
+    position: absolute;
+    top: 1rem;
+    inset-inline-end: 1rem;
 }
 
 /* ── Hero ──────────────────────────────────────────────────── */
@@ -450,7 +456,12 @@ function navigateTo(route: { name: string }) {
 
 .pulse-ring {
     transform-origin: 240px 45px;
-    animation: node-pulse 2.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .pulse-ring {
+        animation: node-pulse 2.8s ease-out forwards;
+    }
 }
 
 @keyframes node-pulse {
@@ -510,6 +521,8 @@ function navigateTo(route: { name: string }) {
     cursor: pointer;
     text-align: center;
     font-family: var(--p-lingo-font-family);
+    color: inherit;
+    text-decoration: none;
     box-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.06);
     transition:
         box-shadow 0.2s ease,

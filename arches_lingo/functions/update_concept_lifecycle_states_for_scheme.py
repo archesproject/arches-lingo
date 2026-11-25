@@ -15,7 +15,7 @@ from arches.app.models.models import (
 )
 from arches.app.models.tile import Tile
 
-from arches_controlled_lists.models import ListItem
+from arches.extensions.controlled_lists.models import ListItem
 from arches_lingo.const import (
     NAMESPACE_NODEGROUP,
     NAMESPACE_NAME_NODE,

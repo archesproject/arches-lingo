@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, useId } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import Button from "openvue/button";
@@ -19,6 +19,7 @@ import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import type { Concept, DeleteConceptStrategy } from "@/arches_lingo/types.ts";
 
 const { conceptId, conceptName, mode, isLoading } = defineProps<{
+    visible: boolean;
     conceptId: string;
     conceptName: string | undefined;
     mode: typeof DELETE | typeof DEPRECATE;
@@ -28,14 +29,16 @@ const { conceptId, conceptName, mode, isLoading } = defineProps<{
 const emit = defineEmits<{
     confirm: [strategy: DeleteConceptStrategy | null];
     cancel: [];
+    "after-hide": [];
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const conceptStore = useConceptStore();
 
 const narrower = ref<Concept[]>([]);
 const isFetchingChildren = ref(true);
 const selectedStrategy = ref<DeleteConceptStrategy>(STRATEGY_REPARENT);
+const strategyQuestionId = useId();
 
 onMounted(async () => {
     try {
@@ -51,12 +54,15 @@ const isDelete = computed(function () {
 });
 
 const childrenText = computed(function () {
-    return $gettext(
-        '"%{name}" has %{count} direct child concept(s). How should they be handled?',
+    return interpolate(
+        $gettext(
+            '"%{name}" has %{count} direct child concept(s). How should they be handled?',
+        ),
         {
             name: conceptName ?? "",
             count: String(narrower.value.length),
         },
+        true,
     );
 });
 
@@ -69,13 +75,17 @@ const dialogHeader = computed(function () {
 
 const confirmationText = computed(function () {
     if (isDelete.value) {
-        return $gettext('Are you sure you want to delete "%{name}"?', {
-            name: conceptName ?? "",
-        });
+        return interpolate(
+            $gettext('Are you sure you want to delete "%{name}"?'),
+            { name: conceptName ?? "" },
+            true,
+        );
     }
-    return $gettext('Are you sure you want to deprecate "%{name}"?', {
-        name: conceptName ?? "",
-    });
+    return interpolate(
+        $gettext('Are you sure you want to deprecate "%{name}"?'),
+        { name: conceptName ?? "" },
+        true,
+    );
 });
 
 const deleteChildrenTitle = computed(function () {
@@ -108,12 +118,13 @@ function onConfirm() {
 
 <template>
     <Dialog
-        :visible="true"
+        :visible="visible"
         :modal="true"
         :header="dialogHeader"
         :closable="!isLoading"
         class="delete-concept-dialog"
         @update:visible="!isLoading && $emit('cancel')"
+        @after-hide="$emit('after-hide')"
     >
         <Skeleton
             v-if="isFetchingChildren"
@@ -138,9 +149,18 @@ function onConfirm() {
             v-else
             class="dialog-body"
         >
-            <div class="dialog-text">{{ childrenText }}</div>
+            <div
+                :id="strategyQuestionId"
+                class="dialog-text"
+            >
+                {{ childrenText }}
+            </div>
 
-            <div class="strategy-options">
+            <div
+                class="strategy-options"
+                role="radiogroup"
+                :aria-labelledby="strategyQuestionId"
+            >
                 <label
                     class="strategy-option"
                     :class="{
@@ -151,6 +171,7 @@ function onConfirm() {
                     <RadioButton
                         v-model="selectedStrategy"
                         input-id="strategy-reparent"
+                        name="delete-concept-strategy"
                         :value="STRATEGY_REPARENT"
                     />
                     <div class="strategy-label">
@@ -175,6 +196,7 @@ function onConfirm() {
                     <RadioButton
                         v-model="selectedStrategy"
                         input-id="strategy-delete"
+                        name="delete-concept-strategy"
                         :value="STRATEGY_DELETE_CHILDREN"
                     />
                     <div class="strategy-label">
@@ -210,7 +232,7 @@ function onConfirm() {
 
 <style scoped>
 .delete-concept-dialog {
-    width: 34rem;
+    width: min(34rem, 100%);
 }
 
 .loading-skeleton {

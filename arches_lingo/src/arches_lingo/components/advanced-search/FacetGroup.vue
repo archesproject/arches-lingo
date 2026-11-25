@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "openvue/button";
@@ -7,7 +7,10 @@ import SelectButton from "openvue/selectbutton";
 
 import FacetRow from "@/arches_lingo/components/advanced-search/FacetRow.vue";
 
-import { generateConditionId } from "@/arches_lingo/utils.ts";
+import {
+    focusFirstFocusableElement,
+    generateConditionId,
+} from "@/arches_lingo/utils.ts";
 
 import type {
     AdvancedSearchOptions,
@@ -24,6 +27,7 @@ const props = defineProps<{
     options: AdvancedSearchOptions;
     conceptSets: ConceptSetItem[];
     depth?: number;
+    groupPosition?: string;
 }>();
 
 const emit = defineEmits<{
@@ -36,6 +40,71 @@ const operatorOptions = computed(() => [
     { label: $gettext("OR"), value: "or" as SearchOperator },
 ]);
 
+const operatorLabel = computed(() =>
+    props.groupPosition
+        ? $gettext(
+              "Group %{position}: combine conditions with",
+              { position: props.groupPosition },
+              true,
+          )
+        : $gettext("Combine conditions with"),
+);
+
+const groupName = computed(() => {
+    const isMatchingAll = props.group.operator === "and";
+    if (!props.groupPosition) {
+        return isMatchingAll
+            ? $gettext("Search conditions, match all")
+            : $gettext("Search conditions, match any");
+    }
+    return isMatchingAll
+        ? $gettext("Group %{position}, match all", {
+              position: props.groupPosition,
+          })
+        : $gettext("Group %{position}, match any", {
+              position: props.groupPosition,
+          });
+});
+
+const groupConditionsRef = ref<HTMLElement | null>(null);
+const addConditionButtonRef = ref<InstanceType<typeof Button> | null>(null);
+let conditionIdToFocus: string | null = null;
+let shouldFocusAddConditionButton = false;
+
+watch(
+    () => props.group.conditions,
+    async () => {
+        if (!conditionIdToFocus && !shouldFocusAddConditionButton) {
+            return;
+        }
+        await nextTick();
+        if (conditionIdToFocus) {
+            focusFirstFocusableElement(
+                groupConditionsRef.value?.querySelector<HTMLElement>(
+                    `[data-condition-id="${conditionIdToFocus}"]`,
+                ) ?? null,
+            );
+        } else {
+            // @ts-expect-error This is an error in OpenVue types
+            addConditionButtonRef.value?.$el.focus();
+        }
+        conditionIdToFocus = null;
+        shouldFocusAddConditionButton = false;
+    },
+);
+
+const removeGroupLabel = computed(() =>
+    $gettext("Remove group %{position}", {
+        position: props.groupPosition ?? "",
+    }),
+);
+
+function getChildPosition(index: number) {
+    return props.groupPosition
+        ? `${props.groupPosition}.${index + 1}`
+        : String(index + 1);
+}
+
 function updateOperator(value: SearchOperator) {
     emit("update:group", { ...props.group, operator: value });
 }
@@ -46,6 +115,7 @@ function addCondition() {
         facet: "label",
         value: "",
     };
+    conditionIdToFocus = newCondition.id;
     emit("update:group", {
         ...props.group,
         conditions: [...props.group.conditions, newCondition],
@@ -64,6 +134,7 @@ function addGroup() {
             } as SearchCondition,
         ],
     };
+    conditionIdToFocus = newGroup.id;
     emit("update:group", {
         ...props.group,
         conditions: [...props.group.conditions, newGroup],
@@ -77,6 +148,11 @@ function updateChild(index: number, updated: SearchCondition | SearchGroup) {
 }
 
 function removeChild(targetIndex: number) {
+    const neighbour =
+        props.group.conditions[targetIndex + 1] ??
+        props.group.conditions[targetIndex - 1];
+    conditionIdToFocus = neighbour?.id ?? null;
+    shouldFocusAddConditionButton = !neighbour;
     const newConditions = props.group.conditions.filter(
         (_item, index) => index !== targetIndex,
     );
@@ -92,6 +168,8 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
     <div
         class="facet-group"
         :class="{ 'nested-group': (depth ?? 0) > 0 }"
+        role="group"
+        :aria-label="groupName"
     >
         <div class="group-header">
             <SelectButton
@@ -100,12 +178,14 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
                 option-label="label"
                 option-value="value"
                 :allow-empty="false"
+                :aria-label="operatorLabel"
                 class="operator-toggle"
                 @update:model-value="updateOperator"
             />
 
             <div class="group-actions">
                 <Button
+                    ref="addConditionButtonRef"
                     :label="$gettext('Add Condition')"
                     icon="pi pi-plus"
                     size="small"
@@ -126,13 +206,16 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
                     size="small"
                     text
                     rounded
-                    :aria-label="$gettext('Remove group')"
+                    :aria-label="removeGroupLabel"
                     @click="$emit('remove')"
                 />
             </div>
         </div>
 
-        <div class="group-conditions">
+        <div
+            ref="groupConditionsRef"
+            class="group-conditions"
+        >
             <template
                 v-for="(child, index) in group.conditions"
                 :key="child.id"
@@ -150,19 +233,23 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
 
                 <FacetGroup
                     v-if="isGroup(child)"
+                    :data-condition-id="child.id"
                     :group="child"
                     :options="options"
                     :concept-sets="conceptSets"
                     :depth="(depth ?? 0) + 1"
+                    :group-position="getChildPosition(index)"
                     @update:group="updateChild(index, $event)"
                     @remove="removeChild(index)"
                 />
 
                 <FacetRow
                     v-else
+                    :data-condition-id="child.id"
                     :condition="child"
                     :options="options"
                     :concept-sets="conceptSets"
+                    :condition-position="getChildPosition(index)"
                     @update:condition="updateChild(index, $event)"
                     @remove="removeChild(index)"
                 />
@@ -187,6 +274,8 @@ export default {
 .nested-group {
     border-color: var(--p-primary-200);
     background-color: var(--p-highlight-background);
+    box-shadow: inset 0 0 0 0.125rem
+        var(--p-lingo-query-builder-group-outline-color);
     margin: 0.25rem 0;
 }
 
@@ -219,10 +308,19 @@ export default {
 .operator-label {
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     text-transform: uppercase;
     padding: 0.125rem 0.5rem;
-    align-self: flex-start;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.operator-label::after {
+    content: "";
+    flex: 1;
+    border-top: 0.0625rem solid var(--p-lingo-query-builder-rule-color);
 }
 
 .operator-toggle :deep(.p-selectbutton) {

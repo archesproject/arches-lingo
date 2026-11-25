@@ -3,7 +3,6 @@ import { computed, onMounted, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "openvue/usetoast";
 
-import Button from "openvue/button";
 import Panel from "openvue/panel";
 import Splitter from "openvue/splitter";
 import SplitterPanel from "openvue/splitterpanel";
@@ -12,6 +11,9 @@ import SearchQueryBuilder from "@/arches_lingo/components/advanced-search/Search
 import SearchResults from "@/arches_lingo/components/advanced-search/SearchResults.vue";
 import SavedSearches from "@/arches_lingo/components/advanced-search/SavedSearches.vue";
 import ConceptSets from "@/arches_lingo/components/advanced-search/ConceptSets.vue";
+import PanelToggleHeader from "@/arches_lingo/components/generic/PanelToggleHeader.vue";
+
+import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 
 import {
     executeAdvancedSearch,
@@ -22,6 +24,7 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
     LABEL_TYPE_LIST_ID,
+    NARROW_SCREEN_MEDIA_QUERY,
     NOTE_TYPE_LIST_ID,
     CONCEPT_TYPE_LIST_ID,
 } from "@/arches_lingo/constants.ts";
@@ -30,7 +33,10 @@ import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import { storeToRefs } from "pinia";
 
-import { generateConditionId } from "@/arches_lingo/utils.ts";
+import {
+    generateConditionId,
+    getSplitterGutterPassThrough,
+} from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { Labellable } from "@/arches_controlled_lists/types.ts";
@@ -50,6 +56,7 @@ const { isAnonymous } = storeToRefs(userStore);
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
 
 const conceptSetsRef =
     useTemplateRef<InstanceType<typeof ConceptSets>>("conceptSetsRef");
@@ -262,45 +269,35 @@ onMounted(loadSearchOptions);
 
 <template>
     <div class="advanced-search">
-        <div class="search-header">
-            <h2 class="search-header-title">
-                <i
-                    class="pi pi-search"
-                    aria-hidden="true"
-                />
-                {{ $gettext("Advanced Search") }}
-            </h2>
-            <Button
-                v-if="!isAnonymous"
-                :label="
-                    showSidePanel
-                        ? $gettext('Hide Saved Searches & Sets')
-                        : $gettext('Show Saved Searches & Sets')
-                "
-                :icon="
-                    showSidePanel
-                        ? 'pi pi-angle-double-right'
-                        : 'pi pi-objects-column'
-                "
-                :class="'side-panel-toggle'"
-                size="small"
-                @click="showSidePanel = !showSidePanel"
-            />
-        </div>
+        <PanelToggleHeader
+            v-model:is-panel-visible="showSidePanel"
+            icon="pi pi-search"
+            hide-panel-icon="pi pi-angle-double-right"
+            show-panel-icon="pi pi-objects-column"
+            :title="$gettext('Advanced Search')"
+            :hide-panel-label="$gettext('Hide Saved Searches & Sets')"
+            :show-panel-label="$gettext('Show Saved Searches & Sets')"
+            :can-toggle-panel="!isAnonymous"
+            panel-id="advanced-search-side-panel"
+        />
 
         <Splitter
             class="search-splitter"
-            :pt="{
-                gutter: {
-                    style: {
-                        display:
-                            showSidePanel && !isAnonymous ? 'flex' : 'none',
-                    },
-                },
-            }"
+            :layout="isNarrowScreen ? 'vertical' : 'horizontal'"
+            :pt="
+                getSplitterGutterPassThrough({
+                    label: $gettext('Resize the Saved Searches & Sets panel'),
+                    primaryPanelId: 'advanced-search-content',
+                    layout: isNarrowScreen ? 'vertical' : 'horizontal',
+                    isVisible: showSidePanel && !isAnonymous,
+                })
+            "
         >
             <SplitterPanel :size="75">
-                <div class="search-content">
+                <div
+                    id="advanced-search-content"
+                    class="search-content"
+                >
                     <SearchQueryBuilder
                         :query-group="queryGroup"
                         :options="searchOptions"
@@ -334,7 +331,10 @@ onMounted(loadSearchOptions);
                 v-show="showSidePanel && !isAnonymous"
                 :size="25"
             >
-                <div class="side-panel">
+                <div
+                    id="advanced-search-side-panel"
+                    class="side-panel"
+                >
                     <Panel
                         :header="$gettext('Saved')"
                         toggleable
@@ -376,49 +376,6 @@ onMounted(loadSearchOptions);
     height: 100%;
     overflow: hidden;
     font-family: var(--p-lingo-font-family);
-}
-
-.search-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    row-gap: 0.5rem;
-    min-height: 3rem;
-    padding: 0.375rem 1rem;
-    background: var(--p-header-toolbar-background);
-    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    flex-shrink: 0;
-    box-sizing: border-box;
-}
-
-.search-header-title {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    margin: 0;
-    font-size: var(--p-lingo-font-size-large);
-    font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-text-color);
-}
-
-.search-header-title .pi {
-    font-size: var(--p-lingo-font-size-medium);
-}
-
-.side-panel-toggle {
-    font-size: var(--p-lingo-font-size-small) !important;
-    font-weight: var(--p-lingo-font-weight-normal) !important;
-    border-radius: 0.125rem !important;
-    background: var(--p-header-button-background) !important;
-    color: var(--p-header-button-color) !important;
-    border-color: var(--p-header-button-border) !important;
-    border-style: solid !important;
-    border-width: 0.0625rem !important;
-}
-
-.side-panel-toggle:hover {
-    background: var(--p-highlight-background) !important;
 }
 
 .search-splitter {
@@ -519,5 +476,11 @@ onMounted(loadSearchOptions);
 
 .advanced-search :deep(.p-dialog .p-button) {
     border-radius: 0.125rem;
+}
+
+@media (max-width: 960px) {
+    .search-content {
+        overflow: auto;
+    }
 }
 </style>

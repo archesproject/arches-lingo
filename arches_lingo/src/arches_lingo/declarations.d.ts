@@ -2,3 +2,16 @@
 // Module homepage on npmjs.com uses logos "TS" or "DT" to indicate if typed
 
 import("@/arches/declarations.d.ts");
+
+declare module "openvue/toasteventbus" {
+    import type { ToastMessageOptions } from "openvue/toast";
+
+    const ToastEventBus: {
+        on(event: "add", handler: (message: ToastMessageOptions) => void): void;
+        off(
+            event: "add",
+            handler: (message: ToastMessageOptions) => void,
+        ): void;
+    };
+    export default ToastEventBus;
+}

@@ -18,6 +18,14 @@ from arches_lingo.const import (
 ORDER_MODE_ALPHABETICAL = "alphabetical"
 ORDER_MODE_REVERSE_ALPHABETICAL = "reverse-alphabetical"
 ORDER_MODE_UNSORTED = "unsorted"
+# pg_trgm cannot index a "contains" pattern shorter than this, but a prefix
+# pattern of any length can still use the trigram index.
+MIN_INDEXED_CONTAINS_LENGTH = 3
+
+
+def escape_like_pattern(term):
+    """Escape LIKE wildcards so a term containing ``%`` or ``_`` matches literally."""
+    return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def resolve_max_edit_distance(term):
@@ -51,8 +59,10 @@ def build_search_queryset(
     order_mode,
     active_language=None,
     system_language=None,
-    scheme_id=None,
     excluded_ids=None,
+    scheme_ids=None,
+    lifecycle_state_ids=None,
+    prefix_only=False,
 ):
     """Return a SearchResultSet of concept IDs matching a search term.
 
@@ -80,8 +90,10 @@ def build_search_queryset(
         order_mode=order_mode,
         active_language=active_language or "",
         system_language=system_language or "",
-        scheme_id=scheme_id,
         excluded_ids=excluded_ids,
+        scheme_ids=scheme_ids,
+        lifecycle_state_ids=lifecycle_state_ids,
+        prefix_only=prefix_only,
     )
 
 
@@ -94,7 +106,7 @@ def _edit_distance_to_similarity_threshold(max_edit_distance, term_length):
 
 
 def build_concept_ids_for_non_fuzzy(
-    labels_queryset, order_mode, scheme_id=None, excluded_ids=None
+    labels_queryset, order_mode, scheme_ids=None, excluded_ids=None
 ):
     """Return a SearchResultSet for browsing (no search term)."""
     return SearchResultSet(
@@ -104,7 +116,7 @@ def build_concept_ids_for_non_fuzzy(
         order_mode=order_mode,
         active_language="",
         system_language="",
-        scheme_id=scheme_id,
+        scheme_ids=scheme_ids,
         excluded_ids=excluded_ids,
     )
 
@@ -131,29 +143,80 @@ class SearchResultSet:
         active_language,
         system_language,
         exact_match=False,
-        scheme_id=None,
         excluded_ids=None,
+        scheme_ids=None,
+        lifecycle_state_ids=None,
+        prefix_only=False,
     ):
         self.term = term
+        self.like_term = None if term is None else escape_like_pattern(term)
         self.use_fuzzy = use_fuzzy
         self.similarity_threshold = similarity_threshold
         self.order_mode = order_mode
         self.active_language = active_language
         self.system_language = system_language
         self.exact_match = exact_match
-        self.scheme_id = scheme_id
         self.excluded_ids = excluded_ids or []
+        # None leaves results unfiltered; an empty collection matches nothing.
+        self.scheme_ids = scheme_ids
+        self.lifecycle_state_ids = lifecycle_state_ids
+        self.prefix_only = prefix_only
         self._count_cache = None
 
-    def _where_clause(self):
-        """Return (sql_fragment, params) for the WHERE filter."""
-        where_sql = self.NODEGROUP_FILTER
+    def _filtered_labels_cte(self):
+        """Return (sql, params) for a WITH clause defining ``filtered_labels``.
+
+        ``filtered_labels`` has one row per matching label, with columns
+        ``resourceinstanceid``, ``label_content``, ``label_type`` and
+        ``label_language``.
+
+        PostgreSQL overestimates how many labels a one- or two-character term
+        matches. When such a term is limited by scheme or lifecycle state, it
+        would start from every concept in scope and test each label in turn,
+        never using the trigram index, so those label matches are materialized
+        first. Longer terms are left to the planner, which estimates them well
+        and can then run the query in parallel.
+        """
+        term_sql, term_params = self._term_filter()
+        concept_sql, concept_params = self._concept_filter()
+        has_concept_scope = (
+            self.scheme_ids is not None or self.lifecycle_state_ids is not None
+        )
+        has_short_term = (
+            self.term is not None and len(self.term) < MIN_INDEXED_CONTAINS_LENGTH
+        )
+        materialization = "MATERIALIZED" if has_concept_scope and has_short_term else ""
+
+        sql = f"""
+            WITH matching_labels AS {materialization} (
+                SELECT
+                    resourceinstanceid,
+                    {self.CONTENT_COL} AS label_content,
+                    {self.TYPE_COL} AS label_type,
+                    {self.LANG_COL} AS label_language
+                FROM tiles
+                WHERE {self.NODEGROUP_FILTER}{term_sql}
+            ),
+            filtered_labels AS (
+                SELECT *
+                FROM matching_labels
+                WHERE TRUE{concept_sql}
+            )
+        """
+        return sql, term_params + concept_params
+
+    def _term_filter(self):
+        """Return (sql_fragment, params) matching label content against the term."""
+        where_sql = ""
         params = []
 
         if self.term is not None:
             if self.exact_match:
                 where_sql += f" AND {self.CONTENT_COL} = %s"
                 params.append(self.term)
+            elif self.prefix_only:
+                where_sql += f" AND {self.CONTENT_COL} ILIKE %s"
+                params.append(f"{self.like_term}%")
             elif self.use_fuzzy:
                 # ILIKE uses the GIN trigram index; %% is the pg_trgm similarity
                 # operator (escaped for cursor.execute parameter substitution).
@@ -161,20 +224,40 @@ class SearchResultSet:
                     f" AND ({self.CONTENT_COL} ILIKE %s"
                     f" OR {self.CONTENT_COL} %% %s)"
                 )
-                params.extend([f"%{self.term}%", self.term])
+                params.extend([f"%{self.like_term}%", self.term])
             else:
                 where_sql += f" AND {self.CONTENT_COL} ILIKE %s"
-                params.append(f"%{self.term}%")
+                params.append(f"%{self.like_term}%")
 
-        if self.scheme_id:
+        return where_sql, params
+
+    def _concept_filter(self):
+        """Return (sql_fragment, params) limiting labels by their concept."""
+        where_sql = ""
+        params = []
+
+        if self.scheme_ids is not None:
             where_sql += (
                 f" AND resourceinstanceid IN ("
                 f"SELECT resourceinstanceid FROM tiles"
                 f" WHERE nodegroupid = '{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'"
                 f" AND tiledata -> '{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'"
-                f" @> %s::jsonb)"
+                f" @> ANY(%s::jsonb[]))"
             )
-            params.append(json.dumps([{"resourceId": self.scheme_id}]))
+            params.append(
+                [
+                    json.dumps([{"resourceId": str(scheme_id)}])
+                    for scheme_id in self.scheme_ids
+                ]
+            )
+
+        if self.lifecycle_state_ids is not None:
+            where_sql += (
+                " AND resourceinstanceid IN ("
+                "SELECT resourceinstanceid FROM resource_instances"
+                " WHERE resource_instance_lifecycle_state_id = ANY(%s::uuid[]))"
+            )
+            params.append([str(state_id) for state_id in self.lifecycle_state_ids])
 
         if self.excluded_ids:
             placeholders = ", ".join(["%s"] * len(self.excluded_ids))
@@ -185,14 +268,12 @@ class SearchResultSet:
 
     def _build_base_sql(self):
         """Build the core query that filters, ranks, and deduplicates."""
-        where_sql, where_params = self._where_clause()
-
         if self.term is None:
-            return self._build_browse_sql(where_sql, where_params)
+            return self._build_browse_sql()
 
-        return self._build_search_sql(where_sql, where_params)
+        return self._build_search_sql()
 
-    def _build_browse_sql(self, where_sql, where_params):
+    def _build_browse_sql(self):
         """SQL for browsing without a search term."""
         if self.order_mode == ORDER_MODE_ALPHABETICAL:
             order_clause = "ORDER BY sort_label ASC, resourceinstanceid"
@@ -201,22 +282,39 @@ class SearchResultSet:
         else:
             order_clause = "ORDER BY resourceinstanceid"
 
+        with_sql, with_params = self._filtered_labels_cte()
         sql = f"""
+            {with_sql}
             SELECT resourceinstanceid
             FROM (
                 SELECT
                     resourceinstanceid,
-                    MIN(LOWER({self.CONTENT_COL})) AS sort_label
-                FROM tiles
-                WHERE {where_sql}
+                    MIN(LOWER(label_content)) AS sort_label
+                FROM filtered_labels
                 GROUP BY resourceinstanceid
             ) grouped
             {order_clause}
         """
-        return sql, where_params
+        return sql, with_params
 
-    def _build_search_sql(self, where_sql, where_params):
-        """SQL for term search with ranking."""
+    def _build_search_sql(self, include_scores=False):
+        """SQL for term search with ranking.
+
+        ``include_scores`` also selects ``best_rank`` and the best trigram
+        ``best_similarity`` of any matching label, for callers that score matches.
+        """
+        if include_scores:
+            selected_columns = "resourceinstanceid, best_rank, best_similarity"
+            similarity_column = (
+                "MAX(similarity(LOWER(label_content), LOWER(%s)))"
+                " AS best_similarity,"
+            )
+            similarity_params = [self.term]
+        else:
+            selected_columns = "resourceinstanceid"
+            similarity_column = ""
+            similarity_params = []
+
         if self.order_mode == ORDER_MODE_UNSORTED:
             order_clause = "ORDER BY best_rank, sort_label"
         elif self.order_mode == ORDER_MODE_ALPHABETICAL:
@@ -224,48 +322,50 @@ class SearchResultSet:
         else:
             order_clause = "ORDER BY sort_label DESC, resourceinstanceid"
 
+        with_sql, with_params = self._filtered_labels_cte()
         sql = f"""
-            SELECT resourceinstanceid
+            {with_sql}
+            SELECT {selected_columns}
             FROM (
                 SELECT
                     resourceinstanceid,
                     MIN(
                         (CASE
-                            WHEN ({self.TYPE_COL}) = %s
-                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            WHEN label_type = %s
+                                 AND label_content ILIKE %s
                             THEN 0
-                            WHEN ({self.TYPE_COL}) = %s
-                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            WHEN label_type = %s
+                                 AND label_content ILIKE %s
                             THEN 1
-                            WHEN ({self.TYPE_COL}) = %s
-                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            WHEN label_type = %s
+                                 AND label_content ILIKE %s
                             THEN 2
-                            WHEN ({self.TYPE_COL}) = %s
-                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            WHEN label_type = %s
+                                 AND label_content ILIKE %s
                             THEN 3
-                            WHEN ({self.TYPE_COL}) = %s
-                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            WHEN label_type = %s
+                                 AND label_content ILIKE %s
                             THEN 4
-                            WHEN ({self.CONTENT_COL}) ILIKE %s
+                            WHEN label_content ILIKE %s
                             THEN 4
-                            WHEN ({self.TYPE_COL}) = %s
-                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            WHEN label_type = %s
+                                 AND label_content ILIKE %s
                             THEN 5
-                            WHEN ({self.CONTENT_COL}) ILIKE %s
+                            WHEN label_content ILIKE %s
                             THEN 5
-                            WHEN ({self.CONTENT_COL}) ILIKE %s
+                            WHEN label_content ILIKE %s
                             THEN 6
                             ELSE 7
                         END) * 1000
                         + (CASE
-                            WHEN ({self.LANG_COL}) = %s THEN 0
-                            WHEN ({self.LANG_COL}) = %s THEN 1
+                            WHEN label_language = %s THEN 0
+                            WHEN label_language = %s THEN 1
                             ELSE 2
                         END)
                     ) AS best_rank,
-                    MIN(LOWER({self.CONTENT_COL})) AS sort_label
-                FROM tiles
-                WHERE {where_sql}
+                    {similarity_column}
+                    MIN(LOWER(label_content)) AS sort_label
+                FROM filtered_labels
                 GROUP BY resourceinstanceid
             ) ranked
             {order_clause}
@@ -273,39 +373,49 @@ class SearchResultSet:
 
         rank_params = [
             PREF_LABEL_URI,
-            self.term,  # prefLabel exact
+            self.like_term,  # prefLabel exact
             ALT_LABEL_URI,
-            self.term,  # altLabel exact
+            self.like_term,  # altLabel exact
             PREF_LABEL_URI,
-            f"{self.term}%",  # prefLabel prefix
+            f"{self.like_term}%",  # prefLabel prefix
             PREF_LABEL_URI,
-            f"%{self.term}%",  # prefLabel contains
+            f"%{self.like_term}%",  # prefLabel contains
             ALT_LABEL_URI,
-            f"{self.term}%",  # altLabel prefix
-            self.term,  # any exact
+            f"{self.like_term}%",  # altLabel prefix
+            self.like_term,  # any exact
             ALT_LABEL_URI,
-            f"%{self.term}%",  # altLabel contains
-            f"{self.term}%",  # any prefix
-            f"%{self.term}%",  # any contains
+            f"%{self.like_term}%",  # altLabel contains
+            f"{self.like_term}%",  # any prefix
+            f"%{self.like_term}%",  # any contains
             self.active_language,
             self.system_language,
         ]
 
-        params = rank_params + where_params
+        params = with_params + rank_params + similarity_params
         return sql, params
+
+    def scored_slice(self, limit):
+        """Return ``[(concept_id, best_rank, best_similarity)]`` for the best matches."""
+        sql, params = self._build_search_sql(include_scores=True)
+        with connection.cursor() as cursor:
+            cursor.execute(f"{sql} LIMIT %s", params + [limit])
+            return [
+                (str(concept_id), best_rank, best_similarity)
+                for concept_id, best_rank, best_similarity in cursor.fetchall()
+            ]
 
     def count(self):
         if self._count_cache is not None:
             return self._count_cache
 
-        where_sql, where_params = self._where_clause()
+        with_sql, with_params = self._filtered_labels_cte()
         sql = f"""
+            {with_sql}
             SELECT COUNT(DISTINCT resourceinstanceid)
-            FROM tiles
-            WHERE {where_sql}
+            FROM filtered_labels
         """
         with connection.cursor() as cursor:
-            cursor.execute(sql, where_params)
+            cursor.execute(sql, with_params)
             self._count_cache = cursor.fetchone()[0]
         return self._count_cache
 

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useGettext } from "vue3-gettext";
+
 import Button from "openvue/button";
 
 import NotificationFileViewer from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationFileViewer.vue";
@@ -10,6 +12,8 @@ const { notification, showUnreadOnly } = defineProps<{
     notification: Notification;
     showUnreadOnly: boolean;
 }>();
+
+const { $gettext } = useGettext();
 
 function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -45,10 +49,12 @@ function formatDate(dateString: string): string {
     </div>
     <Button
         v-if="notification.isread === false && showUnreadOnly"
+        class="dismiss-button"
         icon="pi pi-times"
         severity="danger"
         rounded
         size="small"
+        :aria-label="$gettext('Dismiss notification')"
         @click="dismissNotifications([notification.id])"
     ></Button>
 </template>
@@ -65,5 +71,8 @@ function formatDate(dateString: string): string {
 .notification-item {
     font-size: var(--p-lingo-font-size-small);
     padding-inline-end: 0.25rem;
+}
+.dismiss-button {
+    flex-shrink: 0;
 }
 </style>

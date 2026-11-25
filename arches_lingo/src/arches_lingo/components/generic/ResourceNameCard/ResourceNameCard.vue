@@ -9,6 +9,7 @@ import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.
 import { useNodegroupWidgetConfigStore } from "@/arches_vue_components/stores/useNodegroupWidgetConfigStore.ts";
 
 import { EDIT } from "@/arches_vue_components/widgets/constants.ts";
+import { focusFirstFocusableElement } from "@/arches_lingo/utils.ts";
 
 import type { Ref } from "vue";
 import type {
@@ -39,6 +40,14 @@ const formFacade = reactive({
     states: {} as Record<string, { dirty: boolean }>,
     submit() {
         cardEditorRef.value?.save();
+    },
+    focusFirstField() {
+        const cardEditorElement = cardEditorRef.value?.$el;
+        if (!(cardEditorElement instanceof HTMLElement)) {
+            return false;
+        }
+        focusFirstFocusableElement(cardEditorElement);
+        return cardEditorElement.contains(document.activeElement);
     },
 });
 

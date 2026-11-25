@@ -2,7 +2,9 @@
 import { computed, inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
+import { useDialogFocusReturn } from "@/arches_lingo/composables/useDialogFocusReturn.ts";
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
+import { setPageTitleDetail } from "@/arches_lingo/composables/usePageTitle.ts";
 
 import { useConfirm } from "openvue/useconfirm";
 import { useRouter } from "vue-router";
@@ -20,18 +22,19 @@ import ReinstateDialog from "@/arches_lingo/components/generic/ReinstateDialog.v
 import SchemeIdentifierField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue";
 import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue";
 import SchemeAttributionField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeAttributionField.vue";
+import SchemeReconciliationServiceField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeReconciliationServiceField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
+import GetAsMenu from "@/arches_lingo/components/generic/GetAsMenu.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
-    DEFAULT_TOAST_LIFE,
     ERROR,
     LOCKED_LIFECYCLE_STATE_ID,
     NEW_CONCEPT,
+    PUBLISHED_LIFECYCLE_STATE_ID,
     SECONDARY,
-    SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -48,6 +51,7 @@ import {
     unlockScheme,
     unretireSchemeConcepts,
 } from "@/arches_lingo/api.ts";
+import { useCopyToClipboard } from "@/arches_lingo/composables/useCopyToClipboard.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
@@ -99,12 +103,14 @@ const { openEditLog } = useEditLog(() => props.graphSlug);
 const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
-const { $gettext, interpolate } = useGettext();
+const { copyToClipboard } = useCopyToClipboard();
+const { $gettext, $ngettext, interpolate } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const scheme = ref<ResourceInstanceResult>();
 const schemeResource = ref<Labellable>();
 const label = ref<Label>();
+watch(() => label.value?.value, setPageTitleDetail);
 const data = ref<SchemeHeader>();
 const labelCounts = ref<LanguageLabelCount[]>([]);
 const labelCountsLoading = ref(false);
@@ -133,17 +139,40 @@ const visibleLabelChips = computed(() =>
 );
 
 const showMoreLabel = computed(() =>
-    interpolate($gettext("+%{count} more"), {
-        count: hiddenLanguageCount.value,
-    }),
+    $ngettext(
+        "+%{count} more language",
+        "+%{count} more languages",
+        hiddenLanguageCount.value,
+        { count: String(hiddenLanguageCount.value) },
+    ),
 );
 
 const isLoading = ref(true);
 const showExportDialog = ref(false);
-const showLockDialog = ref(false);
 const exportDialogKey = ref(0);
-const showReinstateDialog = ref(false);
-const showRetireDialog = ref(false);
+const schemeNameHeadingRef = ref<HTMLElement | null>(null);
+
+const {
+    isDialogMounted: isLockDialogMounted,
+    isDialogVisible: isLockDialogVisible,
+    openDialog: openLockDialog,
+    closeDialog: closeLockDialog,
+    onDialogAfterHide: onLockDialogAfterHide,
+} = useDialogFocusReturn(getSchemeNameHeading);
+const {
+    isDialogMounted: isRetireDialogMounted,
+    isDialogVisible: isRetireDialogVisible,
+    openDialog: openRetireDialog,
+    closeDialog: closeRetireDialog,
+    onDialogAfterHide: onRetireDialogAfterHide,
+} = useDialogFocusReturn(getSchemeNameHeading);
+const {
+    isDialogMounted: isReinstateDialogMounted,
+    isDialogVisible: isReinstateDialogVisible,
+    openDialog: openReinstateDialog,
+    closeDialog: closeReinstateDialog,
+    onDialogAfterHide: onReinstateDialogAfterHide,
+} = useDialogFocusReturn(getSchemeNameHeading);
 const isReinstateLoading = ref(false);
 const pendingReinstateStateId = ref<string | undefined>();
 const pendingRetireStateId = ref<string | undefined>();
@@ -168,10 +197,19 @@ const hasPersistedResourceInstance = computed(() => {
 
 const store = useResourceStore();
 const { isEditor, isLingoAdmin } = useUserStore();
-const { publicServerAddress } = storeToRefs(useAppSettingsStore());
+const { publicServerAddress, reconciliationEnabled } = storeToRefs(
+    useAppSettingsStore(),
+);
 
 const isLocked = computed(
     () => currentLifecycleState.value?.id === LOCKED_LIFECYCLE_STATE_ID,
+);
+// Only published and locked schemes are offered by the reconciliation service.
+const isReconcilable = computed(
+    () =>
+        reconciliationEnabled.value &&
+        (isLocked.value ||
+            currentLifecycleState.value?.id === PUBLISHED_LIFECYCLE_STATE_ID),
 );
 const isLockLoading = ref(false);
 
@@ -266,12 +304,14 @@ const schemeUri = computed(() => {
     );
 });
 
-async function copyUriToClipboard(uri: string) {
-    await navigator.clipboard.writeText(uri);
-    toast.add({
-        severity: SUCCESS,
-        life: DEFAULT_TOAST_LIFE,
-        summary: $gettext("URI copied to clipboard"),
+function getSchemeNameHeading() {
+    return schemeNameHeadingRef.value;
+}
+
+async function copyUriToClipboard(uri: string): Promise<void> {
+    await copyToClipboard(uri, {
+        copiedSummary: $gettext("URI copied to clipboard"),
+        failedSummary: $gettext("Unable to copy the URI"),
     });
 }
 
@@ -327,13 +367,13 @@ onMounted(async () => {
 
 function handleLockToggle() {
     if (!props.resourceInstanceId) return;
-    showLockDialog.value = true;
+    openLockDialog();
 }
 
 async function onLockConfirmed() {
     if (!props.resourceInstanceId) return;
     isLockLoading.value = true;
-    showLockDialog.value = false;
+    closeLockDialog();
     try {
         if (isLocked.value) {
             await unlockScheme(props.resourceInstanceId);
@@ -480,7 +520,7 @@ function onLifecycleStateChange(
 
 function onRetireRequested(nextStateId: string) {
     pendingRetireStateId.value = nextStateId;
-    showRetireDialog.value = true;
+    openRetireDialog();
 }
 
 function onRetireConfirmed() {
@@ -488,13 +528,13 @@ function onRetireConfirmed() {
     lifecycleButtonsRef.value?.transitionLifecycleState(
         pendingRetireStateId.value,
     );
-    showRetireDialog.value = false;
+    closeRetireDialog();
     pendingRetireStateId.value = undefined;
 }
 
 function onReinstateRequested(nextStateId: string) {
     pendingReinstateStateId.value = nextStateId;
-    showReinstateDialog.value = true;
+    openReinstateDialog();
 }
 
 async function onReinstateConfirmed(cascade: boolean) {
@@ -519,7 +559,7 @@ async function onReinstateConfirmed(cascade: boolean) {
         });
     } finally {
         isReinstateLoading.value = false;
-        showReinstateDialog.value = false;
+        closeReinstateDialog();
         pendingReinstateStateId.value = undefined;
     }
 }
@@ -528,12 +568,13 @@ async function onReinstateConfirmed(cascade: boolean) {
 <template>
     <ConfirmDialog group="delete-scheme" />
     <Dialog
-        v-if="showLockDialog"
-        :visible="true"
+        v-if="isLockDialogMounted"
+        :visible="isLockDialogVisible"
         :modal="true"
         :dismissable-mask="false"
         :header="isLocked ? $gettext('Unlock scheme') : $gettext('Lock scheme')"
-        @update:visible="showLockDialog = false"
+        @update:visible="closeLockDialog()"
+        @after-hide="onLockDialogAfterHide"
     >
         <p v-if="isLocked">
             {{
@@ -554,7 +595,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                 :label="$gettext('Cancel')"
                 :severity="SECONDARY"
                 :outlined="true"
-                @click="showLockDialog = false"
+                @click="closeLockDialog()"
             />
             <Button
                 :label="isLocked ? $gettext('Unlock') : $gettext('Lock')"
@@ -564,12 +605,13 @@ async function onReinstateConfirmed(cascade: boolean) {
         </template>
     </Dialog>
     <Dialog
-        v-if="showRetireDialog"
-        :visible="true"
+        v-if="isRetireDialogMounted"
+        :visible="isRetireDialogVisible"
         :modal="true"
         :dismissable-mask="false"
         :header="$gettext('Confirmation')"
-        @update:visible="showRetireDialog = false"
+        @update:visible="closeRetireDialog()"
+        @after-hide="onRetireDialogAfterHide"
     >
         <p>
             {{
@@ -583,7 +625,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                 :label="$gettext('Cancel')"
                 :severity="SECONDARY"
                 :outlined="true"
-                @click="showRetireDialog = false"
+                @click="closeRetireDialog()"
             />
             <Button
                 :label="$gettext('Retire')"
@@ -593,13 +635,15 @@ async function onReinstateConfirmed(cascade: boolean) {
         </template>
     </Dialog>
     <ReinstateDialog
-        v-if="showReinstateDialog && resourceInstanceId"
+        v-if="isReinstateDialogMounted && resourceInstanceId"
+        :visible="isReinstateDialogVisible"
         :resource-id="resourceInstanceId"
         :resource-name="label?.value"
         resource-type="scheme"
         :is-loading="isReinstateLoading"
         @confirm="onReinstateConfirmed"
-        @cancel="showReinstateDialog = false"
+        @cancel="closeReinstateDialog()"
+        @after-hide="onReinstateDialogAfterHide"
     />
     <ExportThesauri
         v-if="scheme && showExportDialog"
@@ -620,7 +664,7 @@ async function onReinstateConfirmed(cascade: boolean) {
         <div class="scheme-header-panel">
             <div class="scheme-header-toolbar">
                 <div class="scheme-title">
-                    <h2>
+                    <h1 ref="schemeNameHeadingRef">
                         <span class="scheme-title-text">{{
                             label?.value
                         }}</span>
@@ -630,7 +674,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                         >
                             ({{ label?.language_id }})
                         </span>
-                    </h2>
+                    </h1>
                 </div>
 
                 <div
@@ -669,7 +713,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                         severity="danger"
                         class="delete-button"
                         :label="$gettext('Delete')"
-                        :aria-label="$gettext('Delete Concept')"
+                        :aria-label="$gettext('Delete Scheme')"
                         @click="confirmDelete"
                     />
 
@@ -714,12 +758,21 @@ async function onReinstateConfirmed(cascade: boolean) {
                         >
                             <Button
                                 :label="schemeUri"
+                                :aria-label="
+                                    $gettext(
+                                        '%{uri} (opens in a new tab)',
+                                        { uri: schemeUri },
+                                        true,
+                                    )
+                                "
                                 class="scheme-uri"
                                 variant="link"
                                 as="a"
                                 :href="schemeUri"
                                 target="_blank"
                                 rel="noopener"
+                                icon="pi pi-external-link"
+                                icon-pos="right"
                             ></Button>
                             <Button
                                 icon="pi pi-copy"
@@ -728,6 +781,16 @@ async function onReinstateConfirmed(cascade: boolean) {
                                 :aria-label="$gettext('Copy URI')"
                                 @click="copyUriToClipboard(schemeUri)"
                             ></Button>
+                            <GetAsMenu
+                                resource-type="scheme"
+                                :resource-instance-id="
+                                    props.resourceInstanceId!
+                                "
+                                :file-base-name="
+                                    identifierValue || props.resourceInstanceId!
+                                "
+                                :lifecycle-state-id="currentLifecycleState?.id"
+                            />
                         </div>
                         <span
                             v-else
@@ -746,6 +809,16 @@ async function onReinstateConfirmed(cascade: boolean) {
                             defaultSchemeURITemplate
                         "
                         @update="onSchemeURITemplateUpdate"
+                    />
+                </div>
+
+                <div
+                    v-if="isReconcilable"
+                    class="header-row"
+                >
+                    <SchemeReconciliationServiceField
+                        :scheme-identifier="identifierValue"
+                        :scheme-name="label?.value"
                     />
                 </div>
 
@@ -900,7 +973,7 @@ async function onReinstateConfirmed(cascade: boolean) {
     word-break: break-word;
 }
 
-h2 {
+h1 {
     margin-top: 0;
     margin-bottom: 0;
     font-size: var(--p-lingo-font-size-large);
@@ -908,7 +981,7 @@ h2 {
     min-width: 0;
 }
 
-h2 > span {
+h1 > span {
     min-width: 0;
 }
 
@@ -949,13 +1022,13 @@ h2 > span {
     overflow: hidden;
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .uri-copy-button {
     flex-shrink: 0;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 :deep(.scheme-uri .p-button-label) {
@@ -1022,7 +1095,7 @@ h2 > span {
     gap: 0.25rem;
     padding: 0.125rem 0.375rem;
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     background: none;
     border: 0;
     cursor: pointer;
@@ -1031,8 +1104,8 @@ h2 > span {
 }
 
 .language-expand-toggle:hover {
-    color: var(--p-primary-600);
-    background: var(--p-primary-50);
+    color: var(--p-lingo-accent-strong-color);
+    background: var(--p-lingo-accent-hover-background);
 }
 
 .language-expand-toggle .pi {
@@ -1053,7 +1126,7 @@ h2 > span {
 
 .add-language {
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     text-decoration: underline;
     padding: 0 0.5rem;
 }
@@ -1083,7 +1156,7 @@ h2 > span {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     min-width: 0;
 }
 
@@ -1097,8 +1170,8 @@ h2 > span {
 
 .scheme-language {
     padding: 0.5rem 1rem;
-    background: var(--p-menubar-item-icon-color);
-    border: 0.0625rem solid var(--p-menubar-item-icon-color);
+    background: var(--p-lingo-language-chip-background);
+    border: 0.0625rem solid var(--p-lingo-language-chip-background);
     border-radius: 0.125rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-content-color);

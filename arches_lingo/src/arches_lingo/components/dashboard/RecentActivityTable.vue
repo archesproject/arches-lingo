@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Column from "openvue/column";
@@ -16,6 +16,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
+import type { RouteLocationRaw } from "vue-router";
 import type {
     DashboardActivityItem,
     DashboardStats,
@@ -37,7 +38,6 @@ const emit = defineEmits<{
     "update:selectedActivityPeriod": [value: ActivityPeriod];
 }>();
 
-const router = useRouter();
 const { $gettext } = useGettext();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
@@ -74,20 +74,11 @@ function getInitials(
     return username?.[0]?.toUpperCase() ?? "?";
 }
 
-function navigateToConcept(conceptId: string) {
-    router.push({ name: routeNames.concept, params: { id: conceptId } });
-}
-
-function navigateToScheme(schemeId: string) {
-    router.push({ name: routeNames.scheme, params: { id: schemeId } });
-}
-
-function navigateToResource(item: DashboardActivityItem) {
+function getResourceRoute(item: DashboardActivityItem): RouteLocationRaw {
     if (item.resource_type === "scheme") {
-        navigateToScheme(item.resource_id);
-    } else {
-        navigateToConcept(item.resource_id);
+        return { name: routeNames.scheme, params: { id: item.resource_id } };
     }
+    return { name: routeNames.concept, params: { id: item.resource_id } };
 }
 
 function getDisplayName(item: DashboardActivityItem): string {
@@ -116,14 +107,14 @@ function getResourceTypeSeverity(
         <div class="section-header">
             <h2>{{ $gettext("Recent Activity") }}</h2>
             <div class="filter-group">
-                <label
-                    for="activity-period-filter"
+                <span
+                    id="activity-period-filter-label"
                     class="filter-label"
                 >
                     {{ $gettext("Time frame") }}:
-                </label>
+                </span>
                 <Select
-                    id="activity-period-filter"
+                    aria-labelledby="activity-period-filter-label"
                     :model-value="props.selectedActivityPeriod"
                     :options="props.activityPeriods"
                     option-label="label"
@@ -151,7 +142,10 @@ function getResourceTypeSeverity(
             >
                 <template #empty>
                     <div class="empty-state">
-                        <i class="pi pi-inbox empty-icon" />
+                        <i
+                            class="pi pi-inbox empty-icon"
+                            aria-hidden="true"
+                        />
                         <span>{{ $gettext("No recent activity") }}</span>
                     </div>
                 </template>
@@ -167,15 +161,21 @@ function getResourceTypeSeverity(
                             "
                         >
                             {{ formatRelativeTime(slotProps.data.timestamp) }}
+                            <span class="p-hidden-accessible">
+                                ({{
+                                    formatFullTimestamp(
+                                        slotProps.data.timestamp,
+                                    )
+                                }})
+                            </span>
                         </span>
                     </template>
                 </Column>
                 <Column :header="$gettext('Resource')">
                     <template #body="slotProps">
-                        <a
+                        <RouterLink
                             class="resource-link"
-                            href="#"
-                            @click.prevent="navigateToResource(slotProps.data)"
+                            :to="getResourceRoute(slotProps.data)"
                         >
                             {{
                                 getItemLabel(
@@ -184,7 +184,7 @@ function getResourceTypeSeverity(
                                     systemLanguage.code,
                                 ).value || slotProps.data.resource_id
                             }}
-                        </a>
+                        </RouterLink>
                     </template>
                 </Column>
                 <Column
@@ -217,7 +217,10 @@ function getResourceTypeSeverity(
                 >
                     <template #body="slotProps">
                         <div class="user-cell">
-                            <span class="user-avatar">
+                            <span
+                                class="user-avatar"
+                                aria-hidden="true"
+                            >
                                 {{
                                     getInitials(
                                         slotProps.data.user_firstname,
@@ -250,7 +253,7 @@ function getResourceTypeSeverity(
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     padding-bottom: 0.5rem;
 }
 
@@ -258,7 +261,7 @@ function getResourceTypeSeverity(
     margin: 0;
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
 }
 
 .filter-group {
@@ -270,7 +273,7 @@ function getResourceTypeSeverity(
 .filter-label {
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     white-space: nowrap;
 }
 
@@ -299,7 +302,7 @@ function getResourceTypeSeverity(
     height: 1.5rem;
     border-radius: 50%;
     background: var(--p-primary-100);
-    color: var(--p-primary-600);
+    color: var(--p-lingo-accent-badge-soft-color);
     border: 0.0625rem solid var(--p-primary-300);
     font-size: 0.5625rem;
     font-weight: var(--p-lingo-font-weight-normal);
@@ -323,7 +326,7 @@ function getResourceTypeSeverity(
 }
 
 .resource-link {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     text-decoration: none;
     font-size: var(--p-lingo-font-size-smallnormal);
 }
@@ -339,7 +342,7 @@ function getResourceTypeSeverity(
 
 :deep(.p-datatable-column-title) {
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
     font-size: var(--p-lingo-font-size-small);
 }
 

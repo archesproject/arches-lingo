@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useToast } from "openvue/usetoast";
@@ -10,11 +10,17 @@ import ProgressSpinner from "openvue/progressspinner";
 import RadioButton from "openvue/radiobutton";
 
 import { exportThesaurus } from "@/arches_lingo/api.ts";
+import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import {
     DEFAULT_TOAST_LIFE,
     DEFAULT_ERROR_TOAST_LIFE,
+    QUEUED_EXPORT_TOAST_LIFE,
     ERROR,
+    INFO,
+    SUCCESS,
 } from "@/arches_lingo/constants.ts";
+
+import type { ExportedFile } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const toast = useToast();
@@ -26,6 +32,7 @@ const props = defineProps<{
 
 const loading = ref(false);
 const visible = ref(true);
+const exportFormatIdPrefix = useId();
 
 const exportFormat = ref("xml");
 const exportformatOptions = ref([
@@ -38,36 +45,73 @@ const exportformatOptions = ref([
 ]);
 const fileName = ref();
 
+function downloadExportedFile(exportedFile: ExportedFile) {
+    // The temp file endpoint responds with Content-Disposition: attachment,
+    // so following the link downloads the file without leaving the page.
+    const downloadLink = document.createElement("a");
+    downloadLink.href = generateArchesURL("arches:temp_file", {
+        file_id: exportedFile.fileid,
+    });
+    downloadLink.download = exportedFile.name;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    downloadLink.remove();
+}
+
+function notifyExportQueued() {
+    toast.add({
+        severity: INFO,
+        life: QUEUED_EXPORT_TOAST_LIFE,
+        summary: $gettext("Export queued"),
+        detail: $gettext(
+            "This thesaurus is large, so it is being exported in the background. A download link will appear in the Notifications panel when it is ready.",
+        ),
+    });
+}
+
+function notifyExportComplete(exportedFile: ExportedFile) {
+    toast.add({
+        severity: SUCCESS,
+        life: DEFAULT_TOAST_LIFE,
+        summary: $gettext("Export complete"),
+        detail: $gettext(
+            "Your download of %{fileName} should begin automatically. It is also available in the Notifications panel.",
+            { fileName: exportedFile.name },
+        ),
+    });
+}
+
 async function exportThesauri() {
     if (!exportFormat.value) {
         return;
-    } else {
-        loading.value = true;
-        await exportThesaurus(
+    }
+
+    loading.value = true;
+    try {
+        const exportResponse = await exportThesaurus(
             props.resourceId,
             exportFormat.value,
             fileName.value || undefined,
-        )
-            .then(() => {
-                toast.add({
-                    severity: "success",
-                    life: DEFAULT_TOAST_LIFE,
-                    summary: $gettext("Export initiated"),
-                    detail: $gettext(
-                        "Your thesaurus export is being processed. You will be notified when it is complete.",
-                    ),
-                });
-                visible.value = false;
-            })
-            .catch((error: Error) => {
-                toast.add({
-                    severity: ERROR,
-                    life: DEFAULT_ERROR_TOAST_LIFE,
-                    summary: $gettext("Unable to export thesaurus"),
-                    detail: error.message,
-                });
-                loading.value = false;
-            });
+        );
+
+        if (exportResponse.status === "queued") {
+            notifyExportQueued();
+        } else {
+            downloadExportedFile(exportResponse.file);
+            notifyExportComplete(exportResponse.file);
+        }
+        visible.value = false;
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to export thesaurus"),
+            detail:
+                (error as Error).message ||
+                $gettext("An unexpected error occurred during export."),
+        });
+    } finally {
+        loading.value = false;
     }
 }
 </script>
@@ -117,8 +161,21 @@ async function exportThesauri() {
             <div
                 v-if="loading"
                 class="loading"
+                role="status"
+                aria-live="polite"
             >
-                <ProgressSpinner />
+                <ProgressSpinner
+                    class="loading-spinner"
+                    stroke-width="4"
+                    aria-hidden="true"
+                />
+                <span class="loading-message">
+                    {{
+                        $gettext(
+                            "Preparing your export. This may take a moment for larger thesauri.",
+                        )
+                    }}
+                </span>
             </div>
 
             <div
@@ -146,12 +203,19 @@ async function exportThesauri() {
                             >
                                 <RadioButton
                                     v-model="exportFormat"
-                                    :input-id="option.value"
+                                    :input-id="`${exportFormatIdPrefix}-${option.value}`"
+                                    :name="exportFormatIdPrefix"
                                     :value="option.value"
                                     :disabled="option.disabled"
+                                    :pt="{
+                                        input: {
+                                            autofocus:
+                                                option.value === exportFormat,
+                                        },
+                                    }"
                                 />
                                 <label
-                                    :for="option.value"
+                                    :for="`${exportFormatIdPrefix}-${option.value}`"
                                     class="radio-label"
                                 >
                                     {{ option.label }}
@@ -274,8 +338,21 @@ async function exportThesauri() {
 
 .loading {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 1rem;
+    padding-block: 1rem;
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+}
+
+.loading-message {
+    color: var(--p-text-muted-color);
 }
 
 :deep(.p-dialog) {
